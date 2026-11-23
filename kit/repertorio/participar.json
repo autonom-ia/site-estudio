@@ -1,0 +1,81 @@
+{
+  "acao": "participar",
+  "visitanteQuer": "Fazer parte: se inscrever, matricular, doar ou aparecer no encontro.",
+  "fichas": [
+    {
+      "id": "duolingo",
+      "nome": "Duolingo",
+      "link": "https://www.duolingo.com/",
+      "ondeVer": "Na própria capa: o botão de começar e a promessa de poucos minutos por dia ficam na primeira tela.",
+      "ramo": "ensino de idiomas",
+      "duvida": "É fácil começar, e é para alguém como eu?",
+      "principio": "Um único botão de começar, uma voz leve e a promessa simples de poucos minutos por dia tiram o peso do primeiro passo.",
+      "comoFazemosAqui": {
+        "padrao": "link-de-pagamento-ou-agenda",
+        "texto": "Um botão de começar que leva ao link de inscrição ou de pagamento da turma, com o passo seguinte escrito em uma frase ao lado."
+      },
+      "noCelular": "Frase curta e o botão de começar na primeira tela; a prova fica mais abaixo.",
+      "naoTrazer": "O mascote, os jogos e a pontuação do aplicativo."
+    },
+    {
+      "id": "charity-water",
+      "nome": "charity: water",
+      "link": "https://www.charitywater.org/",
+      "ondeVer": "Abra a página de doar (o botão do topo): os valores de doação ligados ao que cada um faz aparecem ali.",
+      "ramo": "organização sem fins lucrativos",
+      "duvida": "Para onde vai o meu dinheiro, e que diferença ele faz?",
+      "principio": "Valores de doação ligados a resultados concretos, com prova do que foi feito, transformam a doação em escolha consciente.",
+      "comoFazemosAqui": {
+        "padrao": "simulador-na-pagina",
+        "texto": "Botões de valor que mostram na hora o que aquele valor faz, com números do fatos.md; o botão leva ao link de doação, ou a chave Pix fica escrita na página."
+      },
+      "noCelular": "Valores em botões grandes, o resultado em uma frase logo abaixo e o botão de doar preso no pé.",
+      "naoTrazer": "Números de impacto de outra organização: só entram resultados próprios, com fonte."
+    },
+    {
+      "id": "msf",
+      "nome": "Médicos Sem Fronteiras Brasil",
+      "link": "https://www.msf.org.br/",
+      "ondeVer": "Na capa, ache o botão de doar e o link de transparência ou prestação de contas: o princípio está nos dois juntos.",
+      "ramo": "ajuda humanitária",
+      "duvida": "Posso confiar nessa organização para doar?",
+      "principio": "Transparência na frente: para onde vai cada parte do dinheiro, a prestação de contas a um toque e o pedido de doação claro.",
+      "comoFazemosAqui": {
+        "padrao": "link-de-pagamento-ou-agenda",
+        "texto": "Botão para o link de doação da organização, com a prestação de contas e a origem de cada número registradas no fatos.md."
+      },
+      "noCelular": "Pedido de doação e o botão na primeira tela; a transparência logo abaixo, em frases curtas.",
+      "naoTrazer": "Imagem de sofrimento como gancho: a prova de trabalho vale mais que o choque."
+    },
+    {
+      "id": "alura",
+      "nome": "Alura",
+      "link": "https://www.alura.com.br/",
+      "ondeVer": "Abra as formações e depois os planos (no menu): as trilhas por objetivo e o preço do plano ficam nessas páginas.",
+      "ramo": "escola de tecnologia",
+      "duvida": "Esse curso me leva aonde eu quero, e quanto custa?",
+      "principio": "Trilhas por objetivo (o que a pessoa quer virar) organizam o catálogo, e o plano com preço fica claro antes da matrícula.",
+      "comoFazemosAqui": {
+        "padrao": "link-de-pagamento-ou-agenda",
+        "texto": "Cursos agrupados pelo objetivo do aluno, com carga, preço e o botão de matrícula no link de pagamento da escola."
+      },
+      "noCelular": "Objetivos em botões no topo, o curso escolhido com preço e o botão de matrícula logo abaixo.",
+      "naoTrazer": "Catálogo com centenas de cursos e a contagem regressiva de promoção."
+    },
+    {
+      "id": "parkrun",
+      "nome": "parkrun",
+      "link": "https://www.parkrun.com/",
+      "ondeVer": "O site é por país: escolha um evento qualquer e abra a página dele; dia, hora, lugar e o que levar estão em poucas linhas.",
+      "ramo": "corrida comunitária",
+      "duvida": "Onde e quando acontece, e preciso de algo para participar?",
+      "principio": "Dia, hora, lugar e o que levar respondidos em poucas linhas, com o tom de quem convida, então participar parece fácil.",
+      "comoFazemosAqui": {
+        "padrao": "mapa-por-botao",
+        "texto": "Quando, onde e o que levar escritos no topo, com os botões de rota para o ponto de encontro e o link de inscrição, se houver."
+      },
+      "noCelular": "Dia e hora em letra grande, ponto de encontro com os botões de rota e a inscrição no fim.",
+      "naoTrazer": "O mapa mundial de eventos e a identidade da rede."
+    }
+  ]
+}

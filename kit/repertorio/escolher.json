@@ -1,0 +1,81 @@
+{
+  "acao": "escolher",
+  "visitanteQuer": "Escolher entre opções: ver como fica cada versão antes de decidir.",
+  "fichas": [
+    {
+      "id": "tesla",
+      "nome": "Tesla",
+      "link": "https://www.tesla.com/",
+      "ondeVer": "Abra a montagem de um modelo (o caminho /model3/design, ou o botão de encomendar de qualquer modelo): cada escolha troca a imagem e o preço.",
+      "ramo": "automóveis",
+      "duvida": "Como fica na cor que eu quero, e quanto fica com o que eu escolher?",
+      "principio": "Cada escolha troca a imagem e atualiza o preço no mesmo lugar, então o produto é montado diante dos olhos.",
+      "comoFazemosAqui": {
+        "padrao": "troca-de-fotos",
+        "texto": "Fotos reais de cada opção, no mesmo ângulo e luz; o botão de cada opção troca a foto e o preço, e a escolha final vai para o WhatsApp."
+      },
+      "noCelular": "Foto no alto da tela enquanto as opções passam embaixo, com o preço sempre visível.",
+      "naoTrazer": "Imagem 3D gerada e efeito pesado: aqui, foto real de cada opção, no tamanho certo."
+    },
+    {
+      "id": "apple-iphone",
+      "nome": "Apple (página do iPhone)",
+      "link": "https://www.apple.com/br/iphone/",
+      "ondeVer": "Desça a página até a comparação de modelos, ou abra a página de comparar iPhones, ligada no fim desta.",
+      "ramo": "eletrônicos",
+      "duvida": "Qual modelo é para mim, e o que muda de um para outro?",
+      "principio": "A comparação mostra poucas diferenças que importam, lado a lado e na mesma ordem em todos os modelos, então escolher parece fácil.",
+      "comoFazemosAqui": {
+        "padrao": "troca-de-fotos",
+        "texto": "Duas ou três versões lado a lado, com foto real e as mesmas três linhas de diferença em cada; o botão de escolha manda a versão no WhatsApp."
+      },
+      "noCelular": "Uma versão por tela, deslizando com o dedo, com as mesmas linhas na mesma altura para comparar.",
+      "naoTrazer": "Ficha técnica longa e o filme de lançamento: aqui, poucas diferenças que o cliente entende."
+    },
+    {
+      "id": "warby-parker",
+      "nome": "Warby Parker",
+      "link": "https://www.warbyparker.com/",
+      "ondeVer": "Abra o questionário de armações (o quiz, no menu de óculos) e responda as primeiras perguntas para ver o catálogo encolher.",
+      "ramo": "óculos",
+      "duvida": "Qual modelo combina com o meu rosto?",
+      "principio": "Um questionário curto (formato do rosto, estilo, cor) reduz o catálogo a poucas sugestões, então a escolha deixa de ser assustadora.",
+      "comoFazemosAqui": {
+        "padrao": "troca-de-fotos",
+        "texto": "Três perguntas em botões que filtram as fotos reais dos modelos na própria página; a lista curta e o modelo escolhido vão para o WhatsApp."
+      },
+      "noCelular": "Uma pergunta por tela, respostas em botões grandes e as sugestões em fotos grandes, uma embaixo da outra.",
+      "naoTrazer": "Prova virtual com a câmera: precisa de serviço de fora e de permissão da pessoa."
+    },
+    {
+      "id": "casper",
+      "nome": "Casper",
+      "link": "https://casper.com/",
+      "ondeVer": "Abra a comparação de colchões (no menu de colchões): firmeza e posição de dormir aparecem lado a lado.",
+      "ramo": "colchões",
+      "duvida": "Qual dos modelos é o certo para o jeito que eu durmo?",
+      "principio": "Poucos modelos, comparados pelo que a pessoa sente (firmeza, posição de dormir), e não por ficha técnica.",
+      "comoFazemosAqui": {
+        "padrao": "troca-de-fotos",
+        "texto": "Botões por jeito de dormir (de lado, de costas, de bruços) que trocam a foto e o texto do modelo indicado."
+      },
+      "noCelular": "Os botões de jeito de dormir numa linha que desliza, e a indicação logo abaixo.",
+      "naoTrazer": "Período de teste e promessas comerciais que a marca daqui não oferece."
+    },
+    {
+      "id": "herman-miller",
+      "nome": "Herman Miller",
+      "link": "https://www.hermanmiller.com/",
+      "ondeVer": "Abra uma cadeira, como a Aeron: na página do produto, as amostras de cor e material trocam a foto.",
+      "ramo": "móveis",
+      "duvida": "Como fica no tecido e na cor que eu quero?",
+      "principio": "Amostras de material que se tocam mudam a foto do produto, e o nome do material aparece junto, então o tato vira imagem.",
+      "comoFazemosAqui": {
+        "padrao": "troca-de-fotos",
+        "texto": "Amostras reais de tecido ou acabamento fotografadas de perto; tocar na amostra troca a foto do móvel e escreve o nome do material."
+      },
+      "noCelular": "Amostras redondas de 44 px ou mais, numa linha que desliza logo abaixo da foto.",
+      "naoTrazer": "Planta do ambiente e o catálogo enorme deles."
+    }
+  ]
+}

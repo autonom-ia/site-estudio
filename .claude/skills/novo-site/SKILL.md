@@ -15,7 +15,7 @@ Comandos: `./estudio <comando>` (no PowerShell, `.\estudio.cmd <comando>`), de d
 
 Um piloto com um negócio de verdade mostrou o que leva a primeira versão de "parece modelo" para "ficou muito bom" sem rodadas a mais de revisão. Valem desde o primeiro desenho:
 
-1. **Coleta visual antes da direção.** Antes de escrever `direcao.md`, junte em `material/fotos/` até 20 fotos reais do negócio (o lugar, a gente, o trabalho), cada uma com a legenda e a data de onde veio, e em `material/referencias/` prints de 3 a 5 sites do mesmo ramo. Sem esse material na pasta, a direção nasce da imaginação e sai genérica. Foto tirada de rede social chega pequena (perto de 640 px de largura): avise a pessoa em uma frase e peça os arquivos originais. Se a pessoa não tem foto nenhuma, não trave: a Etapa 4 diz como seguir.
+1. **Coleta visual antes da direção.** Antes de escrever `direcao.md`, junte em `material/fotos/` até 20 fotos reais do negócio (o lugar, a gente, o trabalho), cada uma com a legenda e a data de onde veio. Os sites de referência vêm do repertório na Etapa 3, guardados só pelo endereço: nenhum print de outra marca entra na pasta. Sem fotos e referências, a direção nasce da imaginação e sai genérica. Foto tirada de rede social chega pequena (perto de 640 px de largura): avise a pessoa em uma frase e peça os arquivos originais. Se a pessoa não tem foto nenhuma, não trave: a Etapa 4 diz como seguir.
 2. **Assinatura tipográfica no topo.** A primeira tela não é "título com subtítulo": é o nome ou a promessa composta como cartaz, em linhas com pesos (ou larguras) diferentes da letra de título da marca. A anatomia está em `_gerador/secoes/abertura.mjs` do molde.
 3. **Um único momento forte, com a ação logo abaixo.** A página inicial tem um pico só, o "momento mais forte" do brief: uma foto, um número ou uma frase em tamanho de cartaz. A ação principal vem logo abaixo dele, não três telas depois. Dois picos na mesma página se anulam.
 4. **Fotos reais pequenas e agrupadas, nunca esticadas.** Foto de celular ou de rede social não aguenta a tela inteira. Em grupo, cada uma no máximo do tamanho do arquivo, ela mostra o lugar e a gente de verdade. Nunca exiba uma foto maior que o arquivo dela. A anatomia está em `_gerador/secoes/fotos.mjs` do molde.
@@ -61,7 +61,7 @@ Sem marca guardada (`minha-marca/tokens.css`), faça a marca agora com a skill `
 
 Leia tudo sozinho, antes de perguntar o resto. Com o @ do Instagram e o nome do negócio com a cidade, rode `./estudio ler <nome> --instagram perfil --negocio "Nome, cidade"` (o @ vai sem a arroba: no Windows, a arroba solta some do comando) (some `--site <endereço>` ou `--google <link do Google Maps>` se a pessoa passou). Sem entrar em conta nenhuma, ele lê o Instagram (legenda, data e foto de cada publicação), o perfil do Google (endereço, telefone, horário de cada dia, nota e avaliações sem o nome de quem escreveu) e o site atual inteiro (achado pelo Google ou pela bio, se a pessoa não passou). Guarda tudo em `sites/<nome>/coleta/` e anota cada fato, com fonte e data, na parte "Lido pelo estúdio" do `fatos.md`. Leia `coleta/instagram/posts.md`, `coleta/google/lugar.json` e `coleta/site/texto.md`, e traduza cada aviso pelo código. Se o Instagram faltar, siga a ação do aviso (a extensão do Claude no Chrome, com licença da pessoa; nunca peça senha). Horário vem do perfil do Google ou da pessoa, nunca de trecho de resultado de busca. Leia também os arquivos de `referencias/`. Ler a internet é permitido; publicar ou enviar qualquer coisa, não. As fotos lidas ficam em `coleta/`; copie para `material/` só o que a pessoa mandou ou autorizou usar.
 
-Faça a coleta visual da regra 1 agora: as fotos com legenda em `material/fotos/` e os prints do ramo em `material/referencias/`.
+Faça a coleta visual da regra 1 agora: as fotos com legenda em `material/fotos/`.
 
 Escreva `fatos.md`: cada fato com a fonte e a data em que você conferiu. Fato é todo número, preço, endereço, telefone, horário, @, e-mail, nome de pessoa, ano de fundação, prêmio e depoimento. Fonte é o documento, a página (com o endereço), a foto da tabela de preços, ou "a própria pessoa disse em <data>". Sem fonte, o fato fica fora do site. Siga o formato que já vem no `fatos.md` do molde, a tabela `Fato | Fonte | Data`, uma linha por fato, escrito como aparece na página (o telefone com os mesmos dígitos, o @ igual): o comando `fatos` lê essa tabela e reprova linha sem fonte. O que o `ler` anotou já está lá: confirme com a pessoa endereço, horário e telefone, e o que ela corrigir vai para a tabela de cima, com a fonte "a própria pessoa disse em <data>" (a próxima leitura troca a parte lida inteira).
 
@@ -83,19 +83,20 @@ Mostre o brief à pessoa em texto corrido e curto (objetivo, ação principal, a
 
 ## Etapa 3. Referências reais (princípio, não cópia)
 
-Antes de desenhar, estude de 6 a 10 sites **reais** e no ar, do mesmo tipo de negócio ou com o mesmo objetivo, de preferência premiados ou de marcas que são referência no ramo. Inclua os que a pessoa indicou. Se o seu programa tiver subagentes, divida a busca entre eles, em paralelo.
+O estúdio traz um repertório de 40 sites reais, separados pelo que quem visita quer fazer. Leia `kit/repertorio/como-usar.md` e siga. Em resumo:
 
-Para cada referência, abra a página (e, se tiver ferramenta de navegador, tire uma foto) e escreva em `referencias.md`:
-- o endereço e por que ele entrou;
-- **o princípio** que faz funcionar, em uma frase (exemplo: "a foto do produto ocupa a tela inteira e o título é curto, então a vontade vem antes da explicação"; "a tabela de preços é tipografia pura, com preço alinhado, sem ícone");
-- como esse princípio serve ao objetivo **deste** brief;
-- o que **não** vale trazer (o que é da marca deles, o que não combina com o público daqui).
+1. **A escolha parte da ação principal do brief e da dúvida que a página resolve** ("o que quem chega precisa saber, ou ver, para fazer isso?"). O ramo do negócio é só contexto, nunca o critério.
+2. Abra só o arquivo da ação (`kit/repertorio/<ação>.json`), pela tabela "Da ação do brief ao arquivo" do `como-usar.md`. Ligar e chamar no WhatsApp são o canal: a tabela leva à dúvida que vem antes do contato. Compare a dúvida de cada ficha com a do brief, pelo sentido. Escolha 2 ou 3 fichas, com pelo menos **2 de outro ramo**: é delas que vem a ideia que o ramo ainda não usa.
+3. **Confira ao vivo só as escolhidas**: abra o endereço de cada uma, siga o `ondeVer` da ficha até a parte da página onde o princípio aparece e veja se ele ainda está lá. O princípio mudou: troque por outra ficha. Site que recusa leitura automática (acesso negado, tela de verificação) não saiu do ar: use o navegador do seu programa ou troque de ficha, como diz o `como-usar.md`, sem anotar conferência que não aconteceu. Nunca abra as 40.
+4. Some as referências que a pessoa indicou, no mesmo formato.
 
-Nunca copie layout, texto, foto, logo ou cor de uma referência. Referência ensina por que; a solução é desta marca.
+Escreva em `referencias.md` (a tabela do molde), para cada uma: o endereço, o ramo, o **motivo** (a dúvida que ela resolve e por que serve a este brief), o princípio em uma frase, **como fazemos aqui** (o jeito do repertório, adaptado a este negócio), **como fica no celular** e a data em que você conferiu ao vivo. Diga à pessoa, em uma ou duas frases e sem nome técnico, que ideia vai aproveitar e de onde ela veio.
+
+Guarde só o endereço: nenhum print, logo, foto ou texto de outra marca entra no site nem na pasta dele. Nunca copie layout, texto, foto, logo ou cor de uma referência. Referência ensina por que; a solução é desta marca.
 
 ## Etapa 4. Direção visual
 
-1. Confira a coleta visual (regra 1). Os prints do ramo em `material/referencias/` você junta sozinho: faltando, volte à coleta antes de escrever a direção. As fotos dependem da pessoa: se ela não tem nenhuma (o negócio vai abrir, ou não há foto agora), não trave. Anote em `brief.md` > **Insumos faltando**, siga com uma direção que compensa (tipografia como imagem, textura, cor) e diga à pessoa, em uma frase, o que fotografar com o celular.
+1. Confira a coleta visual (regra 1) e as referências da Etapa 3 em `referencias.md`. As referências você escolhe sozinho: faltando, volte à Etapa 3 antes de escrever a direção. As fotos dependem da pessoa: se ela não tem nenhuma (o negócio vai abrir, ou não há foto agora), não trave. Anote em `brief.md` > **Insumos faltando**, siga com uma direção que compensa (tipografia como imagem, textura, cor) e diga à pessoa, em uma frase, o que fotografar com o celular.
 2. Se estiverem instaladas, carregue as skills `frontend-design` e `ui-ux-pro-max`. Use-as para a direção, a tipografia, a cor e o movimento.
 3. Leia `minha-marca/marca.md` (se existir), o brief, `referencias.md` e olhe as fotos de `material/`.
 

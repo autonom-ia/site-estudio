@@ -53,7 +53,9 @@ const RASTROS = [
 const NOMES_REAIS = Object.freeze([{ arquivo: 'kit/scripts/lib/ler-site.mjs', texto: 'cardapioweb.com' }]);
 
 test('nenhum rastro do exemplo antigo de padaria: texto, nome, letra ou cor', () => {
-  const lista = arquivosDoEstudio().filter((a) => a !== ESTE && ehTexto(a));
+  // As fichas do repertório descrevem sites reais (padarias e restaurantes incluídos): é dado, não exemplo.
+  const fichaReal = (a) => rel(a).startsWith('kit/repertorio/') && a.endsWith('.json');
+  const lista = arquivosDoEstudio().filter((a) => a !== ESTE && ehTexto(a) && !fichaReal(a));
   assert.ok(lista.length > 60, `só ${lista.length} arquivos de texto`);
   const achados = [];
   for (const arquivo of lista) {
