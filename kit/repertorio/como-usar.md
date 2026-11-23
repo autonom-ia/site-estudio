@@ -15,6 +15,25 @@ São 40 fichas de sites reais e no ar, separadas pela **ação de quem visita** 
 | `orcar.json` | pedir um orçamento |
 | `participar.json` | se inscrever, matricular, doar ou aparecer no encontro |
 
+## Da ação do brief ao arquivo
+
+A ação principal do brief nem sempre tem o nome do arquivo. Ligar e chamar no WhatsApp são o canal, não a ação: o que conta é a dúvida que vem antes do contato. Pergunte-se o que a pessoa vai pedir nessa conversa e siga a tabela. Assim, o mesmo brief leva sempre ao mesmo arquivo.
+
+| Ação no brief | Arquivo |
+|---|---|
+| fazer pedido, encomendar | `pedir.json` |
+| reservar, marcar horário, agendar consulta ou aula | `reservar.json` |
+| comprar, pagar | `comprar.json` |
+| calcular, simular, cotar | `simular.json` |
+| escolher entre opções, ver como fica | `escolher.json` |
+| visitar, ir até o lugar | `visitar.json` |
+| pedir orçamento | `orcar.json` |
+| se inscrever, matricular, doar, participar | `participar.json` |
+| ligar ou chamar no WhatsApp para encomendar ou pedir algo pronto | `pedir.json` |
+| ligar ou chamar no WhatsApp para marcar consulta, sessão ou horário (dentista, advogado, salão) | `reservar.json` |
+| ligar ou chamar no WhatsApp para saber o preço de um serviço sob medida (obra, conserto, projeto) | `orcar.json` |
+| ligar ou chamar no WhatsApp para tirar dúvida antes de decidir | `escolher.json` (qual opção) ou `orcar.json` (quanto custa) |
+
 ## Só link, nunca imagem
 
 O estúdio guarda de cada referência só o endereço público e o que aprendemos com ela. Nenhum print, logo, foto ou texto de outra marca entra no estúdio, na pasta do site ou no site. As marcas citadas pertencem aos seus donos; a lista não diz que elas apoiam o estúdio.
@@ -24,7 +43,8 @@ O estúdio guarda de cada referência só o endereço público e o que aprendemo
 | Campo | O que é |
 |---|---|
 | `id` | nome curto da ficha, para citar no `referencias.md` |
-| `nome` e `link` | o site e o endereço público |
+| `nome` e `link` | o site e o endereço público (a entrada do site, que muda menos que as páginas internas) |
+| `ondeVer` | o caminho do `link` até a parte da página onde o princípio aparece. Quase nunca é a capa |
 | `ramo` | o ramo do site. É só contexto: nunca é o critério de escolha |
 | `duvida` | a dúvida de quem visita que aquela página resolve, nas palavras de quem visita |
 | `principio` | por que funciona, em uma frase |
@@ -35,9 +55,12 @@ O estúdio guarda de cada referência só o endereço público e o que aprendemo
 ## Como escolher (etapa 3 da skill `novo-site`)
 
 1. **Parta do brief, não do ramo.** Leia a ação principal e responda: "o que a pessoa que chega precisa saber, ou ver, para fazer isso?" Essa é a **dúvida que a página resolve**.
-2. Abra o arquivo da ação principal. Se a dúvida mistura duas ações (ver o lugar e reservar), abra também o da segunda. Não leia os oito.
+2. Abra o arquivo da ação principal, pela tabela "Da ação do brief ao arquivo". Se a dúvida mistura duas ações (ver o lugar e reservar), abra também o da segunda. Não leia os oito.
 3. Compare a `duvida` de cada ficha com a dúvida do brief, pelo sentido. Escolha **2 ou 3** fichas. Pelo menos **2 de outro ramo**: é nelas que mora a ideia que o ramo ainda não usa. Uma do mesmo ramo pode entrar, se ensinar algo que as outras não ensinam.
-4. **Confira ao vivo só as escolhidas.** Abra o link de cada uma com a ferramenta de ler páginas do seu programa e veja se o princípio ainda está lá. Se o site mudou ou saiu do ar, troque por outra ficha e anote a troca. Nunca abra as 40.
+4. **Confira ao vivo só as escolhidas.** Abra o `link` de cada uma, siga o `ondeVer` até a parte da página onde o princípio aparece e veja se ele ainda está lá. A capa sozinha não confere nada. Nunca abra as 40.
+   - **O site recusa leitura automática** (acesso negado, 403, 405, tela de "confirme que você é humano", ou nenhuma resposta enquanto os outros sites abrem): ele **não saiu do ar**. Abra no navegador do seu programa, se ele tiver um. Sem navegador, escolha outra ficha do mesmo arquivo e anote no `referencias.md`: "trocada: o site recusa leitura automática". Nunca escreva que saiu do ar, nem a data de uma conferência que não aconteceu.
+   - **O princípio mudou** (a página existe, mas não faz mais o que a ficha diz): troque de ficha e anote a troca.
+   - **Saiu do ar** só quando o endereço não existe (página não encontrada, domínio sem dono).
 5. Some as referências que a pessoa indicou, no mesmo formato. Se uma delas não está no repertório, escreva você a dúvida, o princípio e o `comoFazemosAqui`.
 6. Registre no `referencias.md` do site (a tabela do molde): endereço, ramo, motivo (a dúvida que ela resolve e por que serve a este brief), princípio, como fazemos aqui, como fica no celular e a data em que conferiu ao vivo.
 7. Diga à pessoa, em uma ou duas frases, o que vai aproveitar. Exemplo: "Vou usar a ideia de um site de óculos: três perguntas que diminuem as opções. No seu caso, para escolher o sabor do bolo."
@@ -81,4 +104,8 @@ Tudo roda na própria página, com os dados do `fatos.md`. Nada de servidor, con
 
 ## Quando nenhuma ficha serve
 
-Se nenhuma dúvida do repertório chega perto da do brief, procure de 2 a 3 sites reais com o mesmo objetivo (de qualquer ramo) e escreva a ficha deles no `referencias.md`, no mesmo formato. Nunca invente uma referência que você não abriu.
+Se nenhuma dúvida do repertório chega perto da do brief, mesmo depois da tabela "Da ação do brief ao arquivo", procure de 2 a 3 sites reais com o mesmo objetivo (de qualquer ramo) e escreva a ficha deles no `referencias.md`, no mesmo formato. Nunca invente uma referência que você não abriu.
+
+## Para quem mantém o estúdio
+
+`node kit/scripts/manutencao/links-do-repertorio.mjs` abre os 40 links e lista os que não respondem normalmente, separando quem recusa leitura automática (está no ar) de quem saiu do ar. Fica fora do `npm test` porque depende da internet. Ficha fora do ar se troca; ficha que só recusa leitor fica, porque a instrução do passo 4 cobre.

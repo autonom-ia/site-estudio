@@ -69,8 +69,8 @@ Mostre o brief à pessoa em texto corrido e curto (objetivo, ação principal, a
 O estúdio traz um repertório de 40 sites reais, separados pelo que quem visita quer fazer. Leia `kit/repertorio/como-usar.md` e siga. Em resumo:
 
 1. **A escolha parte da ação principal do brief e da dúvida que a página resolve** ("o que quem chega precisa saber, ou ver, para fazer isso?"). O ramo do negócio é só contexto, nunca o critério.
-2. Abra só o arquivo da ação (`kit/repertorio/<ação>.json`) e compare a dúvida de cada ficha com a do brief, pelo sentido. Escolha 2 ou 3 fichas, com pelo menos **2 de outro ramo**: é delas que vem a ideia que o ramo ainda não usa.
-3. **Confira ao vivo só as escolhidas**: abra o endereço de cada uma e veja se o princípio ainda está lá. Saiu do ar ou mudou: troque por outra ficha. Nunca abra as 40.
+2. Abra só o arquivo da ação (`kit/repertorio/<ação>.json`), pela tabela "Da ação do brief ao arquivo" do `como-usar.md`. Ligar e chamar no WhatsApp são o canal: a tabela leva à dúvida que vem antes do contato. Compare a dúvida de cada ficha com a do brief, pelo sentido. Escolha 2 ou 3 fichas, com pelo menos **2 de outro ramo**: é delas que vem a ideia que o ramo ainda não usa.
+3. **Confira ao vivo só as escolhidas**: abra o endereço de cada uma, siga o `ondeVer` da ficha até a parte da página onde o princípio aparece e veja se ele ainda está lá. O princípio mudou: troque por outra ficha. Site que recusa leitura automática (acesso negado, tela de verificação) não saiu do ar: use o navegador do seu programa ou troque de ficha, como diz o `como-usar.md`, sem anotar conferência que não aconteceu. Nunca abra as 40.
 4. Some as referências que a pessoa indicou, no mesmo formato.
 
 Escreva em `referencias.md` (a tabela do molde), para cada uma: o endereço, o ramo, o **motivo** (a dúvida que ela resolve e por que serve a este brief), o princípio em uma frase, **como fazemos aqui** (o jeito do repertório, adaptado a este negócio), **como fica no celular** e a data em que você conferiu ao vivo. Diga à pessoa, em uma ou duas frases e sem nome técnico, que ideia vai aproveitar e de onde ela veio.

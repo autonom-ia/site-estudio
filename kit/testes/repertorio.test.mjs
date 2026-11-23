@@ -15,9 +15,10 @@ const PASTA = path.join(KIT, 'repertorio');
 const ACOES = ['pedir', 'reservar', 'comprar', 'simular', 'escolher', 'visitar', 'orcar', 'participar'];
 // Os cinco jeitos de entregar a ideia num site sem servidor ("como fazemos aqui").
 const PADROES = ['troca-de-fotos', 'pedido-no-whatsapp', 'link-de-pagamento-ou-agenda', 'simulador-na-pagina', 'mapa-por-botao'];
-const CAMPOS = ['id', 'nome', 'link', 'ramo', 'duvida', 'principio', 'comoFazemosAqui', 'noCelular', 'naoTrazer'];
+// ondeVer: o caminho do link até a parte da página onde o princípio aparece (quase nunca é a capa).
+const CAMPOS = ['id', 'nome', 'link', 'ondeVer', 'ramo', 'duvida', 'principio', 'comoFazemosAqui', 'noCelular', 'naoTrazer'];
 // Texto que termina em ponto final; a dúvida termina em interrogação.
-const FRASES = ['principio', 'noCelular', 'naoTrazer'];
+const FRASES = ['ondeVer', 'principio', 'noCelular', 'naoTrazer'];
 const TEXTO_MAXIMO = 240;
 const FICHAS_MINIMO = 35;
 const FICHAS_MAXIMO = 45;
@@ -152,7 +153,8 @@ test('a skill novo-site escolhe pela ação e pela dúvida, com 2 de outro ramo,
     const inicio = skill.indexOf('## Etapa 3.');
     const etapa3 = skill.slice(inicio, skill.indexOf('## Etapa 4.'));
     assert.ok(inicio !== -1 && etapa3.length > 0, `${pasta}: sem a etapa 3`);
-    for (const trecho of ['kit/repertorio/como-usar.md', 'ação principal', 'dúvida', 'só contexto', '2 de outro ramo', 'celular', 'ao vivo', 'Nunca abra as 40', 'só o endereço']) {
+    for (const trecho of ['kit/repertorio/como-usar.md', 'ação principal', 'dúvida', 'só contexto', '2 de outro ramo', 'celular', 'ao vivo', 'Nunca abra as 40', 'só o endereço',
+      '`ondeVer`', 'recusa leitura automática', 'não saiu do ar', 'chamar no WhatsApp', 'Da ação do brief ao arquivo']) {
       assert.ok(etapa3.includes(trecho), `${pasta}: etapa 3 sem "${trecho}"`);
     }
   }
@@ -167,4 +169,48 @@ test('o repertório chega pela atualização: o kit nunca é pasta preservada', 
   const { PRESERVADOS } = await import('../scripts/lib/atualizacao.mjs');
   assert.equal(PRESERVADOS.includes('kit'), false);
   assert.ok(PRESERVADOS.includes('referencias'), 'a pasta referencias/ da pessoa continua preservada');
+});
+
+// Linhas da tabela que vem logo depois do título, sem o cabeçalho: [[célula, célula], ...].
+function tabelaDepois(texto, titulo) {
+  const inicio = texto.indexOf(titulo);
+  if (inicio === -1) return [];
+  const linhas = texto.slice(inicio).split('\n').slice(1);
+  const primeira = linhas.findIndex((l) => l.startsWith('|'));
+  if (primeira === -1) return [];
+  const fim = linhas.findIndex((l, i) => i > primeira && !l.startsWith('|'));
+  return linhas.slice(primeira + 2, fim === -1 ? undefined : fim)
+    .map((l) => l.split('|').slice(1, -1).map((c) => c.trim()));
+}
+
+test('toda ação que o brief oferece, inclusive ligar e chamar no WhatsApp, leva a um arquivo do repertório', () => {
+  const guia = fs.readFileSync(path.join(PASTA, 'como-usar.md'), 'utf8');
+  const linhas = tabelaDepois(guia, '## Da ação do brief ao arquivo');
+  assert.ok(linhas.length >= ACOES.length, 'como-usar.md sem a tabela "Da ação do brief ao arquivo"');
+  for (const [acao, destino] of linhas) {
+    const citados = ACOES.filter((a) => destino.includes(`\`${a}.json\``));
+    assert.ok(citados.length >= 1, `"${acao}" não leva a nenhum arquivo do repertório`);
+  }
+  const brief = fs.readFileSync(path.join(KIT, 'molde', 'brief.md'), 'utf8');
+  const exemplo = brief.slice(brief.indexOf('O que a pessoa faz ao abrir o site ('));
+  const oferecidas = exemplo.slice(exemplo.indexOf('(') + 1, exemplo.indexOf(')')).split(', ');
+  assert.ok(oferecidas.includes('chamar no WhatsApp') && oferecidas.includes('ligar'), oferecidas.join(', '));
+  const naTabela = linhas.map(([acao]) => acao.toLowerCase());
+  for (const a of oferecidas) assert.ok(naTabela.some((c) => c.includes(a.toLowerCase())), `a ação "${a}" do brief não está na tabela`);
+  for (const a of ACOES) assert.ok(linhas.some(([, destino]) => destino.includes(`\`${a}.json\``)), `nenhuma ação do brief leva a ${a}.json`);
+});
+
+test('o como-usar manda seguir o ondeVer e separa site que recusa leitor de site fora do ar', () => {
+  const guia = fs.readFileSync(path.join(PASTA, 'como-usar.md'), 'utf8');
+  for (const trecho of ['`ondeVer`', 'recusa leitura automática', 'não saiu do ar', '403', 'links-do-repertorio.mjs', 'Quando nenhuma ficha serve']) {
+    assert.ok(guia.includes(trecho), `como-usar.md sem "${trecho}"`);
+  }
+});
+
+test('o AGENTS.md admite a busca fora do repertório quando nenhuma ficha serve, como o como-usar', () => {
+  for (const nome of ['AGENTS.md', 'CLAUDE.md']) {
+    const texto = fs.readFileSync(path.join(RAIZ, nome), 'utf8');
+    const regra = texto.slice(texto.indexOf('**Referência é princípio, não cópia.**')).split('\n')[0];
+    assert.ok(regra.includes('kit/repertorio/') && regra.includes('nenhuma ficha serve'), `${nome}: ${regra}`);
+  }
 });
