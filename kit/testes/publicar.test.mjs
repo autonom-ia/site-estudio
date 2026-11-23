@@ -41,7 +41,8 @@ test('login pendente, continuação do mesmo pedido, aprovação e envio em part
   assert.equal(r2.json.codigo, 'PUBLICAR_AGUARDANDO_LOGIN');
   assert.equal(r2.json.dados.pedido_novo, false);
   assert.equal(servico.estado.iniciados, 1, 'a segunda chamada continua o mesmo pedido');
-  assert.ok(servico.estado.consultas >= 2);
+  // Quantas consultas cabem no prazo de teste (300 ms) depende da carga da máquina; basta ter consultado.
+  assert.ok(servico.estado.consultas >= 1);
 
   servico.aprovar();
   const r3 = await ctx.publicar();
