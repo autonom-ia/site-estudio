@@ -15,7 +15,7 @@ Comandos: `./estudio <comando>` (no PowerShell, `.\estudio.cmd <comando>`), de d
 
 Um piloto com um negócio de verdade mostrou o que leva a primeira versão de "parece modelo" para "ficou muito bom" sem rodadas a mais de revisão. Valem desde o primeiro desenho:
 
-1. **Coleta visual antes da direção.** Antes de escrever `direcao.md`, junte em `material/fotos/` até 20 fotos reais do negócio (o lugar, a gente, o trabalho), cada uma com a legenda e a data de onde veio, e em `material/referencias/` prints de 3 a 5 sites do mesmo ramo. Sem esse material na pasta, a direção nasce da imaginação e sai genérica. Foto tirada de rede social chega pequena (perto de 640 px de largura): avise a pessoa em uma frase e peça os arquivos originais.
+1. **Coleta visual antes da direção.** Antes de escrever `direcao.md`, junte em `material/fotos/` até 20 fotos reais do negócio (o lugar, a gente, o trabalho), cada uma com a legenda e a data de onde veio, e em `material/referencias/` prints de 3 a 5 sites do mesmo ramo. Sem esse material na pasta, a direção nasce da imaginação e sai genérica. Foto tirada de rede social chega pequena (perto de 640 px de largura): avise a pessoa em uma frase e peça os arquivos originais. Se a pessoa não tem foto nenhuma, não trave: a Etapa 4 diz como seguir.
 2. **Assinatura tipográfica no topo.** A primeira tela não é "título com subtítulo": é o nome ou a promessa composta como cartaz, em linhas com pesos (ou larguras) diferentes da letra de título da marca. A anatomia está em `_gerador/secoes/abertura.mjs` do molde.
 3. **Um único momento forte, com a ação logo abaixo.** A página inicial tem um pico só, o "momento mais forte" do brief: uma foto, um número ou uma frase em tamanho de cartaz. A ação principal vem logo abaixo dele, não três telas depois. Dois picos na mesma página se anulam.
 4. **Fotos reais pequenas e agrupadas, nunca esticadas.** Foto de celular ou de rede social não aguenta a tela inteira. Em grupo, cada uma no máximo do tamanho do arquivo, ela mostra o lugar e a gente de verdade. Nunca exiba uma foto maior que o arquivo dela. A anatomia está em `_gerador/secoes/fotos.mjs` do molde.
@@ -93,7 +93,7 @@ Nunca copie layout, texto, foto, logo ou cor de uma referência. Referência ens
 
 ## Etapa 4. Direção visual
 
-1. Confira a coleta visual (regra 1): `material/fotos/` e `material/referencias/` com material. Faltando, volte à coleta antes de escrever a direção.
+1. Confira a coleta visual (regra 1). Os prints do ramo em `material/referencias/` você junta sozinho: faltando, volte à coleta antes de escrever a direção. As fotos dependem da pessoa: se ela não tem nenhuma (o negócio vai abrir, ou não há foto agora), não trave. Anote em `brief.md` > **Insumos faltando**, siga com uma direção que compensa (tipografia como imagem, textura, cor) e diga à pessoa, em uma frase, o que fotografar com o celular.
 2. Se estiverem instaladas, carregue as skills `frontend-design` e `ui-ux-pro-max`. Use-as para a direção, a tipografia, a cor e o movimento.
 3. Leia `minha-marca/marca.md` (se existir), o brief, `referencias.md` e olhe as fotos de `material/`.
 

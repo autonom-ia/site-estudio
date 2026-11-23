@@ -57,7 +57,8 @@ export async function baixarFonte({ familia, pesos = null, italico = false, larg
   const itens = [];
   for (const bloco of blocos) {
     const arquivo = arquivoDoBloco(proprio, bloco);
-    if (itens.some((i) => i.arquivo === arquivo)) continue;
+    // dois @font-face no mesmo arquivo: um apagaria o outro. Melhor parar do que entregar meia letra.
+    if (itens.some((i) => i.arquivo === arquivo)) falha('FONTE_NAO_ACHADA', { familia: meta.nome, detalhe: `dois estilos no mesmo arquivo ${arquivo}` });
     itens.push({ arquivo, bloco, dados: await pegar(buscar, bloco.url, { binario: true }) });
   }
   // só agora escreve: com tudo baixado, nada fica pela metade

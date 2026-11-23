@@ -125,6 +125,47 @@ test('fonte: baixa só o alfabeto latino em .woff2 e a licença com o nome próp
   }
 });
 
+// Família estática: o css2 devolve um @font-face por peso, cada um com o seu arquivo.
+const faceEstatica = (peso) => face('latin', `https://fonts.gstatic.com/s/y/${peso}.woff2`).split('Letra Teste').join('Outra Letra').split('300 800').join(String(peso));
+const ESTATICA = {
+  [`${RAW}/ofl/outraletra/METADATA.pb`]: META_ESTATICA,
+  [`${RAW}/ofl/outraletra/OFL.txt`]: 'SIL Open Font License 1.1',
+  'https://fonts.gstatic.com/s/y/400.woff2': Buffer.from('wOF2-400'),
+  'https://fonts.gstatic.com/s/y/700.woff2': Buffer.from('wOF2-700-negrito'),
+};
+
+test('fonte: família estática guarda cada peso no seu arquivo, e baixar outro peso depois não apaga o primeiro', async () => {
+  const pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-fonte-'));
+  try {
+    const dois = catalogoDeMentira({ ...ESTATICA, 'https://fonts.googleapis.com/css2': faceEstatica(400) + faceEstatica(700) });
+    const r = await baixarFonte({ familia: 'Outra Letra', pasta, buscar: dois.buscar });
+    assert.deepEqual(r.arquivos, ['OutraLetra-400-latin.woff2', 'OutraLetra-700-latin.woff2']);
+    const faces = r.css.split('\n');
+    assert.equal(faces.length, 2, r.css);
+    assert.ok(faces[0].includes('url("fontes/OutraLetra-400-latin.woff2")') && faces[0].includes('font-weight:400;'), faces[0]);
+    assert.ok(faces[1].includes('url("fontes/OutraLetra-700-latin.woff2")') && faces[1].includes('font-weight:700;'), faces[1]);
+    assert.equal(fs.readFileSync(path.join(pasta, 'OutraLetra-700-latin.woff2'), 'utf8'), 'wOF2-700-negrito');
+    // segunda vez, só o 700: o arquivo do 400 continua o 400
+    const um = catalogoDeMentira({ ...ESTATICA, 'https://fonts.googleapis.com/css2': faceEstatica(700) });
+    await baixarFonte({ familia: 'Outra Letra', pasta, buscar: um.buscar });
+    assert.equal(fs.readFileSync(path.join(pasta, 'OutraLetra-400-latin.woff2'), 'utf8'), 'wOF2-400');
+    assert.deepEqual(conferirLetras(pasta).semLicenca, []);
+  } finally {
+    fs.rmSync(pasta, { recursive: true, force: true });
+  }
+});
+
+test('fonte: dois @font-face que cairiam no mesmo arquivo param tudo, em vez de sumir com um em silêncio', async () => {
+  const pasta = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-fonte-')), 'fontes');
+  try {
+    const { buscar } = catalogoDeMentira({ ...ESTATICA, 'https://fonts.googleapis.com/css2': faceEstatica(700) + faceEstatica(700) });
+    await assert.rejects(baixarFonte({ familia: 'Outra Letra', pasta, buscar }), (e) => e.codigo === 'FONTE_NAO_ACHADA');
+    assert.equal(fs.existsSync(pasta), false);
+  } finally {
+    fs.rmSync(path.dirname(pasta), { recursive: true, force: true });
+  }
+});
+
 test('fonte: tudo ou nada; sem licença, fora do catálogo ou com endereço estranho, nada é escrito', async () => {
   const pasta = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-fonte-')), 'fontes');
   const casos = [

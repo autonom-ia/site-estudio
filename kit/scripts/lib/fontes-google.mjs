@@ -189,7 +189,23 @@ export function enderecoPermitido(url) {
   }
 }
 
-export const arquivoDoBloco = (proprio, bloco) => `${proprio}${bloco.estilo === 'italic' ? '-Italic' : ''}-${bloco.alfabeto}.woff2`;
+const soDigitos = (texto) => [...String(texto)].filter((ch) => ch >= '0' && ch <= '9').join('');
+const ehFaixa = (valor) => String(valor).trim().includes(' ');
+
+// Nome do arquivo de um @font-face. Faixa de peso variável ("100 900"): um arquivo serve todos os
+// pesos, "Família-latin.woff2". Peso único (família estática): cada peso é um arquivo, então o peso
+// vai no nome, "Família-700-latin.woff2"; sem isso, o segundo peso apagaria o primeiro. Largura
+// fora do normal (100%) também vai: "Família-700-largura75-latin.woff2".
+export function arquivoDoBloco(proprio, bloco) {
+  const partes = [proprio];
+  if (bloco.estilo === 'italic') partes.push('Italic');
+  const unico = bloco.peso && !ehFaixa(bloco.peso);
+  if (unico) partes.push(soDigitos(bloco.peso));
+  const largura = soDigitos(bloco.largura);
+  if (unico && largura && largura !== '100' && !ehFaixa(bloco.largura)) partes.push(`largura${largura}`);
+  partes.push(bloco.alfabeto);
+  return `${partes.join('-')}.woff2`;
+}
 
 export function arquivoDaLicenca(proprio, pastaDaLicenca) {
   const l = LICENCAS.find((x) => x.pasta === pastaDaLicenca) || LICENCAS[0];
