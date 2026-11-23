@@ -48,7 +48,7 @@ O pedido do diretor de arte, do revisor de fatos e do QA começa com: "Leia prim
 
 ## 4. Como abrir os revisores
 
-Antes da primeira rodada, avise a pessoa em uma frase do tempo e do consumo: "Agora quatro olhares independentes conferem o site, cada um de um jeito. Leva alguns minutos e gasta uma parte maior do seu plano do que uma conversa comum. Enquanto isso, o site fica aberto para você olhar." Não pergunte; só avise e siga.
+Antes da primeira rodada, avise a pessoa em uma frase do tempo e do consumo: "Agora quatro olhares independentes conferem o site, cada um de um jeito. Leva uns 10 a 15 minutos; se eles pedirem ajustes, eu arrumo e eles olham de novo, até 3 vezes. Isso gasta uma parte maior do seu plano do que uma conversa comum. Enquanto isso, o site fica aberto para você olhar." Não pergunte; só avise e siga.
 
 Escolha o jeito na ordem abaixo e use o primeiro que existir:
 - **Claude Code:** use a ferramenta de subagente (Agent ou Task), **um subagente novo por lente**, os quatro em paralelo. Passe o texto da lente com os caminhos completos.

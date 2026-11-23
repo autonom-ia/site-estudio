@@ -49,9 +49,9 @@ test('foto sem largura na lista: fica a primeira (a página lista da maior para 
 });
 
 test('publicação sem JSON: legenda do og:description, data do <time>, foto do og:image', () => {
-  const lido = { jsons: [], datas: ['2026-11-03T12:00:00.000Z'], descricao: '5 curtidas - casa em 3 de novembro: "Bolo: de "laranja"". ', foto: 'https://x.example/f.jpg' };
+  const lido = { jsons: [], datas: ['2026-11-03T12:00:00.000Z'], descricao: '5 curtidas - casa em 3 de novembro: "Freio: de "disco"". ', foto: 'https://x.example/f.jpg' };
   const p = dadosDoPost(lido, 'Ab', 'u');
-  assert.equal(p.legenda, 'Bolo: de "laranja"');
+  assert.equal(p.legenda, 'Freio: de "disco"');
   assert.equal(p.data, '2026-11-03');
   assert.equal(p.de, 'etiquetas');
   assert.equal(legendaDaDescricao('sem legenda'), '');

@@ -44,7 +44,7 @@ function png(largura, altura) {
 }
 
 function perfil() {
-  const dados = { require: [['Perfil', { data: { user: { username: USUARIO, full_name: NEGOCIO, biography: 'Bolos sob encomenda.\nRua Inventada, 100.', bio_links: [{ url: 'https://wa.me/5500900001111' }], external_url: null } } }]] };
+  const dados = { require: [['Perfil', { data: { user: { username: USUARIO, full_name: NEGOCIO, biography: 'Revisão de bicicleta sob encomenda.\nRua Inventada, 100.', bio_links: [{ url: 'https://wa.me/5500900001111' }], external_url: null } } }]] };
   const links = [];
   for (let n = 1; n <= TOTAL_DE_POSTS; n += 1) links.push(`<a href="/${USUARIO}/${n === 5 ? 'reel' : 'p'}/${codigo(n)}/">publicação</a>`);
   // a grade aparece depois de carregar, como na página de verdade
@@ -78,7 +78,7 @@ function lugarDoGoogle(origem) {
   const dia = (d, h) => `<tr><td>${d}</td><td>${h}</td></tr>`;
   const avaliacao = (id, autor, estrelas, texto, quando) =>
     `<div data-review-id="${id}"><div data-review-id="${id}"><div class="d4r55">${autor}</div><span role="img" aria-label="${estrelas} estrelas"></span><span class="rsqaWe">${quando}</span><span class="wiI7pd">${texto}</span><button class="w8nwRe" onclick="this.previousElementSibling.textContent += ' e o atendimento foi ótimo.'">Mais</button></div></div>`;
-  const avaliacoes = `<div id="avaliacoes" hidden>${avaliacao('r1', AUTORES[0], 5, 'Bolo de laranja perfeito', 'há 2 semanas')}${avaliacao('r2', AUTORES[1], 4, 'Entrega no horário', 'há 1 mês')}</div>`;
+  const avaliacoes = `<div id="avaliacoes" hidden>${avaliacao('r1', AUTORES[0], 5, 'Revisão rápida perfeito', 'há 2 semanas')}${avaliacao('r2', AUTORES[1], 4, 'Entrega no horário', 'há 1 mês')}</div>`;
   const aba = '<button role="tab" aria-label="Avaliações de Casa Exemplo" onclick="document.getElementById(\'avaliacoes\').hidden = false">Avaliações</button>';
   const corpo = `<div role="main" aria-label="${NEGOCIO}"><h1>${NEGOCIO}</h1>
     <button data-item-id="address" aria-label="Endereço: Rua Inventada, 100 - Bairro Exemplo, Cidade Exemplo - UF ">x</button>
@@ -93,8 +93,8 @@ function site(rel, origem) {
   const ld = { '@context': 'https://schema.org', '@type': 'BicycleStore', name: NEGOCIO, telephone: '(00) 0000-1234', address: { '@type': 'PostalAddress', streetAddress: 'Rua Inventada, 100', addressLocality: 'Cidade Exemplo' }, openingHoursSpecification: [{ dayOfWeek: ['https://schema.org/Wednesday'], opens: '07:00', closes: '19:00' }] };
   if (rel === '/site/contato/') return pagina('<title>Contato</title>', '<h1>Contato</h1><p>Fale com a gente.</p><a href="mailto:ola@casa.example">ola@casa.example</a><a href="/site/">início</a>');
   return pagina(
-    `<title>Casa Exemplo</title><meta name="description" content="Bolos"><script type="application/ld+json">${JSON.stringify(ld)}</script>`,
-    `<h1>Bolos da casa</h1><img src="${origem}/img/site-foto.png" alt="vitrine" width="320"><a href="/site/contato/">Contato</a><a href="/site/tabela-de-precos.pdf">Tabela de preços</a><a href="https://example.com/fora">fora</a><a href="tel:+5500000001234">Ligue</a><a href="#topo">topo</a>`,
+    `<title>Casa Exemplo</title><meta name="description" content="Bicicletas"><script type="application/ld+json">${JSON.stringify(ld)}</script>`,
+    `<h1>Bicicletas da casa</h1><img src="${origem}/img/site-foto.png" alt="vitrine" width="320"><a href="/site/contato/">Contato</a><a href="/site/tabela-de-precos.pdf">Tabela de preços</a><a href="https://example.com/fora">fora</a><a href="tel:+5500000001234">Ligue</a><a href="#topo">topo</a>`,
   );
 }
 

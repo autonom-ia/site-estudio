@@ -198,7 +198,7 @@ test('conferências novas acham o que a revisão achava, sem alarme para leitor 
   const am = ck.json.dados.amarelos;
   assert.ok(am.some((v) => v.tipo === 'link-repetido' && v.detalhe.includes('"Ver o endereço" aparece 4 vezes')), JSON.stringify(am));
   assert.ok(am.some((v) => v.tipo === 'frase-repetida' && v.detalhe.includes('aparece 3 vezes')), JSON.stringify(am));
-  assert.ok(!am.some((v) => v.tipo === 'link-repetido' && v.detalhe.includes('A oficina')), 'menu e rodapé não contam como repetição');
+  assert.ok(!am.some((v) => v.tipo === 'link-repetido' && v.detalhe.includes('Onde fica')), 'o link que o menu e o rodapé repetem (2 vezes) fica abaixo do limite de 4');
 
   const ax = estudio('acessibilidade', 'conferencias', '--tamanhos', '768');
   assert.equal(ax.codigo, 2, JSON.stringify(ax.json.dados));

@@ -23,7 +23,7 @@ minha-marca/
 
 ### 1. Juntar o que já existe (uma pergunta por vez)
 1. "Qual é o nome do seu negócio ou projeto, e o que ele faz, em uma frase?"
-2. "Onde o seu negócio aparece hoje? Pode ser o Instagram, um site, o nome no Google, ou uma foto do logo, do cartão ou da fachada." Se tiver, abra e leia as imagens e as páginas. Tire as cores reais delas (hex), não as que você imagina.
+2. "Onde o seu negócio aparece hoje? Pode ser o Instagram, um site, o nome no Google, ou uma foto do logo, do cartão ou da fachada. Se tiver arquivos, pode me mandar aqui mesmo." Se tiver, abra e leia as imagens e as páginas. Tire as cores reais delas (hex), não as que você imagina.
 3. Opcional: "Quer me dar três palavras do jeito que a sua marca fala? Se preferir, eu decido pelo que vi." (exemplo: acolhedora, direta, curiosa). Se a pessoa delegar, tire o tom do que ela já escreve no Instagram ou no site.
 4. Só se não houver nada para olhar: proponha 3 direções de cor e letra, cada uma com um nome e uma frase do porquê, e deixe a pessoa escolher. A recomendada primeiro, com ★.
 

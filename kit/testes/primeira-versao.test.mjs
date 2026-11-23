@@ -51,17 +51,25 @@ const RASTROS = [
 // Nomes reais que contêm um rastro e não vêm do exemplo: o domínio de cardápio de terceiros que o
 // `ler` recusa (lib/ler-site.mjs). Cada um vale só no arquivo dito aqui.
 const NOMES_REAIS = Object.freeze([{ arquivo: 'kit/scripts/lib/ler-site.mjs', texto: 'cardapioweb.com' }]);
+// As fichas do repertório descrevem sites reais, e alguns são de comida: a palavra vem do site de
+// verdade, não do exemplo antigo. Cada par vale só naquele arquivo e só para aquela palavra.
+const RASTROS_DE_SITE_REAL = Object.freeze([
+  { arquivo: 'kit/repertorio/visitar.json', rastro: 'padaria' },
+  { arquivo: 'kit/repertorio/comprar.json', rastro: 'café' },
+  { arquivo: 'kit/repertorio/pedir.json', rastro: 'cardápio' },
+  { arquivo: 'kit/repertorio/pedir.json', rastro: 'bakery' },
+  { arquivo: 'kit/repertorio/reservar.json', rastro: 'cardápio' },
+]);
+const deSiteReal = (arquivo, rastro) => RASTROS_DE_SITE_REAL.some((r) => r.arquivo === arquivo && r.rastro === rastro);
 
 test('nenhum rastro do exemplo antigo de padaria: texto, nome, letra ou cor', () => {
-  // As fichas do repertório descrevem sites reais (padarias e restaurantes incluídos): é dado, não exemplo.
-  const fichaReal = (a) => rel(a).startsWith('kit/repertorio/') && a.endsWith('.json');
-  const lista = arquivosDoEstudio().filter((a) => a !== ESTE && ehTexto(a) && !fichaReal(a));
+  const lista = arquivosDoEstudio().filter((a) => a !== ESTE && ehTexto(a));
   assert.ok(lista.length > 60, `só ${lista.length} arquivos de texto`);
   const achados = [];
   for (const arquivo of lista) {
     let baixo = fs.readFileSync(arquivo, 'utf8').toLowerCase();
     for (const n of NOMES_REAIS) if (rel(arquivo) === n.arquivo) baixo = baixo.split(n.texto).join('');
-    for (const r of RASTROS) if (baixo.includes(r)) achados.push(`${rel(arquivo)}: "${r}"`);
+    for (const r of RASTROS) if (baixo.includes(r) && !deSiteReal(rel(arquivo), r)) achados.push(`${rel(arquivo)}: "${r}"`);
   }
   assert.deepEqual(achados, []);
 });

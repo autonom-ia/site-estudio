@@ -84,7 +84,7 @@ Essas pastas são suas: a atualização do estúdio nunca mexe nelas.
 
 ## Para quem quer mexer no estúdio
 
-- Comandos: `./estudio <comando>` (no Windows, `.\estudio.cmd`). Por site: `novo`, `ler`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`, `antes`, `comparar`, `escolher`, `pacote`, `publicar`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`. A última linha de cada comando é um JSON numa linha só: `{"ok","comando","codigo","resumo","arquivos","avisos","dados"}`. Saída 0 é ok, 1 é erro, 2 é reprovado na conferência.
+- Comandos: `./estudio <comando>` (no Windows, `.\estudio.cmd`). Por site: `novo`, `ler`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `revisao`, `abrir`, `antes`, `comparar`, `escolher`, `pacote`, `publicar`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`. Da marca: `fonte`. A última linha de cada comando é um JSON numa linha só: `{"ok","comando","codigo","resumo","arquivos","avisos","dados"}`. Saída 0 é ok, 1 é erro, 2 é reprovado na conferência.
 - Testes: `npm test` (Node 22 ou mais novo). Os testes que precisam de navegador são pulados quando não há Chrome.
 - Instruções do assistente: a fonte é o `AGENTS.md` e `.claude/skills/`. O `CLAUDE.md` e `.agents/skills/` são gerados por `./estudio espelhar`; `./estudio espelhar --conferir` reprova se estiverem diferentes.
 - Regras do código: Node sem dependência em tempo de execução, versões fixas em `instalar/versoes.env`, sem expressão regular, página lida pelo próprio navegador (DOM via protocolo de depuração do Chrome), nunca como texto.
