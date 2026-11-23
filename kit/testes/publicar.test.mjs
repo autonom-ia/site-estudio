@@ -31,6 +31,8 @@ test('login pendente, continuação do mesmo pedido, aprovação e envio em part
   assert.equal(r1.codigo, 1);
   assert.equal(r1.json.codigo, 'PUBLICAR_AGUARDANDO_LOGIN');
   assert.deepEqual([r1.json.dados.codigo_curto, r1.json.dados.endereco, r1.json.dados.pedido_novo], ['BCDF-GHJK', `${servico.base}/estudio/ligar`, true]);
+  assert.ok(r1.json.resumo.includes('BCDF-GHJK') && r1.json.resumo.includes(`${servico.base}/estudio/ligar`), r1.json.resumo);
+  assert.ok(!r1.json.resumo.includes('{{'), 'o resumo sai preenchido');
   const pedido = JSON.parse(fs.readFileSync(arquivoPedido(ctx.ferr), 'utf8'));
   assert.ok(!r1.saida.includes(pedido.codigo_dispositivo), 'o código de dispositivo não sai');
   if (!NO_WINDOWS) assert.equal(modo(arquivoPedido(ctx.ferr)), 0o600);
@@ -46,6 +48,7 @@ test('login pendente, continuação do mesmo pedido, aprovação e envio em part
   assert.equal(r3.codigo, 0, r3.saida);
   assert.equal(r3.json.codigo, 'PUBLICADO');
   assert.deepEqual([r3.json.dados.versao, r3.json.dados.endereco], [1, `${servico.base}/no-ar/meu-site/`]);
+  assert.ok(r3.json.resumo.includes(`${servico.base}/no-ar/meu-site/`) && !r3.json.resumo.includes('{{'), r3.json.resumo);
   const chave = JSON.parse(fs.readFileSync(arquivoChave(ctx.ferr), 'utf8')).chave;
   assert.ok(chave.startsWith('se_pub_'));
   assert.ok(!r3.saida.includes(chave) && !r3.saida.includes(chave.slice(7)), 'a chave nunca aparece na saída');
@@ -156,4 +159,24 @@ test('mensagens da publicação existem, para leigo, e .gitignore cobre .ferrame
   }
   const linhas = fs.readFileSync(path.join(RAIZ, '.gitignore'), 'utf8').split('\n').map((l) => l.trim());
   assert.ok(linhas.includes('.ferramentas/'));
+});
+
+test('resumo: todo {{campo}} do mensagens.json é preenchido com os dados do resultado', async () => {
+  const { montarResultado, resultadoDeErro } = await import('../scripts/lib/saida.mjs');
+  const comCampos = Object.entries(MENSAGENS).filter(([, m]) => m.texto.includes('{{'));
+  assert.ok(comCampos.length >= 4, 'há mensagens com campo');
+  for (const [codigo, m] of comCampos) {
+    const campos = m.texto.split('{{').slice(1).map((pedaco) => pedaco.split('}}')[0]);
+    const dados = Object.fromEntries(campos.map((campo) => [campo, `valor-${campo}`]));
+    const ok = montarResultado('publicar', { ok: true, codigo, dados });
+    const erro = resultadoDeErro(new KitErro(codigo, dados));
+    for (const r of [ok, erro]) {
+      assert.ok(!r.resumo.includes('{{') && !r.resumo.includes('}}'), `${codigo}: ${r.resumo}`);
+      for (const campo of campos) assert.ok(r.resumo.includes(`valor-${campo}`), `${codigo} sem ${campo}`);
+    }
+  }
+  const semDado = montarResultado('publicar', { ok: true, codigo: 'PUBLICAR_VERSAO_VOLTOU', dados: {} });
+  assert.ok(!semDado.resumo.includes('{{'), 'campo sem dado não vaza o marcador');
+  const objeto = montarResultado('publicar', { ok: true, codigo: 'PUBLICAR_VERSAO_VOLTOU', dados: { versao: { x: 1 } } });
+  assert.ok(!objeto.resumo.includes('[object'), 'só texto e número entram no resumo');
 });
