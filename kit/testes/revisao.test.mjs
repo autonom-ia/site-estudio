@@ -91,6 +91,28 @@ test('trajetória: visitante sem ajuda bloqueia sozinho e o geral acima de 7 é 
   assert.deepEqual(trajetoria([rodada(1, { arte: 9, geral: 9, fatos: 9, qa: 9 })]).notas[0].alertas, []);
 });
 
+test('trajetória: oferta ou próximo passo que não batem com o brief também põem o geral no teto 7 (a régua manda)', () => {
+  const naoBate = { oferta: 'aluguel de bicicleta', proximo_passo: 'ligar', sem_ajuda: true, bate_com_brief: false };
+  const acima = trajetoria([rodada(1, { arte: 9, geral: 8.5, fatos: 9, qa: 9 }, { visitante: naoBate })]);
+  assert.deepEqual(acima.notas[0].alertas, ['visitante_nao_bate', 'geral_acima_do_teto']);
+  // o teto vale, mas só o "sem ajuda" é bloqueio: a lente no teto já segura a rodada pela nota mínima
+  assert.equal(acima.notas[0].bloqueios, 0);
+  const noTeto = trajetoria([rodada(1, { arte: 9, geral: 7, fatos: 9, qa: 9 }, { visitante: naoBate })]);
+  assert.deepEqual(noTeto.notas[0].alertas, ['visitante_nao_bate']);
+  const os2 = trajetoria([rodada(1, { arte: 9, geral: 8, fatos: 9, qa: 9 }, { visitante: { ...naoBate, sem_ajuda: false } })]);
+  assert.deepEqual(os2.notas[0].alertas, ['visitante_sem_ajuda', 'visitante_nao_bate', 'geral_acima_do_teto']);
+  // "bate_com_brief" é sim ou não; ausente (rodada antiga) não acusa nada
+  const ruim = validarRodada(rodada(1, { arte: 8, geral: 8, fatos: 8, qa: 8 }, { visitante: { ...naoBate, bate_com_brief: 'não' } }), 1);
+  assert.ok(ruim.some((e) => e.includes('visitante.bate_com_brief')), ruim.join(' | '));
+  assert.deepEqual(validarRodada(rodada(1, { arte: 8, geral: 8, fatos: 8, qa: 8 }), 1), []);
+});
+
+test('skill revisar: o teto 7 do diretor geral segue a régua (oferta, próximo passo ou sem ajuda)', () => {
+  assert.ok(REGUA.includes('oferta ou próximo passo errados, ou não dá para fazer sem ajuda'));
+  assert.ok(SKILL.includes('"bate_com_brief"'), 'a skill manda gravar se as respostas batem com o brief');
+  assert.ok(SKILL.includes('Visitante com resposta que não bate com o brief, ou com "não" na terceira pergunta, põe o diretor geral no teto 7'));
+});
+
 test('metas separadas: rodadas por passou_na_rodada; estabilidade só por reavaliação do mesmo estado', () => {
   const r1 = rodada(1, { arte: 7.3, geral: 7.4, fatos: 7.4, qa: 8.6 });
   // sem reavaliação, a estabilidade não foi medida: nada de "0" por falta de dado

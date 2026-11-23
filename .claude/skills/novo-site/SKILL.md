@@ -7,7 +7,7 @@ description: Faz um site de primeira linha do começo ao fim no Site Estúdio, p
 
 Um site de primeira linha não nasce de um molde: nasce de uma ideia visual clara, de tipografia com personalidade, de foto de verdade e de movimento que conduz o olhar. O que separa um site premium de um genérico é direção, não programa. O caminho é sempre o mesmo, e a pessoa decide em dois portões: o brief e o piloto.
 
-Comandos: `./estudio <comando>` (no PowerShell, `.\estudio.cmd <comando>`), de dentro da pasta do estúdio. Leia só a última linha (JSON): `ok`, `codigo`, `resumo`, `arquivos`, `avisos`, `dados`. Saída 2 = reprovado: corrija pela causa e rode de novo. Traduza `codigo` por `kit/mensagens.json`. No Codex, `ler`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight` e `abrir` rodam fora da área protegida.
+Comandos: `./estudio <comando>` (no PowerShell, `.\estudio.cmd <comando>`), de dentro da pasta do estúdio. Leia só a última linha (JSON): `ok`, `codigo`, `resumo`, `arquivos`, `avisos`, `dados`. Saída 2 = reprovado: corrija pela causa e rode de novo. Traduza `codigo` por `kit/mensagens.json`. No Codex, os comandos que rodam fora da área protegida são os do `AGENTS.md`, seção das caixinhas de permissão.
 
 **Regra de ouro:** código só confere fato (link morto, letra que não carregou, contraste, texto vazando, número sem fonte). Gosto, história, layout e voz são seus e dos revisores; a palavra final é da pessoa. Nenhum comando diz se o site é bonito.
 
@@ -15,7 +15,7 @@ Comandos: `./estudio <comando>` (no PowerShell, `.\estudio.cmd <comando>`), de d
 
 Um piloto com um negócio de verdade mostrou o que leva a primeira versão de "parece modelo" para "ficou muito bom" sem rodadas a mais de revisão. Valem desde o primeiro desenho:
 
-1. **Coleta visual antes da direção.** Antes de escrever `direcao.md`, junte em `material/fotos/` até 20 fotos reais do negócio (o lugar, a gente, o trabalho), cada uma com a legenda e a data de onde veio. Os sites de referência vêm do repertório na Etapa 3, guardados só pelo endereço: nenhum print de outra marca entra na pasta. Sem fotos e referências, a direção nasce da imaginação e sai genérica. Foto tirada de rede social chega pequena (perto de 640 px de largura): avise a pessoa em uma frase e peça os arquivos originais. Se a pessoa não tem foto nenhuma, não trave: a Etapa 4 diz como seguir.
+1. **Coleta visual antes da direção.** Antes de escrever `direcao.md`, junte em `material/fotos/` até 20 fotos reais do negócio (o lugar, a gente, o trabalho), cada uma com a legenda e a data de onde veio. Entram só as fotos que a pessoa mandou e as lidas que ela autorizou no portão 1 (o brief). Foto que a pessoa manda vai para `material/fotos/` com a legenda e a data; se ela pôs em `referencias/`, copie de lá. Os sites de referência vêm do repertório na Etapa 3, guardados só pelo endereço: nenhum print de outra marca entra na pasta. Sem fotos e referências, a direção nasce da imaginação e sai genérica. Foto tirada de rede social chega pequena: avise a pessoa em uma frase e peça os arquivos originais. Se a pessoa não tem foto nenhuma, não trave: a Etapa 4 diz como seguir.
 2. **Assinatura tipográfica no topo.** A primeira tela não é "título com subtítulo": é o nome ou a promessa composta como cartaz, em linhas com pesos (ou larguras) diferentes da letra de título da marca. A anatomia está em `_gerador/secoes/abertura.mjs` do molde.
 3. **Um único momento forte, com a ação logo abaixo.** A página inicial tem um pico só, o "momento mais forte" do brief: uma foto, um número ou uma frase em tamanho de cartaz. A ação principal vem logo abaixo dele, não três telas depois. Dois picos na mesma página se anulam.
 4. **Fotos reais pequenas e agrupadas, nunca esticadas.** Foto de celular ou de rede social não aguenta a tela inteira. Em grupo, cada uma no máximo do tamanho do arquivo, ela mostra o lugar e a gente de verdade. Nunca exiba uma foto maior que o arquivo dela. A anatomia está em `_gerador/secoes/fotos.mjs` do molde.
@@ -34,6 +34,9 @@ piloto aprovado: <data e as palavras da pessoa, ou "não">
 revisão: <rodada N, nota>
 avisos aceitos: <cada amarelo que ficou de propósito, com o porquê>
 próximo passo: <uma frase>
+
+## Pendências
+- <o que só a pessoa resolve, como confirmar um horário ou autorizar uma foto; apague quando ela resolver>
 ```
 
 Se a sessão cair, você volta daqui. Aprovação só vale com as palavras da pessoa, copiadas sem resumir. "Pode seguir", "faz tudo", "capricha" ditos antes de ver o brief ou o piloto não aprovam nada: mostre e espere.
@@ -57,13 +60,13 @@ Todo o resto você descobre lendo, e propõe no brief em vez de perguntar: para 
 
 Depois das duas, uma mensagem só, opcional: "Quer me contar mais alguma coisa? Um site de que você gosta, uma cor que não quer, fotos que estão no computador. Se preferir, eu decido." com "Pode decidir por mim ★" e "Quero contar". Gosto visual e sites favoritos são sempre opcionais: se a pessoa delegar, siga sem perguntar de novo. Se ela não tiver Instagram, site nem Google, siga só com a primeira resposta e diga no brief o que falta.
 
-Sem marca guardada (`minha-marca/tokens.css`), faça a marca agora com a skill `minha-marca`, sem repetir perguntas: ela usa as duas respostas e o que você leu. Copie a marca para o site como diz o `MARCA_DE_EXEMPLO`.
+Leia tudo sozinho, antes de perguntar o resto. Com o @ do Instagram e o nome do negócio com a cidade, rode `./estudio ler <nome> --instagram perfil --negocio "Nome, cidade"` (o @ vai sem a arroba: no Windows, a arroba solta some do comando) (some `--site <endereço>` ou `--google <link do Google Maps>` se a pessoa passou). Rode com timeout de 10 minutos (no Claude Code, `timeout` 600000). Sem entrar em conta nenhuma, ele lê o Instagram (legenda, data e foto de cada publicação), o perfil do Google (endereço, telefone, horário de cada dia, nota e avaliações sem o nome de quem escreveu) e o site atual inteiro (achado pelo Google ou pela bio, se a pessoa não passou). Guarda tudo em `sites/<nome>/coleta/` e anota cada fato, com fonte e data, na parte "Lido pelo estúdio" do `fatos.md`. Leia `coleta/instagram/posts.md`, `coleta/google/lugar.json` e `coleta/site/texto.md`, e traduza cada aviso pelo código. Se o Instagram faltar, siga a ação do aviso (a extensão do Claude no Chrome, com licença da pessoa; nunca peça senha). Horário vem do perfil do Google ou da pessoa, nunca de trecho de resultado de busca. Leia também os arquivos de `referencias/`. Ler a internet é permitido; publicar ou enviar qualquer coisa, não. As fotos lidas ficam em `coleta/`; copie para `material/fotos/` só as que a pessoa autorizar no portão 1 (Etapa 2).
 
-Leia tudo sozinho, antes de perguntar o resto. Com o @ do Instagram e o nome do negócio com a cidade, rode `./estudio ler <nome> --instagram perfil --negocio "Nome, cidade"` (o @ vai sem a arroba: no Windows, a arroba solta some do comando) (some `--site <endereço>` ou `--google <link do Google Maps>` se a pessoa passou). Sem entrar em conta nenhuma, ele lê o Instagram (legenda, data e foto de cada publicação), o perfil do Google (endereço, telefone, horário de cada dia, nota e avaliações sem o nome de quem escreveu) e o site atual inteiro (achado pelo Google ou pela bio, se a pessoa não passou). Guarda tudo em `sites/<nome>/coleta/` e anota cada fato, com fonte e data, na parte "Lido pelo estúdio" do `fatos.md`. Leia `coleta/instagram/posts.md`, `coleta/google/lugar.json` e `coleta/site/texto.md`, e traduza cada aviso pelo código. Se o Instagram faltar, siga a ação do aviso (a extensão do Claude no Chrome, com licença da pessoa; nunca peça senha). Horário vem do perfil do Google ou da pessoa, nunca de trecho de resultado de busca. Leia também os arquivos de `referencias/`. Ler a internet é permitido; publicar ou enviar qualquer coisa, não. As fotos lidas ficam em `coleta/`; copie para `material/` só o que a pessoa mandou ou autorizou usar.
+Sem marca guardada (`minha-marca/tokens.css`), faça a marca agora com a skill `minha-marca`, sem nenhuma pergunta e sem amostra para aprovar: ela usa as duas respostas e o que você leu, e quem mostra a marca à pessoa é o piloto (portão 2). Copie a marca para o site como diz o `MARCA_DE_EXEMPLO`.
 
-Faça a coleta visual da regra 1 agora: as fotos com legenda em `material/fotos/`.
+Faça a coleta visual da regra 1 agora com as fotos que a pessoa mandou, e separe as fotos lidas que servem ao site para mostrar no portão 1. As que ela autorizar ali entram em `material/fotos/` com a legenda e a data.
 
-Escreva `fatos.md`: cada fato com a fonte e a data em que você conferiu. Fato é todo número, preço, endereço, telefone, horário, @, e-mail, nome de pessoa, ano de fundação, prêmio e depoimento. Fonte é o documento, a página (com o endereço), a foto da tabela de preços, ou "a própria pessoa disse em <data>". Sem fonte, o fato fica fora do site. Siga o formato que já vem no `fatos.md` do molde, a tabela `Fato | Fonte | Data`, uma linha por fato, escrito como aparece na página (o telefone com os mesmos dígitos, o @ igual): o comando `fatos` lê essa tabela e reprova linha sem fonte. O que o `ler` anotou já está lá: confirme com a pessoa endereço, horário e telefone, e o que ela corrigir vai para a tabela de cima, com a fonte "a própria pessoa disse em <data>" (a próxima leitura troca a parte lida inteira).
+Escreva `fatos.md`: cada fato com a fonte e a data em que você conferiu. Fato é todo número, preço, endereço, telefone, horário, @, e-mail, nome de pessoa, ano de fundação, prêmio e depoimento. Fonte é o documento, a página (com o endereço), a foto da tabela de preços, ou "a própria pessoa disse em <data>". Sem fonte, o fato fica fora do site. Siga o formato que já vem no `fatos.md` do molde, a tabela `Fato | Fonte | Data`, uma linha por fato, escrito como aparece na página (o telefone com os mesmos dígitos, o @ igual): o comando `fatos` lê essa tabela e reprova linha sem fonte. O que o `ler` anotou já está lá. Endereço, horário e telefone lidos não viram pergunta separada: você confirma no portão 1 (Etapa 2), na mesma pergunta do brief. O que ela confirmar ou corrigir vai para a tabela de cima, com a fonte "a própria pessoa disse em <data>" (a próxima leitura troca a parte lida inteira).
 
 **Todo texto da página nasce de uma linha do `fatos.md`.** Não só número e contato: cada frase sobre o negócio (o que faz, como faz, para quem, desde quando) tem a linha dela, escrita como a fonte diz. A frase da página pode ser mais bonita que a linha, mas nunca diz mais do que ela: não generalize ("o melhor do bairro"), não invente costume, lugar ou produto que a fonte não cita. Sem linha, a frase sai ou vira pergunta para a pessoa. O comando `fatos` confere número, contato e @; a frase quem confere é o revisor de fatos (skill `revisar`), lendo uma por uma contra o `fatos.md`.
 
@@ -79,7 +82,7 @@ Escreva `sites/<nome>/brief.md` por cima do molde, com:
 - **Como saber se deu certo** (mais ligações, mais mensagens, mais pedidos), em palavras simples.
 - **Insumos faltando**: o que você assumiu por falta de material, e o que melhora se a pessoa mandar.
 
-Mostre o brief à pessoa em texto corrido e curto (objetivo, ação principal, as páginas e o que cada uma diz), sem tabela técnica. Pergunte: "Esse é o caminho do site. Posso buscar referências e desenhar o começo?" com "Pode ★", "Quero mudar algo". Ajuste até aprovar. Grave a aprovação no `andamento.md`.
+Mostre o brief à pessoa em texto corrido e curto (objetivo, ação principal, as páginas e o que cada uma diz), sem tabela técnica. Logo abaixo, mostre o endereço, o horário e o telefone que o estúdio leu, como estão no `fatos.md`, e as fotos lidas que você quer usar no site (abra as fotos para ela ver). Pergunte uma vez só: "Esse é o caminho do site. Está certo, e posso usar estas fotos?" com "Pode ★", "Quero mudar algo". O sim aprova o brief, confirma os dados mostrados e autoriza as fotos mostradas: passe os dados para a tabela de cima do `fatos.md` e copie as fotos para `material/fotos/` com a legenda e a data. Foto que ela recusar fica só em `coleta/`. Ajuste até aprovar. Grave a aprovação no `andamento.md`.
 
 ## Etapa 3. Referências reais (princípio, não cópia)
 
@@ -90,7 +93,7 @@ O estúdio traz um repertório de 40 sites reais, separados pelo que quem visita
 3. **Confira ao vivo só as escolhidas**: abra o endereço de cada uma, siga o `ondeVer` da ficha até a parte da página onde o princípio aparece e veja se ele ainda está lá. O princípio mudou: troque por outra ficha. Site que recusa leitura automática (acesso negado, tela de verificação) não saiu do ar: use o navegador do seu programa ou troque de ficha, como diz o `como-usar.md`, sem anotar conferência que não aconteceu. Nunca abra as 40.
 4. Some as referências que a pessoa indicou, no mesmo formato.
 
-Escreva em `referencias.md` (a tabela do molde), para cada uma: o endereço, o ramo, o **motivo** (a dúvida que ela resolve e por que serve a este brief), o princípio em uma frase, **como fazemos aqui** (o jeito do repertório, adaptado a este negócio), **como fica no celular** e a data em que você conferiu ao vivo. Diga à pessoa, em uma ou duas frases e sem nome técnico, que ideia vai aproveitar e de onde ela veio.
+Escreva em `referencias.md` (a tabela do molde), para cada uma: o endereço, o ramo, o **motivo** (a dúvida que ela resolve e por que serve a este brief), o princípio em uma frase, **como fazemos aqui** (o jeito do repertório, adaptado a este negócio), **como fica no celular**, a data em que você conferiu ao vivo e, se trocou de ficha, a **observação** (como "trocada: o site recusa leitura automática"). Diga à pessoa, em uma ou duas frases e sem nome técnico, que ideia vai aproveitar e de onde ela veio.
 
 Guarde só o endereço: nenhum print, logo, foto ou texto de outra marca entra no site nem na pasta dele. Nunca copie layout, texto, foto, logo ou cor de uma referência. Referência ensina por que; a solução é desta marca.
 
@@ -165,7 +168,7 @@ Rode também `./estudio desempenho <nome>` (`DESEMPENHO_MEDIDO`, números em `da
 
 ## Etapa 9. Revisão
 
-A pessoa não espera de tela vazia. Antes de começar, rode `./estudio abrir <nome>` e diga o texto de `ANDAMENTO_ABRI`. Depois, antes de cada etapa, uma frase de andamento de `kit/mensagens.json`: `ANDAMENTO_CONFERENCIA` (preflight e desempenho), `ANDAMENTO_FOTOS` (prints), `ANDAMENTO_OLHARES` (as 4 lentes), `ANDAMENTO_AJUSTES` (correções) e `ANDAMENTO_PRONTO` (passou). Nunca diga nota, número de vezes nem nome de etapa técnica.
+A pessoa não espera de tela vazia. Antes de começar, rode `./estudio abrir <nome>` e diga o texto de `ANDAMENTO_ABRI`. Depois, antes de cada etapa, uma frase de andamento de `kit/mensagens.json`: `ANDAMENTO_CONFERENCIA` (preflight e desempenho), `ANDAMENTO_FOTOS` (prints), `ANDAMENTO_OLHARES` (as 4 lentes; na primeira vez, o aviso da skill `revisar` vai no lugar dele), `ANDAMENTO_AJUSTES` (correções) e `ANDAMENTO_PRONTO` (passou). Nunca diga nota, número de vezes nem nome de etapa técnica.
 
 Skill `revisar`. Ela chama 4 revisores independentes e devolve nota e problemas. Meta 8,5, até 3 rodadas. Não bateu na terceira: mostre à pessoa o que falta e deixe ela decidir.
 
@@ -175,7 +178,7 @@ Skill `revisar`. Ela chama 4 revisores independentes e devolve nota e problemas.
 2. `./estudio pacote <nome>` (`PACOTE_PRONTO`): empacota a pasta `site/` num arquivo `.zip` pronto para hospedar, em `arquivos.zip` (`sites/<nome>/<nome>-site.zip`).
 3. `./estudio abrir <nome>` e diga: "Está pronto. Abri o site para você ver." Abra também, no seu computador, o lugar onde o arquivo do site ficou, para a pessoa ver onde ele está.
 4. Diga, em poucas linhas: "O seu site está guardado no seu computador. Deixei pronto o arquivo para pôr no ar, e nada foi publicado."
-5. Pergunte: "Quer pôr o site no ar agora? Eu mostro o passo a passo." com "Quero ★" e "Depois". Se sim, skill `hospedar`.
+5. Pergunte: "Quer pôr o site no ar agora?" com "Quero ★" e "Depois". Se sim, skill `hospedar`.
 6. Atualize `andamento.md` com `etapa: entregue`, a data e onde está o pacote.
 
 Pergunte uma vez: "Quer guardar algo deste site como regra para os próximos? (um tom, uma cor, um tipo de parte que funcionou)" Se sim, acrescente em `minha-marca/marca.md`.
@@ -197,8 +200,8 @@ Pergunte uma vez: "Quer guardar algo deste site como regra para os próximos? (u
 1. Leia `andamento.md`, `brief.md`, `direcao.md` e as fotos mais recentes em `revisao/`.
 2. Mudança de conteúdo (texto, preço, foto, página nova): atualize o brief e o `fatos.md` primeiro, depois a parte no `_gerador/`, `montar`, `preflight`, `prints` (leia as páginas mexidas, nos quatro tamanhos) e, se mudou mais de 3 partes, uma rodada de `revisar`.
 3. Mudança de visual geral, ou pedido vago: siga o "Pedido vago: antes e depois" numa parte de teste e peça aprovação antes de mexer nas outras.
-4. Gere o pacote de novo e lembre a pessoa de subir o arquivo novo na hospedagem (skill `hospedar`).
+4. Gere o pacote de novo. Se o site está em sites.autonomia.site, publique de novo com o sim dela (skill `hospedar`); se está em outro lugar, lembre a pessoa de subir o arquivo novo onde ele estiver hospedado.
 
 ## Onde você para e pergunta
 
-Na coleta (só as duas perguntas, e a opcional), no brief (portão 1), no antes e depois, no piloto (portão 2), quando aparece fato novo sem fonte, e quando a revisão não bate a meta na terceira rodada. Nada mais: o resto é com você.
+Na coleta (só as duas perguntas, e a opcional), no brief (portão 1, que na mesma pergunta confirma o endereço, o horário e o telefone lidos e pede licença para usar as fotos lidas), no antes e depois, no piloto (portão 2), quando aparece fato novo sem fonte, quando uma correção da revisão contraria o que a pessoa aprovou, e quando a revisão não bate a meta na terceira rodada. A marca do primeiro site não abre pergunta nenhuma (a skill `minha-marca` vinda daqui não pergunta). Nada mais: o resto é com você.

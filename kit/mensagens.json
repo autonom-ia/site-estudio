@@ -56,7 +56,7 @@
     "acao": "Ofereça a skill minha-marca. Depois de criar minha-marca/tokens.css, copie para site/assets/marca/ do site só tokens.css, a pasta fontes/ (arquivos .woff2, .woff ou .ttf e as licenças OFL) e o logo.svg ou logo.png. Nunca copie marca.md nem outro arquivo de minha-marca/: tudo em site/ vai para o ar."
   },
   "FONTE_BAIXADA": {
-    "texto": "Baixei a letra {{familia}} já leve ({{kb}} KB), com a licença dela.",
+    "texto": "Baixei a letra {{familia}} já leve, com a licença dela.",
     "acao": "Cole dados.css no topo do tokens.css da mesma marca, no lugar das linhas @font-face antigas dessa família, e use dados.familia nas variáveis --fonte-titulo ou --fonte-texto. A licença fica ao lado, com o nome da família (dados.licenca): nunca apague nem renomeie para OFL.txt."
   },
   "FONTE_NAO_ACHADA": {
@@ -221,7 +221,7 @@
   },
   "DESEMPENHO_MEDIDO": {
     "texto": "Medi o peso e a velocidade de cada página.",
-    "acao": "Resuma dados.medidas para a pessoa (peso, LCP, CLS no celular com 4G). Não é reprovação: são números para decidir."
+    "acao": "Use dados.medidas (peso, LCP e CLS no celular com 4G) para achar ganho fácil: foto grande demais, letra que não precisa. Não é reprovação. À pessoa, só palavras simples, como \"abre rápido no celular\" ou \"a página inicial ainda demora um pouco no celular\": nunca número, sigla ou nome de medida."
   },
   "ARQUIVO_PESADO": {
     "texto": "Um arquivo do site está pesado.",
@@ -265,7 +265,7 @@
   },
   "REVISAO_PRONTA": {
     "texto": "Preparei o que os especialistas vão ler antes de olhar o site.",
-    "acao": "Inclua arquivos.contexto no pacote de cada revisor, como primeira leitura. dados.notas mostra cada rodada (alertas incluídos); dados.metas diz se passou em até 2 rodadas e se a reavaliação ficou estável (null = não medida)."
+    "acao": "Não diga este texto à pessoa: durante a revisão, só as frases ANDAMENTO_* vão a ela. Inclua arquivos.contexto no pacote de cada revisor, como primeira leitura. dados.notas mostra cada rodada (alertas incluídos). dados.metas é indicador interno do estúdio: \"em_ate_2_rodadas\" mede se passou em até 2 rodadas e \"estabilidade\" se a reavaliação ficou estável (null = não medida). A regra da revisão continua sendo até 3 rodadas: não pare nem entregue antes por causa desse indicador."
   },
   "RODADA_ILEGIVEL": {
     "texto": "Não consegui ler as anotações da conferência anterior. Vou arrumar antes de seguir.",
@@ -349,7 +349,7 @@
   },
   "ANDAMENTO_OLHARES": {
     "texto": "Quatro olhares independentes estão avaliando o site: a arte, a mensagem, os fatos e o funcionamento.",
-    "acao": "Diga quando abrir as 4 lentes da skill revisar."
+    "acao": "Diga quando abrir as 4 lentes da skill revisar, a partir da segunda vez. Na primeira, não diga este texto: o aviso da skill revisar (seção 4, com os quatro olhares, o tempo e o consumo) vai no lugar dele, para a pessoa não ouvir a mesma coisa duas vezes."
   },
   "ANDAMENTO_AJUSTES": {
     "texto": "Eles acharam pontos para melhorar. Estou ajustando e já confiro de novo.",
@@ -361,7 +361,7 @@
   },
   "PACOTE_PRONTO": {
     "texto": "O site está pronto para pôr no ar, guardado num arquivo só.",
-    "acao": "Diga arquivos.zip e ofereça a skill hospedar (GitHub Pages, Netlify ou Cloudflare Pages). Anotações (.md) e arquivos-fonte de desenho ficam fora do zip (dados.fora_do_pacote). O arquivo .nojekyll e a pasta .well-known/, se existirem, vão no zip de propósito."
+    "acao": "Diga arquivos.zip e ofereça a skill hospedar. Anotações (.md) e arquivos-fonte de desenho ficam fora do zip (dados.fora_do_pacote). O arquivo .nojekyll e a pasta .well-known/, se existirem, vão no zip de propósito."
   },
   "PACOTE_ARQUIVO_PRIVADO": {
     "texto": "Ainda não preparei o arquivo para pôr no ar: há no site arquivos que não podem ir para a internet (senha, chave, configuração, cópia de segurança ou rascunho, arquivo oculto ou atalho).",
@@ -413,7 +413,7 @@
   },
   "PUBLICAR_NOME_RECUSADO": {
     "texto": "Esse nome não pode virar endereço de site. Ele precisa ter de 2 a 40 letras, números ou hífen, e não pode ser um nome reservado.",
-    "acao": "Veja dados.detalhe. Proponha à pessoa outro nome curto para o site, crie o site com esse nome (ou copie site/ para ele) e publique de novo."
+    "acao": "Veja dados.detalhe. Proponha à pessoa um nome curto e livre para o endereço. Com o sim dela para o endereço novo, siga \"Nome recusado ou endereço de outra pessoa\" na skill hospedar: copie sites/<nome>/ inteiro para sites/<novo>/ (nunca só site/), rode ./estudio montar <novo> e a conferência completa do passo 1 da skill hospedar em <novo>, e só então publique <novo>. O sim para o endereço novo vale como a confirmação desta publicação."
   },
   "PUBLICAR_CHAVE_RECUSADA": {
     "texto": "O acesso deste computador deixou de valer. Preciso que você autorize de novo.",
@@ -421,7 +421,7 @@
   },
   "PUBLICAR_SITE_DE_OUTRA_PESSOA": {
     "texto": "Esse endereço já é de outra pessoa. Vamos escolher outro nome para o seu site.",
-    "acao": "Proponha à pessoa um nome parecido e livre, crie o site com esse nome e publique de novo. Nunca tente publicar por cima do site de outra pessoa."
+    "acao": "Proponha à pessoa um nome curto, parecido e livre para o endereço. Com o sim dela para o endereço novo, siga \"Nome recusado ou endereço de outra pessoa\" na skill hospedar: copie sites/<nome>/ inteiro para sites/<novo>/ (nunca só site/), rode ./estudio montar <novo> e a conferência completa do passo 1 da skill hospedar em <novo>, e só então publique <novo>. O sim para o endereço novo vale como a confirmação desta publicação. Nunca tente publicar por cima do site de outra pessoa."
   },
   "PUBLICAR_LIMITE_DE_SITES": {
     "texto": "Você chegou ao número máximo de sites no ar.",
@@ -429,7 +429,7 @@
   },
   "PUBLICAR_SITE_GRANDE_DEMAIS": {
     "texto": "O site ficou grande demais para publicar aqui.",
-    "acao": "Veja dados.detalhe. Reduza fotos e vídeos (o desempenho mostra os arquivos mais pesados), tire de site/ o que nenhuma página usa e publique de novo."
+    "acao": "Veja dados.detalhe. Reduza fotos e vídeos (o desempenho mostra os arquivos mais pesados) e tire de site/ o que nenhuma página usa. Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
   },
   "PUBLICAR_LIMITE_DO_DIA": {
     "texto": "Você já publicou muitas vezes hoje. Amanhã dá para publicar de novo.",
@@ -461,7 +461,7 @@
   },
   "PUBLICAR_PACOTE_RECUSADO": {
     "texto": "O serviço recusou o site por causa de um arquivo que não pode ir para a internet.",
-    "acao": "Veja dados.detalhe e dados.codigo_do_servico, mostre à pessoa o arquivo citado, tire-o de site/ (guarde em material/, se for dela), confira de novo e publique."
+    "acao": "Veja dados.detalhe e dados.codigo_do_servico, mostre à pessoa o arquivo citado e tire-o de site/ (guarde em material/, se for dela). Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
   },
   "PUBLICAR_RECUSADO": {
     "texto": "O serviço de publicação não aceitou o pedido agora.",
@@ -497,7 +497,7 @@
   },
   "LER_OK": {
     "texto": "Li o Instagram, o perfil do Google e o site atual. Cada informação ficou anotada com de onde veio e quando.",
-    "acao": "Leia arquivos.coleta (instagram/posts.md, google/lugar.json, site/texto.md) e a parte \"Lido pelo estúdio\" de fatos.md. Confirme com a pessoa endereço, horário e telefone antes de pôr no site. Foto lida só vai para material/ com a autorização dela."
+    "acao": "Leia arquivos.coleta (instagram/posts.md, google/lugar.json, site/texto.md) e a parte \"Lido pelo estúdio\" de fatos.md. Não pergunte nada agora: o endereço, o horário e o telefone lidos e as fotos lidas que servem ao site vão para o portão 1 da skill novo-site (o brief), na mesma pergunta: \"Está certo, e posso usar estas fotos?\". Foto lida só vai para material/fotos/ com o sim dela ali."
   },
   "LER_COM_AVISOS": {
     "texto": "Li o que deu. Uma parte faltou, e eu explico qual.",
@@ -520,8 +520,8 @@
     "acao": "Confira o @ com a pessoa (dados.instagram); se estava errado, rode de novo. Se estava certo: Com a extensão do Claude no Chrome conectada (Claude Code): peça licença à pessoa, abra o perfil numa aba nova do Chrome dela (que já está na conta dela), role a grade e abra cada publicação que falta; anote legenda, data e endereço em coleta/instagram/posts.md (a fonte é o endereço da publicação). Nunca peça senha nem entre na conta por ela. Sem a extensão, ou no Codex: peça à pessoa, em referencias/, as fotos e os textos que faltam. O desenho da leitura com login está em docs/ler-instagram-com-login.md."
   },
   "LER_FOTOS_PEQUENAS": {
-    "texto": "As fotos do Instagram chegam com no máximo {{maior_largura}} pontos de largura. Para foto grande no site, as originais ficam bem melhores.",
-    "acao": "Peça à pessoa as fotos originais (as do celular dela) na pasta referencias/. Use as do Instagram só em tamanho pequeno, nunca esticadas."
+    "texto": "As fotos do Instagram chegam pequenas. Para foto grande no site, as originais ficam bem melhores.",
+    "acao": "Peça à pessoa as fotos originais (as do celular dela). Se ela puser em referencias/, copie para material/fotos/ do site com a legenda e a data. Use as do Instagram só em tamanho pequeno, nunca esticadas (dados.maior_largura é a maior largura lida)."
   },
   "LER_GOOGLE_NAO_ACHOU": {
     "texto": "Não achei o negócio no Google pelo nome.",

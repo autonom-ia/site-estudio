@@ -58,12 +58,12 @@ O estúdio guarda de cada referência só o endereço público e o que aprendemo
 2. Abra o arquivo da ação principal, pela tabela "Da ação do brief ao arquivo". Se a dúvida mistura duas ações (ver o lugar e reservar), abra também o da segunda. Não leia os oito.
 3. Compare a `duvida` de cada ficha com a dúvida do brief, pelo sentido. Escolha **2 ou 3** fichas. Pelo menos **2 de outro ramo**: é nelas que mora a ideia que o ramo ainda não usa. Uma do mesmo ramo pode entrar, se ensinar algo que as outras não ensinam.
 4. **Confira ao vivo só as escolhidas.** Abra o `link` de cada uma, siga o `ondeVer` até a parte da página onde o princípio aparece e veja se ele ainda está lá. A capa sozinha não confere nada. Nunca abra as 40.
-   - **O site recusa leitura automática** (acesso negado, 403, 405, tela de "confirme que você é humano", ou nenhuma resposta enquanto os outros sites abrem): ele **não saiu do ar**. Abra no navegador do seu programa, se ele tiver um. Sem navegador, escolha outra ficha do mesmo arquivo e anote no `referencias.md`: "trocada: o site recusa leitura automática". Nunca escreva que saiu do ar, nem a data de uma conferência que não aconteceu.
+   - **O site recusa leitura automática** (acesso negado, 403, 405, tela de "confirme que você é humano", ou nenhuma resposta enquanto os outros sites abrem): ele **não saiu do ar**. Abra no navegador do seu programa, se ele tiver um. Se esse navegador for o da própria pessoa (como a extensão do Claude no Chrome), peça licença antes, como no `ler`. Sem navegador, escolha outra ficha do mesmo arquivo e anote na coluna Observação do `referencias.md`: "trocada: o site recusa leitura automática". Nunca escreva que saiu do ar, nem a data de uma conferência que não aconteceu.
    - **O princípio mudou** (a página existe, mas não faz mais o que a ficha diz): troque de ficha e anote a troca.
    - **Saiu do ar** só quando o endereço não existe (página não encontrada, domínio sem dono).
 5. Some as referências que a pessoa indicou, no mesmo formato. Se uma delas não está no repertório, escreva você a dúvida, o princípio e o `comoFazemosAqui`.
-6. Registre no `referencias.md` do site (a tabela do molde): endereço, ramo, motivo (a dúvida que ela resolve e por que serve a este brief), princípio, como fazemos aqui, como fica no celular e a data em que conferiu ao vivo.
-7. Diga à pessoa, em uma ou duas frases, o que vai aproveitar. Exemplo: "Vou usar a ideia de um site de óculos: três perguntas que diminuem as opções. No seu caso, para escolher o sabor do bolo."
+6. Registre no `referencias.md` do site (a tabela do molde): endereço, ramo, motivo (a dúvida que ela resolve e por que serve a este brief), princípio, como fazemos aqui, como fica no celular, a data em que conferiu ao vivo e, se houver, a observação (a troca de ficha e o porquê).
+7. Diga à pessoa, em uma ou duas frases, o que vai aproveitar. Exemplo: "Vou usar a ideia de um site de óculos: três perguntas que diminuem as opções. No seu caso, para escolher o tamanho do quadro da bicicleta."
 
 ## Os cinco jeitos de fazer aqui
 

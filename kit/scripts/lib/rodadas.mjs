@@ -9,7 +9,7 @@
 // revisao/rodada-N.json (escrito pela skill revisar, junto do rodada-N.md):
 // { "rodada": N,
 //   "notas": { "arte": 7.8, "geral": 8.0, "fatos": 8.5, "qa": 9.0 },
-//   "visitante": { "oferta": "…", "proximo_passo": "…", "sem_ajuda": true },
+//   "visitante": { "oferta": "…", "proximo_passo": "…", "sem_ajuda": true, "bate_com_brief": true },
 //   "bloqueios": ["…"],
 //   "aceitos": [{ "lente": "arte", "pagina": "index.html", "problema": "…", "conserto": "…" }],
 //   "recusados": [{ "lente": "fatos", "problema": "…", "porque": "…" }],
@@ -39,6 +39,7 @@ function errosDoVisitante(v) {
   const erros = [];
   for (const campo of ['oferta', 'proximo_passo']) if (!ehTexto(v[campo])) erros.push(`"visitante.${campo}" precisa ser a resposta do visitante`);
   if (typeof v.sem_ajuda !== 'boolean') erros.push('"visitante.sem_ajuda" precisa ser true ou false');
+  if (v.bate_com_brief !== undefined && typeof v.bate_com_brief !== 'boolean') erros.push('"visitante.bate_com_brief" precisa ser true ou false');
   return erros;
 }
 
@@ -93,9 +94,15 @@ export function lerRodadas(pastaRevisao, ate) {
 }
 
 // O que o código impõe sozinho, sem depender do orquestrador copiar para "bloqueios".
+// O teto 7 do diretor geral segue a régua: oferta ou próximo passo que não batem com o brief
+// (bate_com_brief: false), ou o passo que não dá para fazer sem ajuda (sem_ajuda: false).
+// Só o "sem ajuda" é bloqueio; o "não bate" segura a rodada pela nota do geral.
 function alertasDaRodada(r) {
-  if (r.visitante.sem_ajuda !== false) return [];
-  return r.notas.geral > META.teto_geral_visitante ? ['visitante_sem_ajuda', 'geral_acima_do_teto'] : ['visitante_sem_ajuda'];
+  const alertas = [];
+  if (r.visitante.sem_ajuda === false) alertas.push('visitante_sem_ajuda');
+  if (r.visitante.bate_com_brief === false) alertas.push('visitante_nao_bate');
+  if (alertas.length && r.notas.geral > META.teto_geral_visitante) alertas.push('geral_acima_do_teto');
+  return alertas;
 }
 
 function resumoDaRodada(r) {

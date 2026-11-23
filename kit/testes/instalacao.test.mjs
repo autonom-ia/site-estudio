@@ -31,6 +31,11 @@ test('instalação numa entrada só: "tudo" no Mac e no Windows, liberado nas pe
   }
   // o que apaga ou move fica pedindo licença
   for (const p of permitidos) for (const perigo of ['desinstalar', 'mudar-pasta', 'rm ']) assert.equal(p.includes(perigo), false, p);
+  // publicar sempre pede licença no Claude Code, mesmo com o ./estudio liberado: "ask" vence "allow"
+  const perguntar = lerJson('.claude/settings.json').permissions.ask;
+  for (const p of ['Bash(./estudio publicar:*)', 'Bash(./estudio.cmd publicar:*)', 'Bash(.\\estudio.cmd publicar:*)', 'PowerShell(.\\estudio.cmd publicar *)', 'PowerShell(./estudio.cmd publicar *)']) {
+    assert.ok(perguntar.includes(p), p);
+  }
   // o I-01 não é pergunta: a caixinha do "tudo" é o sim da pessoa
   const i01 = lerJson('instalar/mensagens.json').textos['I-01'];
   assert.equal(i01.opcoes, undefined);

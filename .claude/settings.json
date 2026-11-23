@@ -26,6 +26,13 @@
       "Edit(./referencias/**)",
       "Write(./referencias/**)"
     ],
+    "ask": [
+      "Bash(./estudio publicar:*)",
+      "Bash(./estudio.cmd publicar:*)",
+      "Bash(.\\estudio.cmd publicar:*)",
+      "PowerShell(.\\estudio.cmd publicar *)",
+      "PowerShell(./estudio.cmd publicar *)"
+    ],
     "deny": [
       "Bash(rm -rf:*)",
       "Bash(git push:*)"

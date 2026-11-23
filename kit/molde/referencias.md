@@ -4,6 +4,8 @@
 > pela dúvida que a página resolve, mais as que a pessoa indicou. Pelo menos 2 de outro ramo. Só o
 > endereço: nenhuma imagem de outra marca entra aqui nem no site. O PRINCÍPIO, nunca o layout.
 
-| Endereço | Ramo | Motivo (a dúvida que resolve) | Princípio | Como fazemos aqui | No celular | Conferida ao vivo em |
-|---|---|---|---|---|---|---|
-|  |  |  |  |  |  |  |
+| Endereço | Ramo | Motivo (a dúvida que resolve) | Princípio | Como fazemos aqui | No celular | Conferida ao vivo em | Observação |
+|---|---|---|---|---|---|---|---|
+|  |  |  |  |  |  |  |  |
+
+> Observação: a troca de ficha e o porquê, como "trocada: o site recusa leitura automática". Vazia quando não houve.

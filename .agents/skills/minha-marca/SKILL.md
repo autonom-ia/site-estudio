@@ -1,6 +1,6 @@
 ---
 name: minha-marca
-description: Registra a marca da pessoa no Site Estúdio (cores, letras, logo e tom) em minha-marca/tokens.css e minha-marca/marca.md, confere o contraste e mostra uma página de amostra com a marca aplicada, no computador e no celular, para aprovação. Use logo depois da instalação, quando faltar minha-marca/tokens.css, ou quando a pessoa quiser mudar cores, letras, logo ou o jeito de falar dos sites.
+description: Registra a marca da pessoa no Site Estúdio (cores, letras, logo e tom) em minha-marca/tokens.css e minha-marca/marca.md, confere o contraste e, quando usada sozinha, mostra uma página de amostra com a marca aplicada, no computador e no celular, para aprovação (vinda da novo-site, não pergunta nada: quem mostra a marca é o piloto). Use logo depois da instalação, quando faltar minha-marca/tokens.css, ou quando a pessoa quiser mudar cores, letras, logo ou o jeito de falar dos sites.
 ---
 
 # Minha marca
@@ -20,6 +20,8 @@ minha-marca/
 ```
 
 ## Passo a passo
+
+**Vinda da skill `novo-site` (o primeiro site), não pergunte nada.** Nem a pergunta 3, nem as 3 direções da pergunta 4, nem a aprovação da amostra do passo 6: a marca nasce junto com o primeiro site. O tom sai do que a pessoa já escreve (Instagram, site atual) e a cor sai das peças lidas (logo, fachada, fotos); sem nada para olhar, você escolhe a direção pelo ramo e pelo que ela contou, e anota no `marca.md` de onde veio cada escolha. Faça os passos 1 a 5 sem perguntas e pule o passo 6: quem mostra a marca à pessoa é o piloto da `novo-site` (portão 2), e o que ela pedir ali muda a marca também. Usada sozinha (a pessoa pediu para criar ou mudar a marca), siga o passo a passo inteiro, com as perguntas e a amostra.
 
 ### 1. Juntar o que já existe (uma pergunta por vez)
 1. "Qual é o nome do seu negócio ou projeto, e o que ele faz, em uma frase?"
