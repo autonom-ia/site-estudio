@@ -52,7 +52,8 @@ export function preencher(texto, dados) {
       saida += `{{${parte}`;
       continue;
     }
-    const valor = dados && typeof dados === 'object' ? dados[parte.slice(0, fim)] : undefined;
+    const campo = parte.slice(0, fim);
+    const valor = dados && typeof dados === 'object' && Object.hasOwn(dados, campo) ? dados[campo] : undefined;
     const trecho = typeof valor === 'string' || typeof valor === 'number' ? String(valor) : '';
     saida += trecho + parte.slice(fim + 2);
   }
@@ -91,7 +92,7 @@ export function montarResultado(comando, resultado) {
     ok,
     comando,
     codigo: resultado.codigo || (ok ? 'OK' : 'DESCONHECIDO'),
-    resumo: resultado.resumo || textoDoCodigo(resultado.codigo, resultado.dados) || '',
+    resumo: resultado.resumo || textoDoCodigo(resultado.codigo, limpar(resultado.dados || {})) || '',
     arquivos: resultado.arquivos || {},
     avisos: limpar(resultado.avisos || []),
     dados: limpar(resultado.dados === undefined ? {} : resultado.dados),
@@ -104,7 +105,7 @@ export function imprimirResultado(comando, resultado) {
 
 export function resultadoDeErro(erro) {
   if (erro instanceof KitErro) {
-    return { ok: false, codigo: erro.codigo, dados: erro.dados, resumo: textoDoCodigo(erro.codigo, erro.dados) || erro.codigo, sair: erro.sair };
+    return { ok: false, codigo: erro.codigo, dados: erro.dados, resumo: textoDoCodigo(erro.codigo, limpar(erro.dados || {})) || erro.codigo, sair: erro.sair };
   }
   const detalhe = sanear(String((erro && erro.stack) || erro)).split('\n').slice(0, 6).join('\n');
   return { ok: false, codigo: 'DESCONHECIDO', dados: { detalhe }, resumo: textoDoCodigo('DESCONHECIDO'), sair: 1 };
