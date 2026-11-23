@@ -494,5 +494,57 @@
   "PUBLICAR_VERSAO_RUIM": {
     "texto": "Essa versão guardada do site não tem uma página inicial que funcione. Nada mudou no ar.",
     "acao": "Pergunte à pessoa qual outra versão ela quer, ou volte sem número, para a anterior."
+  },
+  "LER_OK": {
+    "texto": "Li o Instagram, o perfil do Google e o site atual. Cada informação ficou anotada com de onde veio e quando.",
+    "acao": "Leia arquivos.coleta (instagram/posts.md, google/lugar.json, site/texto.md) e a parte \"Lido pelo estúdio\" de fatos.md. Confirme com a pessoa endereço, horário e telefone antes de pôr no site. Foto lida só vai para material/ com a autorização dela."
+  },
+  "LER_COM_AVISOS": {
+    "texto": "Li o que deu. Uma parte faltou, e eu explico qual.",
+    "acao": "Traduza cada aviso pelo código dele. O que foi lido está em arquivos.coleta e na parte \"Lido pelo estúdio\" de fatos.md."
+  },
+  "LER_NADA": {
+    "texto": "Não consegui ler nenhuma página do negócio agora.",
+    "acao": "Traduza os avisos. Confira com a pessoa o @ e o nome com a cidade e rode de novo. Se o Instagram não abriu, siga a ação de LER_INSTAGRAM_FALHOU."
+  },
+  "LER_SEM_ENDERECO": {
+    "texto": "Preciso do @ do Instagram ou do nome do negócio para começar a ler.",
+    "acao": "Pergunte o @ e o nome com a cidade e rode ./estudio ler <nome> --instagram perfil --negocio \"Nome, cidade\" (o @ sem a arroba)."
+  },
+  "LER_INSTAGRAM_POUCOS": {
+    "texto": "Do Instagram, sem entrar na conta, consegui ler {{posts}} publicações. Se faltar alguma, dá para ler o resto pela extensão do Claude no Chrome.",
+    "acao": "Diga o texto. Se a pessoa quiser mais publicações: Com a extensão do Claude no Chrome conectada (Claude Code): peça licença à pessoa, abra o perfil numa aba nova do Chrome dela (que já está na conta dela), role a grade e abra cada publicação que falta; anote legenda, data e endereço em coleta/instagram/posts.md (a fonte é o endereço da publicação). Nunca peça senha nem entre na conta por ela. Sem a extensão, ou no Codex: peça à pessoa, em referencias/, as fotos e os textos que faltam. O desenho da leitura com login está em docs/ler-instagram-com-login.md."
+  },
+  "LER_INSTAGRAM_FALHOU": {
+    "texto": "Não consegui ler o Instagram sem entrar na conta. Dá para ler pela extensão do Claude no Chrome.",
+    "acao": "Confira o @ com a pessoa (dados.instagram); se estava errado, rode de novo. Se estava certo: Com a extensão do Claude no Chrome conectada (Claude Code): peça licença à pessoa, abra o perfil numa aba nova do Chrome dela (que já está na conta dela), role a grade e abra cada publicação que falta; anote legenda, data e endereço em coleta/instagram/posts.md (a fonte é o endereço da publicação). Nunca peça senha nem entre na conta por ela. Sem a extensão, ou no Codex: peça à pessoa, em referencias/, as fotos e os textos que faltam. O desenho da leitura com login está em docs/ler-instagram-com-login.md."
+  },
+  "LER_FOTOS_PEQUENAS": {
+    "texto": "As fotos do Instagram chegam com no máximo {{maior_largura}} pontos de largura. Para foto grande no site, as originais ficam bem melhores.",
+    "acao": "Peça à pessoa as fotos originais (as do celular dela) na pasta referencias/. Use as do Instagram só em tamanho pequeno, nunca esticadas."
+  },
+  "LER_GOOGLE_NAO_ACHOU": {
+    "texto": "Não achei o negócio no Google pelo nome.",
+    "acao": "Se dados.motivo for \"bloqueado\", o Google pediu para confirmar que é uma pessoa: peça o link de compartilhar do perfil no Google Maps e rode de novo com --google <link>. Se for \"nao-achou\", pergunte o nome como aparece no Google e a cidade, e rode de novo com --negocio."
+  },
+  "LER_GOOGLE_PRIMEIRO_DA_LISTA": {
+    "texto": "Achei mais de um lugar com esse nome no Google e fiquei com {{escolhido}}. É esse mesmo?",
+    "acao": "Confirme com a pessoa (os outros nomes estão em dados.outros). Se for outro, rode de novo com --google e o link certo do Google Maps, ou com --negocio e a cidade."
+  },
+  "LER_GOOGLE_SEM_HORARIO": {
+    "texto": "O perfil do Google não mostra o horário de funcionamento.",
+    "acao": "Pergunte o horário à pessoa e anote em fatos.md com a fonte \"a própria pessoa disse em <data>\". Nunca use horário de trecho de resultado de busca."
+  },
+  "LER_GOOGLE_FALHOU": {
+    "texto": "Não consegui abrir o perfil do Google agora.",
+    "acao": "Leia dados.detalhe. Rode de novo uma vez; se repetir, peça à pessoa o link do perfil no Google Maps e rode com --google <link>."
+  },
+  "LER_SITE_OUTRO_ENDERECO": {
+    "texto": "O endereço do site leva para outra página, que não parece ser do negócio. Não li essa página.",
+    "acao": "Confira com a pessoa se dados.final é o site do próprio negócio. Se for, rode de novo com --site <dados.final>. Se não for (loja de pedidos, link curto, página de links ou rede social), siga sem o site e não use nada dessa página."
+  },
+  "LER_SITE_FALHOU": {
+    "texto": "Não consegui abrir o site atual.",
+    "acao": "Confira o endereço com a pessoa (dados.endereco) e rode de novo com --site. Se o site não existe mais, siga sem ele."
   }
 }

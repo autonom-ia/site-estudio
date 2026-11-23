@@ -59,7 +59,7 @@ Rode tudo de dentro da pasta do estúdio.
 | Windows, Git Bash | `./estudio <comando>` | o mesmo instalador do Windows, com barra normal |
 
 - As skills escrevem `./estudio`. No PowerShell, troque por `.\estudio.cmd`.
-- Comandos de cada site: `novo`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `revisao`, `abrir` (a prévia com celular e computador lado a lado), `antes`, `comparar` e `escolher` (o antes e depois de um pedido vago), `pacote`, `publicar`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`. Da marca: `fonte` (baixa uma letra livre já leve, com a licença).
+- Comandos de cada site: `novo`, `ler`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `revisao`, `abrir` (a prévia com celular e computador lado a lado), `antes`, `comparar` e `escolher` (o antes e depois de um pedido vago), `pacote`, `publicar`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`. Da marca: `fonte` (baixa uma letra livre já leve, com a licença).
 - **Leia só a última linha** de cada comando. Ela é um JSON numa linha só: `{"ok","comando","codigo","resumo","arquivos","avisos","dados"}`.
 - **Saída 0** é ok, **1** é erro de execução, **2** é reprovado na conferência (corrija pela causa e rode de novo).
 - **Traduza o código.** Os do instalador estão em `instalar/mensagens.json`; os dos comandos, em `kit/mensagens.json`. Diga à pessoa o `texto` (trocando os `{{ }}` pelos `dados`) e faça a `acao`. Cada aviso em `avisos` também tem `codigo`.
@@ -67,7 +67,7 @@ Rode tudo de dentro da pasta do estúdio.
 - **O site é montado, não editado.** O HTML de `site/` sai do `./estudio montar <nome>`, a partir de `_gerador/`. Mude a parte em `_gerador/secoes/` e monte de novo; edição feita direto num `index.html` de `site/` some na próxima montagem. A pasta `site/assets/` (CSS, JavaScript, fotos, fontes, marca) o `montar` não toca: o estilo e o movimento você escreve direto em `site/assets/css/site.css` e `site/assets/js/site.js`.
 - Comando que falha duas vezes: skill `consertar`.
 
-**Caixinhas de permissão.** O Claude Code e o Codex pedem licença antes de mexer no computador. Antes de cada ação que gera caixinha, avise em uma frase o que é e diga que pode aprovar. No Codex, peça para sair da área protegida (com `sandbox_permissions: "require_escalated"` no próprio comando) no instalador inteiro (ele baixa da internet) e nos comandos que abrem o navegador escondido: `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`, `comparar`; e no `fonte`, que baixa a letra da internet. O `publicar` também sai da área protegida, porque fala com sites.autonomia.site pela internet. Dê ao `publicar` até 5 minutos para terminar (no Claude Code, `timeout` 300000). Os textos prontos estão em `instalar/mensagens.json` (`CODEX-INTERNET`, `CODEX-FORA-DA-AREA`).
+**Caixinhas de permissão.** O Claude Code e o Codex pedem licença antes de mexer no computador. Antes de cada ação que gera caixinha, avise em uma frase o que é e diga que pode aprovar. No Codex, peça para sair da área protegida (com `sandbox_permissions: "require_escalated"` no próprio comando) no instalador inteiro (ele baixa da internet) e nos comandos que abrem o navegador escondido: `ler` (também lê a internet), `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`, `comparar`; e no `fonte`, que baixa a letra da internet. O `publicar` também sai da área protegida, porque fala com sites.autonomia.site pela internet. Dê ao `publicar` até 5 minutos para terminar (no Claude Code, `timeout` 300000). Os textos prontos estão em `instalar/mensagens.json` (`CODEX-INTERNET`, `CODEX-FORA-DA-AREA`).
 
 ## 5. Regras
 
@@ -90,7 +90,7 @@ Rode tudo de dentro da pasta do estúdio.
 | Pasta ou arquivo | O que é |
 |---|---|
 | `minha-marca/` | Da pessoa: `tokens.css` (cores e letras), `fontes/`, logo, `marca.md` (tom e regras). O `novo` copia para cada site só `tokens.css`, `fontes/` e o logo; o `marca.md` nunca vai para `site/` |
-| `sites/<nome>/` | Da pessoa: `brief.md`, `fatos.md`, `referencias.md`, `direcao.md`, `andamento.md`, `material/`, `_gerador/` (a fonte), `site/` (o site montado), `revisao/`, `<nome>.zip` |
+| `sites/<nome>/` | Da pessoa: `brief.md`, `fatos.md`, `referencias.md`, `direcao.md`, `andamento.md`, `material/`, `coleta/` (o que o `ler` leu das páginas públicas), `_gerador/` (a fonte), `site/` (o site montado), `revisao/`, `<nome>.zip` |
 | `referencias/` | Da pessoa: fotos, logos, documentos com os fatos, endereços de sites de que ela gosta |
 | `kit/` | O motor do estúdio. Não edite: a atualização sobrescreve. O molde do site está no `kit/` e o `novo` copia |
 | `instalar/` | O instalador e os textos da instalação. Não edite |

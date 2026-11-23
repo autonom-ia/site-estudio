@@ -48,12 +48,17 @@ const RASTROS = [
   '#f4efe4', '#eae2d2', '#1d1a2e', '#575270', '#8f4a0e', '#16122a', '#221c3e', '#bab4d0', '#ffb86e', '#ffe2b8',
 ];
 
+// Nomes reais que contêm um rastro e não vêm do exemplo: o domínio de cardápio de terceiros que o
+// `ler` recusa (lib/ler-site.mjs). Cada um vale só no arquivo dito aqui.
+const NOMES_REAIS = Object.freeze([{ arquivo: 'kit/scripts/lib/ler-site.mjs', texto: 'cardapioweb.com' }]);
+
 test('nenhum rastro do exemplo antigo de padaria: texto, nome, letra ou cor', () => {
   const lista = arquivosDoEstudio().filter((a) => a !== ESTE && ehTexto(a));
   assert.ok(lista.length > 60, `só ${lista.length} arquivos de texto`);
   const achados = [];
   for (const arquivo of lista) {
-    const baixo = fs.readFileSync(arquivo, 'utf8').toLowerCase();
+    let baixo = fs.readFileSync(arquivo, 'utf8').toLowerCase();
+    for (const n of NOMES_REAIS) if (rel(arquivo) === n.arquivo) baixo = baixo.split(n.texto).join('');
     for (const r of RASTROS) if (baixo.includes(r)) achados.push(`${rel(arquivo)}: "${r}"`);
   }
   assert.deepEqual(achados, []);
