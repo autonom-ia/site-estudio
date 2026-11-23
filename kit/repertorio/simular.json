@@ -1,0 +1,76 @@
+{
+  "acao": "simular",
+  "visitanteQuer": "Calcular antes de decidir: saber quanto custa, quanto economiza ou quanto recebe.",
+  "fichas": [
+    {
+      "id": "wise",
+      "nome": "Wise",
+      "link": "https://wise.com/br/",
+      "ramo": "câmbio e remessa",
+      "duvida": "Quanto chega do outro lado, e quanto eu pago de taxa?",
+      "principio": "A calculadora está na primeira tela e mostra o resultado com cada taxa separada, então a transparência é a própria venda.",
+      "comoFazemosAqui": {
+        "padrao": "simulador-na-pagina",
+        "texto": "Conta feita na própria página, com os valores e as taxas do fatos.md; o resultado aparece na hora e o botão leva o valor simulado para o WhatsApp."
+      },
+      "noCelular": "Dois campos grandes, um embaixo do outro, com teclado numérico e o resultado logo abaixo, sem rolar.",
+      "naoTrazer": "Cotação ao vivo, que precisa de servidor: na página, valor de referência com data e fonte."
+    },
+    {
+      "id": "creditas",
+      "nome": "Creditas",
+      "link": "https://www.creditas.com/",
+      "ramo": "crédito",
+      "duvida": "Quanto fica a parcela para o valor de que eu preciso?",
+      "principio": "Valor e prazo escolhidos num controle simples devolvem a parcela na hora, e as condições ficam escritas ao lado, sem letra miúda escondida.",
+      "comoFazemosAqui": {
+        "padrao": "simulador-na-pagina",
+        "texto": "Simulador de valor e prazo com a taxa de referência que a pessoa informou; aviso claro de que é estimativa e botão para conversar com a parcela já escrita."
+      },
+      "noCelular": "Campo de valor com teclado numérico, prazo em botões e a parcela em letra grande logo abaixo.",
+      "naoTrazer": "Pedido de dados pessoais e de documento na página: o site não guarda nada."
+    },
+    {
+      "id": "portal-solar",
+      "nome": "Portal Solar",
+      "link": "https://www.portalsolar.com.br/",
+      "ramo": "energia solar",
+      "duvida": "Quanto eu economizo por mês com energia solar?",
+      "principio": "A pessoa informa só o valor da conta de luz e recebe a economia e o tamanho do sistema, então o benefício vira um número dela.",
+      "comoFazemosAqui": {
+        "padrao": "simulador-na-pagina",
+        "texto": "Um campo (o valor da conta), a conta feita na página com os parâmetros do fatos.md e o resultado em reais por mês; o botão leva o resultado ao pedido de orçamento."
+      },
+      "noCelular": "Um campo, um botão e o resultado grande; o detalhe da conta numa parte que abre só se a pessoa quiser.",
+      "naoTrazer": "Lista de empresas concorrentes e cadastro obrigatório antes de mostrar o resultado."
+    },
+    {
+      "id": "contabilizei",
+      "nome": "Contabilizei",
+      "link": "https://www.contabilizei.com.br/",
+      "ramo": "contabilidade",
+      "duvida": "Quanto eu vou pagar por mês, para o meu tipo de empresa?",
+      "principio": "O preço depende de poucas respostas (tipo de empresa, faturamento) e aparece sem pedir contato, então a confiança vem antes da conversa.",
+      "comoFazemosAqui": {
+        "padrao": "simulador-na-pagina",
+        "texto": "Duas ou três perguntas em botões, a faixa de preço calculada na página e o botão que manda as respostas no WhatsApp."
+      },
+      "noCelular": "Uma pergunta por tela, com botões grandes, e o preço aparecendo no fim sem recarregar.",
+      "naoTrazer": "Tabela comparativa com concorrentes e promessa de economia sem fonte."
+    },
+    {
+      "id": "youse",
+      "nome": "Youse",
+      "link": "https://www.youse.com.br/",
+      "ramo": "seguros",
+      "duvida": "Quanto custa o meu seguro, e o que ele cobre?",
+      "principio": "A cotação começa com perguntas simples, uma por vez, e as coberturas são explicadas em linguagem de gente, então seguro deixa de parecer contrato.",
+      "comoFazemosAqui": {
+        "padrao": "simulador-na-pagina",
+        "texto": "Perguntas curtas, uma por vez, com faixa de preço de referência calculada na página; o botão manda as respostas para o corretor no WhatsApp."
+      },
+      "noCelular": "Uma pergunta por tela, progresso no topo e o botão de voltar sempre visível.",
+      "naoTrazer": "Preço fechado sem cotação real: na página, sempre faixa de referência, com fonte e aviso."
+    }
+  ]
+}

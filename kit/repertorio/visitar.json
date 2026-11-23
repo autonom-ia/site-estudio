@@ -1,0 +1,76 @@
+{
+  "acao": "visitar",
+  "visitanteQuer": "Ir até o lugar: saber onde fica, quando abre e como chegar.",
+  "fichas": [
+    {
+      "id": "moma",
+      "nome": "MoMA",
+      "link": "https://www.moma.org/",
+      "ramo": "museu",
+      "duvida": "Está aberto hoje, até que horas, e como eu chego?",
+      "principio": "Horário de hoje, endereço e ingresso estão no alto da página, antes da programação, então a visita é planejada em segundos.",
+      "comoFazemosAqui": {
+        "padrao": "mapa-por-botao",
+        "texto": "Horário e endereço escritos no topo; dois botões, Abrir no Google Maps e Abrir no Waze, com o endereço do fatos.md; nenhum mapa embutido."
+      },
+      "noCelular": "Horário e os dois botões de rota na primeira tela, com o endereço logo acima, em texto que dá para copiar.",
+      "naoTrazer": "Agenda enorme de exposições e a identidade gráfica do museu."
+    },
+    {
+      "id": "inhotim",
+      "nome": "Inhotim",
+      "link": "https://www.inhotim.org.br/",
+      "ramo": "parque e museu a céu aberto",
+      "duvida": "Quanto tempo eu preciso, o que eu levo e como chego lá?",
+      "principio": "A visita é tratada como roteiro (tempo sugerido, o que levar, como chegar), então o lugar distante parece possível.",
+      "comoFazemosAqui": {
+        "padrao": "mapa-por-botao",
+        "texto": "Parte de como chegar com botões para o Maps e o Waze, tempo de viagem de referência e as dicas do lugar, tudo com fonte no fatos.md."
+      },
+      "noCelular": "Dicas em lista curta e os botões de rota grandes, um embaixo do outro.",
+      "naoTrazer": "O tamanho do acervo deles: aqui, só o que o lugar tem de verdade."
+    },
+    {
+      "id": "shake-shack",
+      "nome": "Shake Shack",
+      "link": "https://shakeshack.com/",
+      "ramo": "lanchonete",
+      "duvida": "Onde fica a unidade mais perto de mim, e ela está aberta?",
+      "principio": "Cada unidade tem a sua parte com endereço, horário e botão de rota, sem obrigar a pessoa a mexer num mapa.",
+      "comoFazemosAqui": {
+        "padrao": "mapa-por-botao",
+        "texto": "Uma parte por unidade (endereço, horário, foto da fachada) com botões para o Maps e o Waze."
+      },
+      "noCelular": "Unidades em lista, uma por bloco de texto, com os botões de rota visíveis sem abrir nada.",
+      "naoTrazer": "Localizador com mapa interativo embutido, que pesa e carrega endereço de fora."
+    },
+    {
+      "id": "apple-retail",
+      "nome": "Apple Store (lojas)",
+      "link": "https://www.apple.com/br/retail/",
+      "ramo": "loja física",
+      "duvida": "O que tem na loja além de comprar, e quando eu posso ir?",
+      "principio": "A loja vende a visita: o que acontece lá dentro (atendimento, aulas) vem antes do endereço, então ir deixa de ser obrigação.",
+      "comoFazemosAqui": {
+        "padrao": "mapa-por-botao",
+        "texto": "Foto real de dentro da loja, o que se faz lá, o horário de hoje e os botões de rota."
+      },
+      "noCelular": "Foto de dentro na primeira tela, horário logo abaixo e botões de rota grandes.",
+      "naoTrazer": "A vitrine de vidro e o visual da marca."
+    },
+    {
+      "id": "eataly",
+      "nome": "Eataly",
+      "link": "https://www.eataly.com/",
+      "ramo": "mercado e restaurante",
+      "duvida": "O que eu encontro lá, e vale a pena a ida?",
+      "principio": "O lugar é mostrado por cantos (padaria, massas, restaurante), cada um com foto e horário, então a visita parece passeio.",
+      "comoFazemosAqui": {
+        "padrao": "mapa-por-botao",
+        "texto": "Os cantos do lugar em fotos reais, cada um com uma frase, e no fim endereço, horário e botões de rota."
+      },
+      "noCelular": "Um canto por tela, foto e frase, e o endereço com os botões de rota no fecho.",
+      "naoTrazer": "A lista de unidades no mundo e a voz italiana da marca."
+    }
+  ]
+}

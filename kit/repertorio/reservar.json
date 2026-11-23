@@ -1,0 +1,76 @@
+{
+  "acao": "reservar",
+  "visitanteQuer": "Marcar um horário ou reservar: escolher o dia, a hora e garantir o lugar.",
+  "fichas": [
+    {
+      "id": "opentable",
+      "nome": "OpenTable",
+      "link": "https://www.opentable.com/",
+      "ramo": "reserva em restaurantes",
+      "duvida": "Tem mesa para quantas pessoas, em que dia e hora?",
+      "principio": "Três escolhas (pessoas, dia, hora) cabem numa linha e levam direto aos horários livres, então reservar leva segundos.",
+      "comoFazemosAqui": {
+        "padrao": "link-de-pagamento-ou-agenda",
+        "texto": "Se a casa já usa uma agenda ou um sistema de reservas, o botão leva para lá; se não, as três escolhas vão escritas no WhatsApp."
+      },
+      "noCelular": "As três escolhas empilhadas, em botões grandes, e o botão de reservar logo abaixo, sem rolar.",
+      "naoTrazer": "Lista de outros restaurantes, nota de avaliação e mapa embutido."
+    },
+    {
+      "id": "doctoralia",
+      "nome": "Doctoralia",
+      "link": "https://www.doctoralia.com.br/",
+      "ramo": "saúde",
+      "duvida": "Esse profissional atende o meu caso, aceita o meu convênio e tem horário quando?",
+      "principio": "Especialidade, convênio, endereço e os próximos horários livres aparecem juntos no perfil, então a confiança e a ação estão na mesma tela.",
+      "comoFazemosAqui": {
+        "padrao": "link-de-pagamento-ou-agenda",
+        "texto": "Botão para a agenda online que o consultório já usa; especialidade, convênios aceitos e endereço escritos na página, cada um com fonte."
+      },
+      "noCelular": "Nome, especialidade e o botão de agendar na primeira tela; convênios numa lista curta logo abaixo.",
+      "naoTrazer": "Depoimentos e notas copiados da plataforma: só entram com fonte e autorização."
+    },
+    {
+      "id": "booksy",
+      "nome": "Booksy",
+      "link": "https://booksy.com/",
+      "ramo": "salão e barbearia",
+      "duvida": "Quanto custa o serviço, quanto tempo leva e com quem eu marco?",
+      "principio": "Cada serviço mostra preço e duração em uma linha, e a escolha do profissional vem antes do horário, então a pessoa sabe o que está marcando.",
+      "comoFazemosAqui": {
+        "padrao": "link-de-pagamento-ou-agenda",
+        "texto": "Serviços com preço e duração em tipografia, sem caixa; o botão de cada serviço abre a agenda online da casa ou manda o serviço escolhido no WhatsApp."
+      },
+      "noCelular": "Serviços em linhas largas, fáceis de tocar, com o preço alinhado à direita.",
+      "naoTrazer": "Busca de outros salões e a vitrine da plataforma."
+    },
+    {
+      "id": "airbnb",
+      "nome": "Airbnb",
+      "link": "https://www.airbnb.com.br/",
+      "ramo": "hospedagem",
+      "duvida": "Como é o lugar de verdade, e quanto fica no total para as minhas datas?",
+      "principio": "Muitas fotos reais do lugar e o preço total para as datas escolhidas aparecem antes de qualquer cadastro, então a decisão é feita com o olho e com a conta.",
+      "comoFazemosAqui": {
+        "padrao": "pedido-no-whatsapp",
+        "texto": "Fotos reais do lugar, escolha de entrada, saída e número de hóspedes; o pedido de reserva vai escrito no WhatsApp para a casa confirmar."
+      },
+      "noCelular": "Fotos em faixa que desliza com o dedo e o botão de pedir reserva preso no pé da tela.",
+      "naoTrazer": "Mapa embutido, conta de usuário e as regras da plataforma."
+    },
+    {
+      "id": "noma",
+      "nome": "noma",
+      "link": "https://noma.dk/",
+      "ramo": "restaurante autoral",
+      "duvida": "Quando abre a próxima temporada, e como eu consigo uma mesa?",
+      "principio": "Pouquíssimo texto, a temporada atual em destaque e a reserva como único caminho claro: a escassez vira parte da experiência.",
+      "comoFazemosAqui": {
+        "padrao": "link-de-pagamento-ou-agenda",
+        "texto": "Uma página que diz a temporada ou o cardápio do momento e leva a um único botão de reserva; datas e regras vêm do fatos.md."
+      },
+      "noCelular": "A temporada e o botão de reservar na primeira tela; o resto fica abaixo, para quem quiser ler.",
+      "naoTrazer": "O minimalismo extremo quando o público precisa de mais explicação, e a identidade da casa."
+    }
+  ]
+}

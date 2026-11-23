@@ -1,0 +1,76 @@
+{
+  "acao": "comprar",
+  "visitanteQuer": "Comprar e pagar: entender o produto, sentir segurança e concluir sem atrito.",
+  "fichas": [
+    {
+      "id": "aesop",
+      "nome": "Aesop",
+      "link": "https://www.aesop.com/",
+      "ramo": "cosmética",
+      "duvida": "Qual produto é para mim, e como ele é de verdade?",
+      "principio": "Cada produto é apresentado em texto editorial curto, com textura, aroma e modo de uso, então a compra parece conselho e não vitrine.",
+      "comoFazemosAqui": {
+        "padrao": "link-de-pagamento-ou-agenda",
+        "texto": "Página do produto com a foto real, o modo de uso e um botão para o link de pagamento que a pessoa já tem (banco, maquininha ou loja); sem link, o pedido vai pelo WhatsApp."
+      },
+      "noCelular": "Foto, nome e preço na primeira tela; o modo de uso em parágrafos curtos abaixo; o botão de comprar preso no pé.",
+      "naoTrazer": "A paleta sóbria e as embalagens deles: a calma editorial vale, a aparência não."
+    },
+    {
+      "id": "allbirds",
+      "nome": "Allbirds",
+      "link": "https://www.allbirds.com/",
+      "ramo": "calçados",
+      "duvida": "De que é feito, como fica no pé e qual tamanho eu peço?",
+      "principio": "O material vira argumento visual (fio, lã, sola) e a tabela de tamanho está a um toque, então a dúvida que trava a compra é respondida antes.",
+      "comoFazemosAqui": {
+        "padrao": "troca-de-fotos",
+        "texto": "Botões de cor que trocam a foto real do produto, com o mesmo enquadramento; tamanho e cor escolhidos vão para o link de pagamento ou para o WhatsApp."
+      },
+      "noCelular": "Foto grande que troca com a cor, amostras de cor com pelo menos 44 px e guia de tamanho que abre na própria página.",
+      "naoTrazer": "O discurso de sustentabilidade deles: só entra o que a marca daqui pode provar com fonte."
+    },
+    {
+      "id": "gumroad",
+      "nome": "Gumroad",
+      "link": "https://gumroad.com/",
+      "ramo": "produto digital",
+      "duvida": "O que exatamente eu recebo, e como eu pago?",
+      "principio": "Uma página só: o que é, o que vem dentro, o preço e um botão de pagar; nada distrai da compra.",
+      "comoFazemosAqui": {
+        "padrao": "link-de-pagamento-ou-agenda",
+        "texto": "Página única do produto (curso, guia, ingresso) com o sumário do que vem dentro e o botão para o link de pagamento da pessoa."
+      },
+      "noCelular": "Título, preço e botão na primeira tela; o sumário em lista curta abaixo.",
+      "naoTrazer": "A estética de plataforma e o rodapé com outros vendedores."
+    },
+    {
+      "id": "fellow",
+      "nome": "Fellow",
+      "link": "https://fellowproducts.com/",
+      "ramo": "utensílios de café",
+      "duvida": "Por que este, e não um mais barato?",
+      "principio": "Fotos de detalhe com luz de estúdio mostram o que o preço paga (acabamento, encaixe, precisão), e cada foto tem uma frase curta ao lado.",
+      "comoFazemosAqui": {
+        "padrao": "troca-de-fotos",
+        "texto": "Escolha do acabamento que troca a foto real; abaixo, três detalhes do produto fotografados de perto, cada um com uma frase."
+      },
+      "noCelular": "Uma foto de detalhe por tela, com a frase embaixo, em vez de grade de miniaturas.",
+      "naoTrazer": "Fundo de estúdio perfeito quando só há foto de celular: aí a luz natural do lugar funciona melhor."
+    },
+    {
+      "id": "bellroy",
+      "nome": "Bellroy",
+      "link": "https://bellroy.com/",
+      "ramo": "acessórios de couro",
+      "duvida": "Cabe o que eu carrego, e quanto é menor que o meu?",
+      "principio": "Comparação lado a lado, vazio e cheio, mostra o benefício em vez de descrever, e a foto responde a dúvida antes do texto.",
+      "comoFazemosAqui": {
+        "padrao": "troca-de-fotos",
+        "texto": "Botões de antes e depois (vazio e cheio, ou o produto e o comum) que trocam fotos reais tiradas do mesmo ângulo."
+      },
+      "noCelular": "As duas fotos empilhadas, ou um botão que alterna entre elas, sempre com a legenda de qual é qual.",
+      "naoTrazer": "Comparação de arrastar com o dedo, difícil no toque e para quem usa leitor de tela."
+    }
+  ]
+}

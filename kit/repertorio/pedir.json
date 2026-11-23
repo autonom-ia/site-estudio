@@ -1,0 +1,76 @@
+{
+  "acao": "pedir",
+  "visitanteQuer": "Fazer um pedido ou uma encomenda: escolher o que quer, ver quanto fica e mandar.",
+  "fichas": [
+    {
+      "id": "ifood",
+      "nome": "iFood",
+      "link": "https://www.ifood.com.br/",
+      "ramo": "delivery de comida",
+      "duvida": "O que tem para pedir agora, quanto custa e quanto demora?",
+      "principio": "Cada item mostra foto, preço e um botão de adicionar; a sacola com o total fica sempre à vista, então a pessoa monta o pedido sem perder a conta.",
+      "comoFazemosAqui": {
+        "padrao": "pedido-no-whatsapp",
+        "texto": "Lista dos produtos reais com botões de menos e mais, total somado na página e um botão que manda o pedido pronto no WhatsApp da casa."
+      },
+      "noCelular": "Barra presa no pé da tela com o total e o botão de enviar; ela só aparece depois do primeiro item escolhido.",
+      "naoTrazer": "Busca, cupom, ranking de restaurantes e cara de aplicativo de entrega: o site é de uma casa só."
+    },
+    {
+      "id": "ze-delivery",
+      "nome": "Zé Delivery",
+      "link": "https://www.ze.delivery/",
+      "ramo": "entrega de bebidas",
+      "duvida": "Entrega no meu bairro, e em quanto tempo?",
+      "principio": "A primeira coisa que o site resolve é se atende o endereço; só depois mostra os produtos, então ninguém monta pedido à toa.",
+      "comoFazemosAqui": {
+        "padrao": "pedido-no-whatsapp",
+        "texto": "Escolha do bairro entre os atendidos, num componente próprio de escolha, com prazo e taxa de cada um vindos do fatos.md; o bairro vai junto na mensagem do WhatsApp."
+      },
+      "noCelular": "A pergunta do bairro ocupa a primeira tela, com botões grandes; a resposta (atende ou não) aparece logo abaixo, sem trocar de página.",
+      "naoTrazer": "Busca automática de CEP, que precisa de servidor, e o tom de festa da marca deles."
+    },
+    {
+      "id": "magnolia-bakery",
+      "nome": "Magnolia Bakery",
+      "link": "https://www.magnoliabakery.com/",
+      "ramo": "confeitaria",
+      "duvida": "Dá tempo de encomendar para a minha data, e quais sabores e tamanhos existem?",
+      "principio": "O bolo aparece inteiro e cortado, com tamanho, sabor e prazo de encomenda escritos ao lado da foto, então a pessoa decide sem precisar perguntar.",
+      "comoFazemosAqui": {
+        "padrao": "pedido-no-whatsapp",
+        "texto": "Encomenda montada na página: sabor, tamanho e data desejada; o botão manda tudo escrito no WhatsApp e lembra o prazo mínimo que a casa pede."
+      },
+      "noCelular": "Foto do bolo no topo, sabor e tamanho logo abaixo em botões grandes, e o prazo mínimo em letra visível antes do botão.",
+      "naoTrazer": "O tom nostálgico de cidade grande e a loja com entrega nacional deles."
+    },
+    {
+      "id": "sweetgreen",
+      "nome": "Sweetgreen",
+      "link": "https://www.sweetgreen.com/",
+      "ramo": "restaurante de saladas",
+      "duvida": "Consigo montar o prato do meu jeito e saber o que vai nele?",
+      "principio": "O prato é montado por partes (base, proteína, molho) e cada escolha aparece somada na hora, então a personalização parece simples e não um formulário.",
+      "comoFazemosAqui": {
+        "padrao": "pedido-no-whatsapp",
+        "texto": "Montagem por etapas na página, com no máximo três escolhas por etapa; o resumo do prato e o preço vão escritos na mensagem do WhatsApp."
+      },
+      "noCelular": "Uma etapa por vez, ocupando a tela, com o resumo do prato preso no pé.",
+      "naoTrazer": "Conta de cliente, programa de pontos e retirada agendada por aplicativo."
+    },
+    {
+      "id": "dominos",
+      "nome": "Domino's Pizza Brasil",
+      "link": "https://www.dominos.com.br/",
+      "ramo": "pizzaria",
+      "duvida": "Posso pedir meio a meio, e quanto fica com a borda?",
+      "principio": "As escolhas que mudam o preço (tamanho, borda, metades) ficam juntas e o valor se atualiza a cada toque, então não há surpresa no fim.",
+      "comoFazemosAqui": {
+        "padrao": "pedido-no-whatsapp",
+        "texto": "Escolha de tamanho e de duas metades com o preço recalculado na página; a mensagem do WhatsApp sai com o pedido escrito do jeito que a cozinha lê."
+      },
+      "noCelular": "Botões de tamanho grandes no topo, metades lado a lado e o total sempre visível no pé da tela.",
+      "naoTrazer": "Promoção piscando, cronômetro de oferta e o excesso de faixas de anúncio da rede."
+    }
+  ]
+}

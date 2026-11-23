@@ -74,7 +74,7 @@ Rode tudo de dentro da pasta do estúdio.
 - **Brief antes do pixel.** Nenhuma página é desenhada antes de a pessoa aprovar o brief (objetivo, ação principal e mapa do site).
 - **Piloto antes da leva.** O topo da página inicial, uma parte comum e o momento mais forte, no computador e no celular, aprovados pela pessoa antes de fazer o resto.
 - **Fato com fonte.** Todo número, preço, endereço, telefone, horário, @, nome e depoimento que vai para o site está em `fatos.md`, com a fonte. Sem fonte, não entra. Nunca invente dado, cliente, depoimento, prêmio ou resultado. O comando `fatos` reprova número e contato sem fonte.
-- **Referência é princípio, não cópia.** Os sites de referência ensinam por que funcionam; nunca copie layout, texto, foto ou marca deles.
+- **Referência é princípio, não cópia.** Os sites de referência ensinam por que funcionam; nunca copie layout, texto, foto ou marca deles. Elas saem do repertório do estúdio (`kit/repertorio/`), escolhidas pela ação de quem visita e não pelo ramo, e só o endereço é guardado.
 - **Autor nunca é o revisor.** Quem fez o site não dá a nota. A skill `revisar` chama 4 revisores independentes; meta 8,5 em até 3 rodadas.
 - **Use as skills de design.** Antes de desenhar qualquer página, se estiverem instaladas, carregue `frontend-design` e `ui-ux-pro-max`. A skill `instalar-estudio` sugere instalá-las.
 - **Sem caixa genérica.** Nada de grade de cartões com borda e fundo, nada de lista de serviços com ícone em quadradinho. Hierarquia por tipografia, foto, luz, cor e movimento. Teste: "trocando o nome do negócio, esta página serve para outro?" Se serve, está genérica.

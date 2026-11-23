@@ -1,0 +1,76 @@
+{
+  "acao": "orcar",
+  "visitanteQuer": "Pedir um orçamento: mostrar o que precisa e confiar que o serviço dá conta.",
+  "fichas": [
+    {
+      "id": "getninjas",
+      "nome": "GetNinjas",
+      "link": "https://www.getninjas.com.br/",
+      "ramo": "serviços em casa",
+      "duvida": "Alguém faz o serviço de que eu preciso, e quanto pode custar?",
+      "principio": "Perguntas guiadas sobre o serviço transformam um pedido vago em orçamento comparável, sem a pessoa ter que saber os termos.",
+      "comoFazemosAqui": {
+        "padrao": "pedido-no-whatsapp",
+        "texto": "Três ou quatro perguntas em botões (o que é, tamanho, quando) e uma mensagem de orçamento já escrita no WhatsApp."
+      },
+      "noCelular": "Uma pergunta por tela, com a opção Não sei sempre disponível.",
+      "naoTrazer": "Mercado de vários profissionais e a cobrança por pedido."
+    },
+    {
+      "id": "thumbtack",
+      "nome": "Thumbtack",
+      "link": "https://www.thumbtack.com/",
+      "ramo": "serviços profissionais",
+      "duvida": "Quem é bom nisso perto de mim, e qual é a faixa de preço?",
+      "principio": "Faixa de preço típica mostrada antes do contato tira o medo do orçamento e filtra quem não cabe.",
+      "comoFazemosAqui": {
+        "padrao": "simulador-na-pagina",
+        "texto": "Faixas de preço por tipo de serviço, com fonte, e um cálculo simples na página (metragem, quantidade) que leva o valor ao WhatsApp."
+      },
+      "noCelular": "Faixa de preço em letra grande, logo abaixo do nome do serviço.",
+      "naoTrazer": "Ranking de profissionais e avaliações sem origem."
+    },
+    {
+      "id": "pentagram",
+      "nome": "Pentagram",
+      "link": "https://www.pentagram.com/",
+      "ramo": "estúdio de design",
+      "duvida": "Eles já fizeram algo parecido com o que eu preciso?",
+      "principio": "Os projetos falam sozinhos: imagem grande, nome do cliente e uma frase do problema resolvido, com pouquíssimo texto do estúdio sobre si.",
+      "comoFazemosAqui": {
+        "padrao": "pedido-no-whatsapp",
+        "texto": "Projetos reais em imagem grande, com o desafio em uma frase; no fim, o tipo de projeto escolhido vai escrito no pedido de orçamento pelo WhatsApp."
+      },
+      "noCelular": "Um projeto por tela, imagem inteira e a frase embaixo, sem grade de miniaturas.",
+      "naoTrazer": "A grade neutra e a lista enorme de sócios do estúdio."
+    },
+    {
+      "id": "snohetta",
+      "nome": "Snøhetta",
+      "link": "https://snohetta.com/",
+      "ramo": "arquitetura",
+      "duvida": "Qual é o jeito de projetar deles, e ele serve para a minha obra?",
+      "principio": "Cada projeto conta o problema, a ideia e o resultado com fotos que mostram a escala, então o processo vende mais que o portfólio.",
+      "comoFazemosAqui": {
+        "padrao": "pedido-no-whatsapp",
+        "texto": "Dois ou três projetos contados em problema, ideia e resultado; o pedido de conversa leva o tipo de obra e a cidade."
+      },
+      "noCelular": "Fotos de tela inteira alternando com uma frase curta, como um ensaio que se rola.",
+      "naoTrazer": "A escala de obra pública: aqui, os projetos reais da pessoa, do tamanho que tiverem."
+    },
+    {
+      "id": "houzz",
+      "nome": "Houzz",
+      "link": "https://www.houzz.com/",
+      "ramo": "reforma e decoração",
+      "duvida": "Como fica o antes e o depois, e o profissional atende a minha região?",
+      "principio": "Fotos do ambiente pronto, com o profissional e a região ao lado, fazem do portfólio a prova de capacidade.",
+      "comoFazemosAqui": {
+        "padrao": "troca-de-fotos",
+        "texto": "Botões de antes e depois que trocam fotos reais do mesmo ângulo; cidade e bairros atendidos escritos com fonte; o pedido de orçamento vai pelo WhatsApp."
+      },
+      "noCelular": "Antes e depois num botão que alterna, com a legenda dizendo qual é qual.",
+      "naoTrazer": "Loja de produtos e a comunidade de perguntas da plataforma."
+    }
+  ]
+}

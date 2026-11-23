@@ -66,15 +66,16 @@ Mostre o brief à pessoa em texto corrido e curto (objetivo, ação principal, a
 
 ## Etapa 3. Referências reais (princípio, não cópia)
 
-Antes de desenhar, estude de 6 a 10 sites **reais** e no ar, do mesmo tipo de negócio ou com o mesmo objetivo, de preferência premiados ou de marcas que são referência no ramo. Inclua os que a pessoa indicou. Se o seu programa tiver subagentes, divida a busca entre eles, em paralelo.
+O estúdio traz um repertório de 40 sites reais, separados pelo que quem visita quer fazer. Leia `kit/repertorio/como-usar.md` e siga. Em resumo:
 
-Para cada referência, abra a página (e, se tiver ferramenta de navegador, tire uma foto) e escreva em `referencias.md`:
-- o endereço e por que ele entrou;
-- **o princípio** que faz funcionar, em uma frase (exemplo: "a foto do produto ocupa a tela inteira e o título é curto, então a vontade vem antes da explicação"; "o cardápio é tipografia pura, com preço alinhado, sem ícone");
-- como esse princípio serve ao objetivo **deste** brief;
-- o que **não** vale trazer (o que é da marca deles, o que não combina com o público daqui).
+1. **A escolha parte da ação principal do brief e da dúvida que a página resolve** ("o que quem chega precisa saber, ou ver, para fazer isso?"). O ramo do negócio é só contexto, nunca o critério.
+2. Abra só o arquivo da ação (`kit/repertorio/<ação>.json`) e compare a dúvida de cada ficha com a do brief, pelo sentido. Escolha 2 ou 3 fichas, com pelo menos **2 de outro ramo**: é delas que vem a ideia que o ramo ainda não usa.
+3. **Confira ao vivo só as escolhidas**: abra o endereço de cada uma e veja se o princípio ainda está lá. Saiu do ar ou mudou: troque por outra ficha. Nunca abra as 40.
+4. Some as referências que a pessoa indicou, no mesmo formato.
 
-Nunca copie layout, texto, foto, logo ou cor de uma referência. Referência ensina por que; a solução é desta marca.
+Escreva em `referencias.md` (a tabela do molde), para cada uma: o endereço, o ramo, o **motivo** (a dúvida que ela resolve e por que serve a este brief), o princípio em uma frase, **como fazemos aqui** (o jeito do repertório, adaptado a este negócio), **como fica no celular** e a data em que você conferiu ao vivo. Diga à pessoa, em uma ou duas frases e sem nome técnico, que ideia vai aproveitar e de onde ela veio.
+
+Guarde só o endereço: nenhum print, logo, foto ou texto de outra marca entra no site nem na pasta dele. Nunca copie layout, texto, foto, logo ou cor de uma referência. Referência ensina por que; a solução é desta marca.
 
 ## Etapa 4. Direção visual
 
