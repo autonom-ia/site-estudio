@@ -161,22 +161,42 @@ test('mensagens da publicação existem, para leigo, e .gitignore cobre .ferrame
   assert.ok(linhas.includes('.ferramentas/'));
 });
 
-test('resumo: todo {{campo}} do mensagens.json é preenchido com os dados do resultado', async () => {
-  const { montarResultado, resultadoDeErro } = await import('../scripts/lib/saida.mjs');
+// Os campos que cada comando realmente manda em `dados`. Um erro de digitação no mensagens.json
+// ({{enderco}}) quebra aqui, em vez de sumir em silêncio na frase.
+const CAMPOS_ENVIADOS = Object.freeze({
+  PUBLICADO: ['endereco'],
+  PUBLICADO_CERTIFICADO_PENDENTE: ['endereco'],
+  PUBLICAR_AGUARDANDO_LOGIN: ['codigo_curto', 'endereco'],
+  PUBLICAR_VERSAO_VOLTOU: ['versao'],
+});
+
+test('resumo: os {{campos}} do mensagens.json são os que o comando manda, e saem preenchidos', async () => {
+  const { montarResultado, resultadoDeErro, preencher } = await import('../scripts/lib/saida.mjs');
   const comCampos = Object.entries(MENSAGENS).filter(([, m]) => m.texto.includes('{{'));
-  assert.ok(comCampos.length >= 4, 'há mensagens com campo');
+  assert.deepEqual(comCampos.map(([codigo]) => codigo).sort(), Object.keys(CAMPOS_ENVIADOS).sort());
   for (const [codigo, m] of comCampos) {
     const campos = m.texto.split('{{').slice(1).map((pedaco) => pedaco.split('}}')[0]);
+    assert.deepEqual([...new Set(campos)].sort(), [...CAMPOS_ENVIADOS[codigo]].sort(), codigo);
     const dados = Object.fromEntries(campos.map((campo) => [campo, `valor-${campo}`]));
-    const ok = montarResultado('publicar', { ok: true, codigo, dados });
-    const erro = resultadoDeErro(new KitErro(codigo, dados));
-    for (const r of [ok, erro]) {
+    for (const r of [montarResultado('publicar', { ok: true, codigo, dados }), resultadoDeErro(new KitErro(codigo, dados))]) {
       assert.ok(!r.resumo.includes('{{') && !r.resumo.includes('}}'), `${codigo}: ${r.resumo}`);
       for (const campo of campos) assert.ok(r.resumo.includes(`valor-${campo}`), `${codigo} sem ${campo}`);
     }
   }
-  const semDado = montarResultado('publicar', { ok: true, codigo: 'PUBLICAR_VERSAO_VOLTOU', dados: {} });
-  assert.ok(!semDado.resumo.includes('{{'), 'campo sem dado não vaza o marcador');
-  const objeto = montarResultado('publicar', { ok: true, codigo: 'PUBLICAR_VERSAO_VOLTOU', dados: { versao: { x: 1 } } });
-  assert.ok(!objeto.resumo.includes('[object'), 'só texto e número entram no resumo');
+  assert.ok(!montarResultado('publicar', { ok: true, codigo: 'PUBLICAR_VERSAO_VOLTOU', dados: {} }).resumo.includes('{{'));
+  assert.ok(!montarResultado('publicar', { ok: true, codigo: 'PUBLICAR_VERSAO_VOLTOU', dados: { versao: { x: 1 } } }).resumo.includes('[object'));
+  assert.equal(preencher('a {{constructor}} b {{toString}}', {}), 'a  b ', 'campo herdado não entra');
+  assert.equal(preencher('sem fecho {{x', { x: 'y' }), 'sem fecho {{x');
+});
+
+test('endereço do site que não é https e código curto estranho não chegam à frase', async (t) => {
+  const { codigoCurtoValido } = await import('../scripts/lib/publicar-login.mjs');
+  for (const bom of ['BCDF-GHJK', 'A1']) assert.equal(codigoCurtoValido(bom), true, bom);
+  for (const ruim of ['', 'bcdf-ghjk', 'ABC DEF', 'ABCD<b>', 'A'.repeat(17), 12, null]) assert.equal(codigoCurtoValido(ruim), false, String(ruim));
+  const ctx = await preparar(t);
+  darChave(ctx);
+  ctx.servico.estado.enderecoDoSite = 'javascript:alert(1)';
+  const r = await ctx.publicar();
+  assert.equal(r.json.codigo, 'PUBLICAR_RESPOSTA_ESTRANHA', r.saida);
+  assert.ok(!r.saida.includes('javascript:'), 'o endereço estranho não sai');
 });

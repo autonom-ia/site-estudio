@@ -45,8 +45,8 @@ async function iniciar(cfg, ferr) {
   if (r.status !== 200 || !r.corpo || r.corpo.ok !== true) throw erroDoServico(r);
   const c = r.corpo;
   const endereco = enderecoSeguro(c.endereco, cfg, true);
-  const valido = typeof c.codigo_dispositivo === 'string' && c.codigo_dispositivo && typeof c.codigo_curto === 'string' &&
-    c.codigo_curto && Number.isFinite(c.expira_em) && endereco;
+  const valido = typeof c.codigo_dispositivo === 'string' && c.codigo_dispositivo && codigoCurtoValido(c.codigo_curto) &&
+    Number.isFinite(c.expira_em) && endereco;
   if (!valido) throw new KitErro('PUBLICAR_RESPOSTA_ESTRANHA', { status: r.status });
   const pedido = { codigo_dispositivo: c.codigo_dispositivo, codigo_curto: c.codigo_curto, endereco, expira_em: c.expira_em };
   gravarPedido(cfg.base, pedido, ferr);
@@ -102,6 +102,14 @@ async function consultarAtePrazo(cfg, pedido, ferr) {
 }
 
 // Devolve { chave, esperou } quando há acesso, ou { resultado } (PUBLICAR_AGUARDANDO_LOGIN) para devolver já.
+// O código curto vai para a frase que a pessoa lê e digita: só letras maiúsculas, dígitos e hífen.
+const CODIGO_CURTO_MAX = 16;
+const CARACTERES_DO_CODIGO = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-';
+export function codigoCurtoValido(texto) {
+  return typeof texto === 'string' && texto.length > 0 && texto.length <= CODIGO_CURTO_MAX &&
+    [...texto].every((letra) => CARACTERES_DO_CODIGO.includes(letra));
+}
+
 export async function entrar(cfg, ferr = FERR) {
   const guardado = lerPedido(cfg.base, ferr);
   if (!guardado) return { resultado: aguardando(await iniciar(cfg, ferr), true) };

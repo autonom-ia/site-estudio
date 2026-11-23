@@ -38,8 +38,10 @@ async function lerSite(cfg, chave, nome) {
   const c = exigir(await chamar(cfg, 'GET', '/api/estudio/sites', { chave }), 200);
   if (!Array.isArray(c.sites)) throw new KitErro('PUBLICAR_RESPOSTA_ESTRANHA', { etapa: 'listar sites' });
   const site = c.sites.find((s) => s && s.slug === nome);
-  if (!site || !Number.isInteger(site.versao) || typeof site.endereco !== 'string') return { versao: null, endereco: '' };
-  return { versao: site.versao, endereco: site.endereco };
+  // O endereço vai para a frase que o assistente repete à pessoa: só https (ou o local de teste).
+  const endereco = site ? enderecoSeguro(site.endereco, cfg) : null;
+  if (!site || !Number.isInteger(site.versao) || !endereco) return { versao: null, endereco: '' };
+  return { versao: site.versao, endereco };
 }
 
 const versaoNova = (site, antes) => site.versao !== null && site.versao !== antes;
@@ -131,8 +133,9 @@ export async function enviarPacote(cfg, chave, nome, pacote, ferr = FERR) {
   }
   const c = await concluir(cfg, chave, envio);
   if (!c) return { ...(await confirmarOuGuardar(cfg, chave, nome, antes.versao, ferr)), partes: envio.partes };
-  if (!Number.isInteger(c.versao) || typeof c.endereco !== 'string') throw new KitErro('PUBLICAR_RESPOSTA_ESTRANHA', { etapa: 'concluir' });
-  return { slug: typeof c.slug === 'string' ? c.slug : nome, versao: c.versao, endereco: c.endereco, partes: envio.partes };
+  const endereco = enderecoSeguro(c.endereco, cfg);
+  if (!Number.isInteger(c.versao) || !endereco) throw new KitErro('PUBLICAR_RESPOSTA_ESTRANHA', { etapa: 'concluir' });
+  return { slug: typeof c.slug === 'string' ? c.slug : nome, versao: c.versao, endereco, partes: envio.partes };
 }
 
 // Volta o site para uma versão guardada (sem versão: a anterior). Devolve { versao }.
