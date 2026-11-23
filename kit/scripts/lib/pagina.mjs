@@ -44,7 +44,8 @@ export async function assentar() {
       for (const st of window.ScrollTrigger.getAll()) {
         try {
           if (st.animation) st.animation.progress(1);
-          st.kill(false, true);
+          // seção presa (pin): desfaz o espaçador, senão a foto fica com um buraco de tela cheia
+          st.kill(Boolean(st.pin), true);
         } catch (e) {}
       }
     }
@@ -74,10 +75,16 @@ export async function assentar() {
   for (const img of document.images) {
     if (!img.complete) await Promise.race([new Promise((r) => { img.onload = r; img.onerror = r; }), dormir(5000)]);
   }
-  ir(0);
-  await quadro();
-  await dormir(100);
-  return { altura: raiz.scrollHeight, largura: raiz.scrollWidth };
+  // Volta ao topo e confere. O ScrollTrigger adia um "refresh" pedido durante a rolagem para o fim
+  // dela, e esse refresh devolve a página para onde estava quando foi pedido (o fim da página). No
+  // piloto, as fotos saíam com a página rolada até o fim e o cabeçalho preso no meio da última parte.
+  for (let k = 0; k < 10; k += 1) {
+    ir(0);
+    await quadro();
+    await dormir(250);
+    if (scrollY === 0) break;
+  }
+  return { altura: raiz.scrollHeight, largura: raiz.scrollWidth, topo: scrollY === 0 };
 }
 
 // As partes da página para fotografar uma a uma: cabeçalho, cada seção do <main> e o rodapé.
@@ -375,10 +382,23 @@ export async function medir(L) {
     }
     return lista;
   };
+  // texto só para leitor de tela (recorte de 1 px ou clip zerado): ninguém vê, não se mede
+  const soLeitor = (el) => {
+    for (let e = el; e && e !== raiz; e = e.parentElement) {
+      const cs = getComputedStyle(e);
+      const corta = ['hidden', 'clip'].includes(cs.overflowX) || ['hidden', 'clip'].includes(cs.overflowY);
+      const r = e.getBoundingClientRect();
+      if (corta && (r.width <= 2 || r.height <= 2)) return true;
+      if (cs.clip === 'rect(0px, 0px, 0px, 0px)' || cs.clipPath === 'inset(50%)') return true;
+    }
+    return false;
+  };
   ir(0);
   await quadro();
   for (const it of itens) {
     const cs = getComputedStyle(it.el);
+    it.soLeitor = soLeitor(it.el);
+    it.decorativo = Boolean(it.el.closest('[aria-hidden="true"]'));
     it.cs = cs;
     it.texto = juntar(it.texto);
     it.op = opacidade(it.el);
@@ -408,11 +428,12 @@ export async function medir(L) {
       if (vaza > it.cortado) it.cortado = vaza;
     }
   }
-  const validos = itens.filter((it) => it.visivel && !it.sumido && it.caixas.length && it.texto.length > 0);
+  const validos = itens.filter((it) => it.visivel && !it.sumido && !it.soLeitor && it.caixas.length && it.texto.length > 0);
 
   // 2. texto cortado por um recorte
   for (const it of validos) {
-    if (it.op < 0.05 || it.cs.textOverflow === 'ellipsis') continue;
+    // faixa decorativa (aria-hidden) pode vazar a tela de propósito
+    if (it.op < 0.05 || it.cs.textOverflow === 'ellipsis' || it.decorativo) continue;
     if (it.cortado > L.vazamento) red.push({ tipo: 'texto-cortado', detalhe: `${Math.round(it.cortado)} px escondidos: ${nomeDe(it.el, it.texto)}` });
   }
 
@@ -480,6 +501,7 @@ export async function medir(L) {
   // 4. contraste, medido onde o texto está: rola em trechos e lê a pilha atrás de cada texto
   const semMedir = [];
   const medidos = new Set();
+  const debaixoDePreso = new Set();
   const MIDIA = ['IMG', 'VIDEO', 'CANVAS', 'PICTURE', 'IFRAME', 'svg', 'SVG', 'OBJECT', 'EMBED'];
   const medirContraste = (it) => {
     const cx = caixasDe(it);
@@ -496,6 +518,11 @@ export async function medir(L) {
     const pilha = document.elementsFromPoint(x, y);
     let k = pilha.findIndex((e) => e === it.el || it.el.contains(e));
     if (k < 0) {
+      // cabeçalho ou barra presos por cima agora: mede noutra posição da rolagem
+      if (pilha.length && ehFixo(pilha[0])) {
+        debaixoDePreso.add(it);
+        return false;
+      }
       semMedir.push(`${nomeDe(it.el, it.texto)}: outro elemento por cima`);
       return true;
     }
@@ -548,6 +575,7 @@ export async function medir(L) {
   for (const it of validos) {
     if (it.op < 0.05 && !it.el.closest('[aria-hidden="true"]')) warn.push({ tipo: 'texto-invisivel', detalhe: `opacidade ${it.op.toFixed(2)} depois de assentar: ${nomeDe(it.el, it.texto)}` });
   }
+  for (const it of debaixoDePreso) if (!medidos.has(it)) semMedir.push(`${nomeDe(it.el, it.texto)}: fica sempre debaixo de uma parte presa`);
   for (const s of semMedir.slice(0, L.maximo)) warn.push({ tipo: 'contraste-nao-medido', detalhe: s });
 
   // 5. só no celular: alvo de toque e texto pequeno

@@ -169,7 +169,7 @@
   },
   "CHECAGEM_COM_AVISOS": {
     "texto": "Conferi as páginas: nada reprova, mas há avisos.",
-    "acao": "Leia dados.amarelos. Corrija o que for de verdade e explique à pessoa o que ficou."
+    "acao": "Leia dados.amarelos. Corrija o que for de verdade e explique à pessoa o que ficou. link-repetido e frase-repetida: deixe cada ação e cada frase aparecer só onde ela ajuda; o revisor cobra repetição."
   },
   "CHECAGEM_REPROVADA": {
     "texto": "A conferência achou problemas nas páginas. Vou corrigir antes de mostrar.",
@@ -181,7 +181,7 @@
   },
   "MEDIDAS_COM_AVISOS": {
     "texto": "Medi as páginas: nada reprova, mas há avisos.",
-    "acao": "Leia dados.amarelos. Contraste não medido pede olhar o print daquele trecho. Texto pequeno no celular: aumente se for texto de leitura."
+    "acao": "Leia dados.amarelos. Contraste não medido pede olhar o print daquele trecho. Texto pequeno no celular: aumente se for texto de leitura. foto-esticada: use um arquivo maior, mostre a foto menor ou acerte o sizes. linha-longa: limite a largura do texto (no tablet, é o celular esticado). Texto só para leitor de tela e faixa com aria-hidden já não são medidos; data-medir-nao só para o que não é texto de ler, e anote no andamento.md."
   },
   "MEDIDAS_REPROVADAS": {
     "texto": "A medição achou problemas de leitura ou de layout. Vou corrigir antes de mostrar.",
@@ -197,7 +197,7 @@
   },
   "ACESSIBILIDADE_REPROVADA": {
     "texto": "A conferência de acessibilidade achou problemas sérios. Vou corrigir.",
-    "acao": "Leia dados.vermelhos (regra, ajuda, nos.alvo). Corrija na seção e rode de novo."
+    "acao": "Leia dados.vermelhos (regra, ajuda, nos.alvo). Corrija na seção e rode de novo. foco-perdido: o script que rola até a parte precisa mover o foco para ela no fim da rolagem (tabindex=\"-1\" na parte e focus com preventScroll)."
   },
   "AXE_AUSENTE": {
     "texto": "Falta a peça que confere acessibilidade.",
@@ -237,7 +237,15 @@
   },
   "PRINTS_PRONTOS": {
     "texto": "Fotografei todas as páginas, inteiras e por seção, nos tamanhos de tela pedidos.",
-    "acao": "Abra e olhe cada arquivo de dados.fotos, um por um (comece pelo celular, 390), antes de mostrar à pessoa."
+    "acao": "Abra e olhe cada arquivo de dados.fotos, um por um (comece pelo celular, 390, e depois o tablet, 768), antes de mostrar à pessoa."
+  },
+  "PAGINA_FORA_DO_TOPO": {
+    "texto": "Uma página não ficou parada no topo para as fotos.",
+    "acao": "Algum script do site rola a página sozinho depois que ela assenta. Abra as fotos de dados.pagina em dados.largura: parte presa pode ter saído no meio. Procure no site.js o que rola a página (refresh, scrollTo, foco) e rode prints de novo."
+  },
+  "PRINTS_EM_ANDAMENTO": {
+    "texto": "Já estou fotografando este site agora. Espero terminar antes de tirar outras.",
+    "acao": "Não rode prints duas vezes ao mesmo tempo para a mesma rodada. Espere o outro terminar e use as fotos dele. Não apague o arquivo dados.pasta + .trava: ele sai sozinho quando o outro termina ou quando o processo dele não existe mais."
   },
   "FOTO_LISA": {
     "texto": "Uma foto saiu quase toda de uma cor só.",

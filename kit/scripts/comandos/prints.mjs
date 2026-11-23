@@ -1,15 +1,23 @@
 // Fotografa cada página em 390, 768, 1440 e 1920 px: a página inteira (captureBeyondViewport, não
 // só o topo) e cada seção separada, sempre com o movimento assentado (nada no meio de um fade).
 // Vai para revisao/prints-rN/ (N = rodada). Avisa quando uma foto sai quase toda de uma cor só.
+// Parte presa (cabeçalho, barra, coluna "sticky") fica onde a pessoa a vê ao abrir a página, e não
+// no meio das outras partes (pagina-fotos.mjs).
+// Uma pasta de fotos, um "prints" por vez. Causa do DESCONHECIDO do piloto (falhava uma vez e
+// passava ao repetir): dois "prints" na mesma pasta ao mesmo tempo; um apagava as fotos que o outro
+// estava gravando (ENOENT no rmSync) e as fotos se misturavam. Agora o segundo recebe
+// PRINTS_EM_ANDAMENTO e a limpeza não quebra com foto que já sumiu.
 import fs from 'node:fs';
 import path from 'node:path';
 import { nomeDoSite, inteiro } from '../lib/args.mjs';
 import { abrirSite, paginasDoSite, escolherTamanhos, rodadaAtual } from '../lib/site.mjs';
 import { abrirSessao, visitar } from '../lib/sessao.mjs';
 import { secoes } from '../lib/pagina.mjs';
+import { prenderParaFoto } from '../lib/pagina-fotos.mjs';
+import { pegarTrava, soltarTrava } from '../lib/trava.mjs';
 import { decodePng, frameStats } from '../lib/png.mjs';
 import { progresso } from '../lib/executar.mjs';
-import { aviso } from '../lib/saida.mjs';
+import { aviso, falha } from '../lib/saida.mjs';
 import { relativoARaiz } from '../lib/caminhos.mjs';
 
 const ALTURA_MAXIMA = 16000; // px: acima disso o navegador não fotografa de uma vez
@@ -60,7 +68,17 @@ export default async function prints(args) {
   const rodada = rodadaAtual(c, args.opcoes);
   const pasta = path.join(c.revisao, `prints-r${rodada}`);
   fs.mkdirSync(pasta, { recursive: true });
-  for (const n of fs.readdirSync(pasta)) if (n.toLowerCase().endsWith('.jpg')) fs.rmSync(path.join(pasta, n));
+  const trava = `${pasta}.trava`;
+  if (!pegarTrava(trava)) falha('PRINTS_EM_ANDAMENTO', { pasta: relativoARaiz(pasta), rodada });
+  try {
+    return await fotografarTudo(c, pasta, { tamanhos, qualidade, comSecoes, reduzido, rodada });
+  } finally {
+    soltarTrava(trava);
+  }
+}
+
+async function fotografarTudo(c, pasta, { tamanhos, qualidade, comSecoes, reduzido, rodada }) {
+  for (const n of fs.readdirSync(pasta)) if (n.toLowerCase().endsWith('.jpg')) fs.rmSync(path.join(pasta, n), { force: true });
 
   const paginas = paginasDoSite(c);
   const fotos = [];
@@ -71,6 +89,8 @@ export default async function prints(args) {
       for (const t of tamanhos) {
         progresso(`Fotografando ${pagina.rel} em ${t.largura} px...`);
         const doc = await visitar(sessao, pagina, t, { reduzido });
+        if (doc.topo === false) avisos.push(aviso('PAGINA_FORA_DO_TOPO', { pagina: pagina.rel, largura: t.largura }));
+        await sessao.avaliar(prenderParaFoto);
         const altura = Math.min(doc.altura, ALTURA_MAXIMA);
         if (doc.altura > ALTURA_MAXIMA) avisos.push(aviso('PAGINA_MUITO_ALTA', { pagina: pagina.rel, largura: t.largura, altura: doc.altura }));
         const inteira = { x: 0, y: 0, width: t.largura, height: altura };

@@ -3,13 +3,15 @@
 // mídia ausente, link interno morto (inclusive âncora), sem <title>, sem description, sem lang,
 // sem exatamente um <h1>, <select> nativo, travessão no texto visível, erro de JavaScript e
 // resto-do-molde (elemento com data-molde: texto do negócio fictício que ainda não foi trocado).
-// WARN: og:image relativa, JSON-LD que não abre, fonte usada que não foi declarada.
+// WARN: og:image relativa, JSON-LD que não abre, fonte usada que não foi declarada, link com o
+// mesmo texto 4 vezes ou mais (link-repetido) e a mesma frase 3 vezes ou mais (frase-repetida).
 import fs from 'node:fs';
 import path from 'node:path';
 import { nomeDoSite } from '../lib/args.mjs';
 import { abrirSite, paginasDoSite, TAMANHOS } from '../lib/site.mjs';
 import { abrirSessao, visitar } from '../lib/sessao.mjs';
 import { estatico } from '../lib/pagina.mjs';
+import { repeticoes } from '../lib/pagina-leitura.mjs';
 import { progresso } from '../lib/executar.mjs';
 import { esperar } from '../lib/cdp.mjs';
 
@@ -18,6 +20,13 @@ export const VENDOR_OBRIGATORIO = Object.freeze([
   ['assets', 'vendor', 'gsap', 'ScrollTrigger.min.js'],
   ['assets', 'vendor', 'lenis', 'lenis.min.js'],
 ]);
+
+export const REPETICAO = Object.freeze({
+  link_repetido: 4, // o mesmo texto de link, na mesma página
+  frase_repetida: 3, // a mesma frase, na mesma página
+  frase_minima: 16, // letras para contar como frase
+  maximo: 25,
+});
 
 function ehAbsoluto(url) {
   const baixo = url.toLowerCase();
@@ -74,6 +83,7 @@ export default async function checar(args) {
       const est = await sessao.avaliar(estatico);
       await esperar(50);
       anotarEstatico(pagina, est, sessao.rede(), sessao.errosJs(), red, warn);
+      for (const w of await sessao.avaliar(repeticoes, REPETICAO)) warn.push({ pagina: pagina.rel, ...w });
     }
   } finally {
     await sessao.fechar();
