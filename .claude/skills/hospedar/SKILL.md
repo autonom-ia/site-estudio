@@ -25,7 +25,7 @@ Os três têm plano grátis que serve para um site como este. As telas desses se
 
 1. "Abra o endereço app.netlify.com/drop no navegador."
 2. "Crie uma conta grátis (pode entrar com o e-mail ou com o Google). Sem conta, o site some depois de um tempo."
-3. "Arraste para a área indicada a pasta `site` que eu abri para você. Se ele aceitar o arquivo `.zip`, pode ser o arquivo também."
+3. "Arraste para a área indicada o `site` que eu abri para você na tela. Se ele aceitar o arquivo que eu preparei, pode ser o arquivo também."
 4. "Espere terminar. Ele mostra um endereço terminado em `.netlify.app`. Abra e confira."
 5. Opcional: "Em Configurações do site, dá para trocar o nome do endereço por um mais curto."
 
@@ -36,7 +36,7 @@ Os três têm plano grátis que serve para um site como este. As telas desses se
 1. "Abra dash.cloudflare.com e crie uma conta grátis."
 2. "No menu, entre em Workers e Pages e escolha criar um projeto de Pages, na opção de enviar arquivos (Upload assets ou Direct Upload). Não escolha a opção de ligar ao Git."
 3. "Dê um nome ao projeto: ele vira o endereço, terminado em `.pages.dev`."
-4. "Envie o arquivo `.zip` ou a pasta `site`."
+4. "Envie o arquivo que eu preparei, ou o `site` que eu abri para você na tela."
 5. "Clique para publicar (Deploy) e abra o endereço que aparece."
 
 **Atualizar depois:** no projeto, crie uma nova publicação (Create deployment) e envie o pacote novo.
@@ -46,9 +46,9 @@ Os três têm plano grátis que serve para um site como este. As telas desses se
 1. "Abra github.com e crie uma conta grátis, se ainda não tiver."
 2. "Crie um repositório novo (o botão New). Dê um nome curto, por exemplo o nome do negócio, e deixe como público. No plano grátis, o site só sai de repositório público."
 3. "Na página do repositório, clique em enviar arquivos (uploading an existing file)."
-4. "Abra a pasta `site` e arraste **o que está dentro dela** (o `index.html`, a pasta `assets` e as outras pastas), não a pasta `site` em si. O `index.html` precisa ficar na primeira tela do repositório." Se forem mais de 100 arquivos, arraste em mais de uma vez.
+4. "No `site` que eu abri para você na tela, selecione **tudo o que está dentro** (o `index.html`, o `assets` e o resto) e arraste, sem levar o `site` em si. O `index.html` precisa ficar na primeira tela do repositório." Se forem mais de 100 arquivos, arraste em mais de uma vez.
 5. "Clique em confirmar (Commit changes)."
-6. "Vá em Settings, depois em Pages. Em Source, escolha publicar a partir de um ramo (Deploy from a branch), escolha `main` e a pasta `/ (root)`, e salve."
+6. "Vá em Settings, depois em Pages. Em Source, escolha publicar a partir de um ramo (Deploy from a branch), escolha `main` e depois `/ (root)`, e salve."
 7. "Em um ou dois minutos aparece o endereço, no formato `seu-usuario.github.io/nome-do-repositorio`. Abra e confira."
 
 **Atualizar depois:** envie os arquivos novos do mesmo jeito, por cima dos antigos, e confirme.

@@ -23,11 +23,11 @@ minha-marca/
 
 ### 1. Juntar o que já existe (uma pergunta por vez)
 1. "Qual é o nome do seu negócio ou projeto, e o que ele faz, em uma frase?"
-2. "Você tem logo, site, Instagram ou alguma peça pronta (cartão, cardápio, fachada) que eu possa olhar? Pode pôr os arquivos na pasta referencias, ou me passar o endereço." Se tiver, abra e leia as imagens e as páginas. Tire as cores reais delas (hex), não as que você imagina.
-3. "Que três palavras descrevem como a sua marca fala?" (exemplo: acolhedora, direta, curiosa).
+2. "Onde o seu negócio aparece hoje? Pode ser o Instagram, um site, o nome no Google, ou uma foto do logo, do cartão ou da fachada." Se tiver, abra e leia as imagens e as páginas. Tire as cores reais delas (hex), não as que você imagina.
+3. Opcional: "Quer me dar três palavras do jeito que a sua marca fala? Se preferir, eu decido pelo que vi." (exemplo: acolhedora, direta, curiosa). Se a pessoa delegar, tire o tom do que ela já escreve no Instagram ou no site.
 4. Só se não houver nada para olhar: proponha 3 direções de cor e letra, cada uma com um nome e uma frase do porquê, e deixe a pessoa escolher. A recomendada primeiro, com ★.
 
-Não pergunte o que dá para ver nas peças. Não pergunte código de cor.
+Não pergunte o que dá para ver nas peças. Não pergunte código de cor. Vindo da skill `novo-site`, as perguntas 1 e 2 já foram feitas na coleta: não repita, use as respostas.
 
 ### 2. Escolher as letras
 - Duas famílias no máximo: uma para título, uma para texto. A letra de título é a maior alavanca de personalidade do site: escolha com intenção, não a mais comum.
@@ -60,7 +60,7 @@ Se algum par não passar, ajuste a cor (mais escura ou mais clara, mesmo tom) e 
 ### 6. Mostrar a amostra
 1. Rode `./estudio novo amostra-da-marca --titulo "<nome do negócio>"`. Se vier `SITE_JA_EXISTE`, use outro nome (`amostra-da-marca-2`).
 2. Rode `./estudio montar amostra-da-marca` e `./estudio prints amostra-da-marca`. A amostra é o molde com a sua marca: não rode `checar` nem `preflight` nela (eles reprovam de propósito, com `resto-do-molde` e `fonte-de-exemplo`, porque o texto ainda é do negócio fictício). Abra as fotos do computador e do celular e confira se as letras carregaram e se nada está apertado.
-3. Rode `./estudio abrir amostra-da-marca` (no Codex, fora da área protegida). Diga: "Abri uma página de exemplo com a sua marca. Olhe também no celular, se quiser: é só diminuir a janela."
+3. Rode `./estudio abrir amostra-da-marca` (no Codex, fora da área protegida). Diga: "Abri uma página de exemplo com a sua marca, no celular e no computador lado a lado."
 4. Pergunte: "Ficou com a cara da sua marca?" com "Ficou ★", "Mudar as cores" e "Mudar as letras".
 5. Ajuste e mostre de novo até a pessoa aprovar. A amostra pode ser apagada depois, a pedido dela.
 

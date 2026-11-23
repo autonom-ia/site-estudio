@@ -29,22 +29,24 @@ Se a sessão cair, você volta daqui. Aprovação só vale com as palavras da pe
 
 ## Etapa 0. Abrir a pasta
 
-Escolha um nome curto (letras minúsculas, números e hífen) e rode:
+Se ainda não sabe o nome do negócio, faça antes a pergunta 1 da coleta (etapa 1): é dela que sai o nome. Escolha um nome curto (letras minúsculas, números e hífen) e rode:
 `./estudio novo <nome> --titulo "<nome do negócio>"`
 
 - `SITE_CRIADO`: a pasta está em `arquivos.pasta`, com `brief.md`, `fatos.md`, `referencias.md`, `direcao.md`, `material/`, `_gerador/` e `site/` (marca e motor de movimento já copiados, e o molde de um negócio fictício já montado, com a página inicial e uma página). Todo texto do molde será trocado. Cada seção do molde, o cabeçalho e a nota do rodapé levam `data-molde`, a `_gerador/ordem.mjs` leva `molde: true` e as linhas do `fatos.md` do molde têm a fonte "Exemplo fictício do Site Estúdio": o `checar` reprova com `resto-do-molde` e o `fatos` com `fonte-de-exemplo` enquanto sobrar algum. Tire o `data-molde` de uma parte só depois de reescrevê-la com o conteúdo do brief, apague o `molde: true` quando nome, negócio e páginas forem os de verdade, e apague do `fatos.md` toda linha do exemplo. Nunca tire a marca para passar na conferência sem trocar o conteúdo.
 - Aviso `MARCA_DE_EXEMPLO`: diga em uma frase que está usando a marca de exemplo e ofereça a skill `minha-marca` depois.
 - `SITE_JA_EXISTE`: pergunte se é para continuar aquele ou criar com outro nome. Nunca apague o existente.
 
-## Etapa 1. Coleta (com fonte)
+## Etapa 1. Coleta (duas perguntas, o resto com fonte)
 
-Uma pergunta por mensagem, no máximo 6, e só as que faltam:
-1. O que é o negócio, para quem, e onde (cidade, bairro, online)?
-2. O que a pessoa precisa fazer ao abrir o site (ligar, chamar no WhatsApp, agendar, ir até lá, pedir orçamento, comprar)? Essa é a ação principal.
-3. Já existe site, Instagram, página no Google ou cardápio/catálogo? Passe os endereços.
-4. Quais páginas o site precisa? (Sugira o mínimo: muitas vezes uma página inicial forte e uma ou duas de apoio bastam.)
-5. Que fotos reais existem (do lugar, da equipe, do produto)? Peça os arquivos na pasta `referencias/`.
-6. Tem algum site de que você gosta, de qualquer ramo? Por quê?
+**Perguntas obrigatórias (só estas duas)**, uma por mensagem, e só a que a pessoa ainda não respondeu:
+1. "Qual é o nome do seu negócio e o que ele faz? Conte do seu jeito, em uma ou duas frases."
+2. "Onde o seu negócio aparece hoje? Pode ser o Instagram, um site ou o nome no Google."
+
+Todo o resto você descobre lendo, e propõe no brief em vez de perguntar: para quem é, onde fica, a ação principal (o WhatsApp da bio, o telefone do Google, o botão de agendar), as páginas, as fotos que existem, as cores, o tom. Não pergunte o que dá para ver.
+
+Depois das duas, uma mensagem só, opcional: "Quer me contar mais alguma coisa? Um site de que você gosta, uma cor que não quer, fotos que estão no computador. Se preferir, eu decido." com "Pode decidir por mim ★" e "Quero contar". Gosto visual e sites favoritos são sempre opcionais: se a pessoa delegar, siga sem perguntar de novo. Se ela não tiver Instagram, site nem Google, siga só com a primeira resposta e diga no brief o que falta.
+
+Sem marca guardada (`minha-marca/tokens.css`), faça a marca agora com a skill `minha-marca`, sem repetir perguntas: ela usa as duas respostas e o que você leu. Copie a marca para o site como diz o `MARCA_DE_EXEMPLO`.
 
 Leia tudo: os arquivos de `referencias/` e as páginas públicas que a pessoa indicar (site atual, Instagram, página no Google), com a ferramenta de ler páginas da internet do seu programa. Ler a internet é permitido; publicar ou enviar qualquer coisa, não. Copie para `material/` só o que a pessoa mandou ou autorizou usar.
 
@@ -118,9 +120,9 @@ Conferir antes de mostrar:
 1. `./estudio montar <nome>` (`SITE_MONTADO`). `MONTAR_FALHOU`: o erro está em `dados.detalhe`, numa parte do `_gerador/`; corrija e monte de novo.
 2. `./estudio checar <nome>` e `./estudio medir <nome>`. Saída 2: leia `dados.vermelhos` (cada um com `pagina`, `tipo`, `detalhe` e, no `medir`, `largura`; os tipos estão explicados em `_tipos_dos_achados` de `kit/mensagens.json`), corrija pela causa na parte certa do `_gerador/`, monte de novo e rode outra vez até `ok:true`. Leia também `dados.amarelos`: `contraste-nao-medido` (texto sobre foto ou degradê) pede olhar a foto daquele trecho.
 3. `./estudio prints <nome>` (`PRINTS_PRONTOS`): fotos da página inteira e de cada parte, em 390, 768, 1440 e 1920 de largura, com o movimento assentado, em `revisao/prints-rN/` e listadas em `dados.fotos`. Aviso `FOTO_LISA`: uma foto saiu quase toda de uma cor só; se não foi de propósito, algo não carregou. Abra **cada** imagem com a ferramenta de ler arquivo, uma a uma, começando pelo celular. Procure: texto cortado, encostado ou sobreposto; foto mal cortada; espaço morto; contraste fraco; a ação principal escondida; algo que não bate com a tese. Corrija e tire as fotos de novo.
-4. `./estudio abrir <nome>` (`SITE_ABERTO`; o endereço vem em `dados.endereco` e só funciona neste computador) e diga: "Abri o começo do site. Veja no computador e também com a janela estreita, como no celular."
+4. `./estudio abrir <nome>` (`SITE_ABERTO`): o navegador abre a prévia lado a lado, o celular e o computador na mesma tela (`dados.previa`; o site sozinho fica em `dados.endereco`, e os dois só funcionam neste computador). Diga: "Abri o começo do site, no celular e no computador lado a lado."
 
-Pergunte: "É esse o visual?" com "É esse ★", "Quero mudar algo". Ajuste até aprovar. Grave a aprovação no `andamento.md`. A partir daqui, a linguagem visual está travada: mudança de direção só com nova aprovação. Site com mais de uma página passa pelo piloto só com a página inicial; as outras herdam a direção.
+Pergunte: "É esse o visual?" com "É esse ★", "Quero mudar algo". Ajuste até aprovar; pedido vago ("mais caseiro", "mais elegante") segue o "Pedido vago: antes e depois", mais abaixo. Grave a aprovação no `andamento.md`. A partir daqui, a linguagem visual está travada: mudança de direção só com nova aprovação. Site com mais de uma página passa pelo piloto só com a página inicial; as outras herdam a direção.
 
 ## Etapa 6. Construção por parte
 
@@ -144,6 +146,8 @@ Rode também `./estudio desempenho <nome>` (`DESEMPENHO_MEDIDO`, números em `da
 
 ## Etapa 9. Revisão
 
+A pessoa não espera de tela vazia. Antes de começar, rode `./estudio abrir <nome>` e diga o texto de `ANDAMENTO_ABRI`. Depois, antes de cada etapa, uma frase de andamento de `kit/mensagens.json`: `ANDAMENTO_CONFERENCIA` (preflight e desempenho), `ANDAMENTO_FOTOS` (prints), `ANDAMENTO_OLHARES` (as 4 lentes), `ANDAMENTO_AJUSTES` (correções) e `ANDAMENTO_PRONTO` (passou). Nunca diga nota, número de vezes nem nome de etapa técnica.
+
 Skill `revisar`. Ela chama 4 revisores independentes e devolve nota e problemas. Meta 8,5, até 3 rodadas. Não bateu na terceira: mostre à pessoa o que falta e deixe ela decidir.
 
 ## Etapa 10. Entrega
@@ -157,13 +161,22 @@ Skill `revisar`. Ela chama 4 revisores independentes e devolve nota e problemas.
 
 Pergunte uma vez: "Quer guardar algo deste site como regra para os próximos? (um tom, uma cor, um tipo de parte que funcionou)" Se sim, acrescente em `minha-marca/marca.md`.
 
+## Pedido vago: antes e depois
+
+"Mais caseiro", "mais elegante", "mais moderno", "não sei, não gostei": você traduz em 2 ou 3 mudanças concretas, que se veem (a letra, a cor, a foto, o espaço, o movimento, o texto), e mostra o antes e o depois. Nunca pergunte "o que você quer dizer com isso?": proponha e mostre.
+1. `./estudio antes <nome>` (`ANTES_GUARDADO`): guarda o site como está, antes de mexer.
+2. Faça as 2 ou 3 mudanças no `_gerador/` e em `site/assets/`, cada uma ligada ao pedido, e rode `montar`.
+3. Escreva `arquivos.mudancas` (`revisao/antes-depois/mudancas.json`) com as palavras da pessoa em `pedido` e cada mudança com `titulo` (o que mudou, em palavras do dia a dia) e `porque` (como atende o pedido).
+4. `./estudio comparar <nome>` (`COMPARACAO_PRONTA`): abre o antes e o depois lado a lado, com as mudanças numeradas. Saída 2: `POUCAS_MUDANCAS` (menos de 2) ou `NADA_MUDOU` (faltou montar); corrija e rode de novo.
+5. Diga em uma frase cada mudança e pergunte: "Qual fica?" com "O depois ★", "Voltar como estava" e "Outro caminho". "Voltar": desfaça as mudanças nas fontes e monte de novo. "Outro caminho": volte ao passo 1 com outra leitura do pedido.
+
 ## Mudar um site que já existe
 
 1. Leia `andamento.md`, `brief.md`, `direcao.md` e as fotos mais recentes em `revisao/`.
 2. Mudança de conteúdo (texto, preço, foto, página nova): atualize o brief e o `fatos.md` primeiro, depois a parte no `_gerador/`, `montar`, `preflight`, `prints` (leia as páginas mexidas, nos quatro tamanhos) e, se mudou mais de 3 partes, uma rodada de `revisar`.
-3. Mudança de visual geral: mostre uma parte de teste e peça aprovação antes de mexer nas outras.
+3. Mudança de visual geral, ou pedido vago: siga o "Pedido vago: antes e depois" numa parte de teste e peça aprovação antes de mexer nas outras.
 4. Gere o pacote de novo e lembre a pessoa de subir o arquivo novo na hospedagem (skill `hospedar`).
 
 ## Onde você para e pergunta
 
-Na coleta (só o que falta), no brief (portão 1), no piloto (portão 2), quando aparece fato novo sem fonte, e quando a revisão não bate a meta na terceira rodada. Nada mais: o resto é com você.
+Na coleta (só as duas perguntas, e a opcional), no brief (portão 1), no antes e depois, no piloto (portão 2), quando aparece fato novo sem fonte, e quando a revisão não bate a meta na terceira rodada. Nada mais: o resto é com você.

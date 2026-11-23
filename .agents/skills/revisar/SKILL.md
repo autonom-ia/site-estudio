@@ -11,7 +11,7 @@ Comandos: `./estudio <comando>` (no PowerShell, `.\estudio.cmd <comando>`). Leia
 
 ## 1. Antes de chamar os revisores
 
-A checagem mecânica vem antes do julgamento: o diretor de arte não gasta olho com link morto. Rode e leia (N = número da rodada):
+A checagem mecânica vem antes do julgamento: o diretor de arte não gasta olho com link morto. A pessoa acompanha com o site aberto: rode `./estudio abrir <nome>` antes de tudo e diga uma frase de andamento antes de cada passo (`ANDAMENTO_*` em `kit/mensagens.json`; a skill `novo-site`, etapa 9, diz qual em cada passo). Rode e leia (N = número da rodada):
 1. `./estudio montar <nome>` e `./estudio preflight <nome>`: precisa de `ok:true`. Vermelho não vai para revisor: corrija antes.
 2. `./estudio desempenho <nome>`: só relatório.
 3. `./estudio prints <nome> --rodada N`: fotos novas de todas as páginas, nos quatro tamanhos, inteiras e por parte, em `sites/<nome>/revisao/prints-rN/` (código `PRINTS_PRONTOS`, lista em `dados.fotos`). Aviso `FOTO_LISA`: abra a foto antes de seguir; algo pode não ter carregado.
@@ -46,12 +46,12 @@ Peça a cada revisor: nota de 0 a 10 (uma casa decimal) **por página** e a nota
 
 ## 4. Como abrir os revisores
 
-Antes da primeira rodada, avise a pessoa em uma frase do tempo e do consumo: "A revisão chama 4 revisores separados e pode levar até 3 rodadas; costuma levar alguns minutos por rodada e gasta uma parte maior do seu plano do que uma conversa comum." Não pergunte; só avise e siga.
+Antes da primeira rodada, avise a pessoa em uma frase do tempo e do consumo: "Agora quatro olhares independentes conferem o site, cada um de um jeito. Leva alguns minutos e gasta uma parte maior do seu plano do que uma conversa comum. Enquanto isso, o site fica aberto para você olhar." Não pergunte; só avise e siga.
 
 Escolha o jeito na ordem abaixo e use o primeiro que existir:
 - **Claude Code:** use a ferramenta de subagente (Agent ou Task), **um subagente novo por lente**, os quatro em paralelo. Passe o texto da lente com os caminhos completos.
 - **Codex com subagente:** um subagente novo por lente, como no Claude Code.
-- **Codex sem subagente, com o programa `codex` instalado:** confira antes se ele existe (`command -v codex` no Mac; `Get-Command codex` no PowerShell). Se existir, rode um processo novo, só leitura, por lente: `codex exec --sandbox read-only --cd "<pasta do estúdio>" "<texto da lente>"`. Avise antes, em uma frase: "Vou chamar revisores separados para conferir. O Codex vai pedir licença. Pode aprovar."
+- **Codex sem subagente, com o programa `codex` instalado:** confira antes se ele existe (`command -v codex` no Mac; `Get-Command codex` no PowerShell). Se existir, rode um processo novo, só leitura, por lente: `codex exec --sandbox read-only --cd "<pasta do estúdio>" "<texto da lente>"`. Avise antes, em uma frase: "Vou chamar ajudantes separados para conferir. O Codex vai pedir licença. Pode aprovar."
 - **Sem subagente e sem o programa `codex`:** não tente instalar nada nem chamar o que não existe. Vá direto para as 4 lentes em sequência, cada uma começando do zero: releia só o pacote, escreva a avaliação sem consultar o que você pensou como autor, e só depois passe à próxima lente.
 
 Cada rodada usa revisores novos. Nunca reaproveite o da rodada anterior.
