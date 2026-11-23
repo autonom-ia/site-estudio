@@ -1,6 +1,7 @@
 // Revisão mais curta e estável (v1.1), sem navegador: o resumo de cada rodada, o contexto que os
-// revisores da rodada seguinte recebem (régua + aceitos e recusados), a medida da meta (8,5 em até
-// 2 rodadas, oscilação de cada lente até 0,3).
+// revisores da rodada seguinte recebem (régua + aceitos e recusados, sem nota nenhuma), e as duas
+// metas medidas em separado: passar com 8,5 em até 2 rodadas; estabilidade de até 0,3 por lente
+// numa reavaliação do mesmo estado do site, sem conserto entre as duas notas.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -13,6 +14,7 @@ import { validarRodada, trajetoria, montarContexto } from '../scripts/lib/rodada
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DESPACHANTE = path.join(RAIZ, 'kit', 'scripts', 'estudio.mjs');
 const REGUA = fs.readFileSync(path.join(RAIZ, 'kit', 'regua-revisao.md'), 'utf8');
+const SKILL = fs.readFileSync(path.join(RAIZ, '.claude', 'skills', 'revisar', 'SKILL.md'), 'utf8');
 
 let base;
 let env;
@@ -39,45 +41,100 @@ const rodada = (n, notas, extra = {}) => ({
   ...extra,
 });
 
-test('rodada-N.json: valida notas de 0 a 10, as 4 lentes, o número da rodada e as listas', () => {
+test('rodada-N.json: valida notas de 0 a 10, as 4 lentes, o número da rodada, as listas e o visitante', () => {
   assert.deepEqual(validarRodada(rodada(1, { arte: 8, geral: 8, fatos: 8, qa: 8 }), 1), []);
   const erros = validarRodada({ rodada: 2, notas: { arte: 11, geral: '8' }, aceitos: [{}], recusados: 'nada' }, 1);
-  for (const parte of ['"rodada" deveria ser 1', 'nota "arte"', 'nota "geral"', 'nota "fatos"', 'nota "qa"', 'aceitos[0] sem "problema"', '"recusados" precisa ser uma lista']) {
+  for (const parte of ['"rodada" deveria ser 1', 'nota "arte"', 'nota "geral"', 'nota "fatos"', 'nota "qa"', 'aceitos[0] sem "problema"', '"recusados" precisa ser uma lista', 'falta "visitante"']) {
     assert.ok(erros.some((e) => e.includes(parte)), `${parte} em ${erros.join(' | ')}`);
   }
   assert.deepEqual(validarRodada([], 1), ['não é um objeto']);
+  // o teste do visitante é obrigatório e "sem_ajuda" é sim ou não, não texto
+  const visitanteRuim = validarRodada(rodada(1, { arte: 8, geral: 8, fatos: 8, qa: 8 }, { visitante: { oferta: '', proximo_passo: 'ligar', sem_ajuda: 'sim' } }), 1);
+  assert.ok(visitanteRuim.some((e) => e.includes('visitante.oferta')), visitanteRuim.join(' | '));
+  assert.ok(visitanteRuim.some((e) => e.includes('visitante.sem_ajuda')), visitanteRuim.join(' | '));
+  // a reavaliação é opcional, mas quando vem traz as 4 notas
+  const reavRuim = validarRodada(rodada(1, { arte: 8, geral: 8, fatos: 8, qa: 8 }, { reavaliacao: { notas: { arte: 8 } } }), 1);
+  assert.ok(reavRuim.some((e) => e.includes('reavaliacao') && e.includes('"qa"')), reavRuim.join(' | '));
 });
 
-test('trajetória: média de uma casa, passa com 8,5 e nenhuma lente abaixo de 7,5, oscilação por lente', () => {
+test('trajetória: média de uma casa para mostrar, passa com 8,5 e nenhuma lente abaixo de 7,5', () => {
   const t = trajetoria([
     rodada(1, { arte: 7.3, geral: 7.4, fatos: 7.4, qa: 8.6 }),
     rodada(2, { arte: 8.4, geral: 8.6, fatos: 8.8, qa: 9.0 }),
-    rodada(3, { arte: 8.6, geral: 8.4, fatos: 8.8, qa: 9.0 }),
   ]);
-  assert.deepEqual(t.notas.map((n) => [n.rodada, n.media, n.passou]), [[1, 7.7, false], [2, 8.7, true], [3, 8.7, true]]);
+  assert.deepEqual(t.notas.map((n) => [n.rodada, n.media, n.passou]), [[1, 7.7, false], [2, 8.7, true]]);
   assert.equal(t.passou_na_rodada, 2);
-  assert.deepEqual(t.oscilacao, { arte: 1.1, geral: 1.2, fatos: 1.4, qa: 0.4, media: 1 });
+  assert.equal(t.oscilacao, undefined, 'variação entre rodadas com conserto no meio não é medida de estabilidade');
   // média alta não basta: uma lente abaixo de 7,5 ou um bloqueio seguram a rodada
   const baixa = trajetoria([rodada(1, { arte: 7.4, geral: 9.5, fatos: 9.5, qa: 9.5 })]);
   assert.equal(baixa.notas[0].passou, false);
   const bloqueada = trajetoria([rodada(1, { arte: 9, geral: 9, fatos: 9, qa: 9 }, { bloqueios: ['fato sem fonte'] })]);
   assert.deepEqual([bloqueada.notas[0].passou, bloqueada.passou_na_rodada], [false, null]);
-  // rodada que falta no meio não vira oscilação falsa
-  const pulada = trajetoria([rodada(1, { arte: 6, geral: 6, fatos: 6, qa: 6 }), rodada(3, { arte: 9, geral: 9, fatos: 9, qa: 9 })]);
-  assert.equal(pulada.oscilacao.arte, 0);
 });
 
-test('contexto: régua sempre; decisões das rodadas anteriores, da mais nova para a mais velha', () => {
+test('trajetória: 8,45 não vira 8,5 para passar; 8,5 exato passa', () => {
+  const quase = trajetoria([rodada(1, { arte: 8.4, geral: 8.5, fatos: 8.4, qa: 8.5 })]);
+  assert.equal(quase.notas[0].passou, false);
+  assert.equal(quase.passou_na_rodada, null);
+  const exato = trajetoria([rodada(1, { arte: 8.4, geral: 8.6, fatos: 8.5, qa: 8.5 })]);
+  assert.deepEqual([exato.notas[0].media, exato.notas[0].passou], [8.5, true]);
+});
+
+test('trajetória: visitante sem ajuda bloqueia sozinho e o geral acima de 7 é acusado', () => {
+  const t = trajetoria([rodada(1, { arte: 9, geral: 8.5, fatos: 9, qa: 9 }, { visitante: { oferta: 'pão', proximo_passo: 'ligar', sem_ajuda: false } })]);
+  assert.equal(t.notas[0].passou, false);
+  assert.equal(t.passou_na_rodada, null);
+  assert.equal(t.notas[0].bloqueios, 1);
+  assert.deepEqual(t.notas[0].alertas, ['visitante_sem_ajuda', 'geral_acima_do_teto']);
+  const noTeto = trajetoria([rodada(1, { arte: 9, geral: 7, fatos: 9, qa: 9 }, { visitante: { oferta: 'pão', proximo_passo: 'ligar', sem_ajuda: false } })]);
+  assert.deepEqual(noTeto.notas[0].alertas, ['visitante_sem_ajuda']);
+  assert.deepEqual(trajetoria([rodada(1, { arte: 9, geral: 9, fatos: 9, qa: 9 })]).notas[0].alertas, []);
+});
+
+test('metas separadas: rodadas por passou_na_rodada; estabilidade só por reavaliação do mesmo estado', () => {
+  const r1 = rodada(1, { arte: 7.3, geral: 7.4, fatos: 7.4, qa: 8.6 });
+  // sem reavaliação, a estabilidade não foi medida: nada de "0" por falta de dado
+  const semMedida = trajetoria([rodada(1, { arte: 9, geral: 9, fatos: 9, qa: 9 })]);
+  assert.equal(semMedida.estabilidade, null);
+  assert.deepEqual(semMedida.metas, { em_ate_2_rodadas: true, estabilidade: null });
+  // subir de 7,7 para 8,7 com conserto no meio é progresso, não instabilidade
+  const r2 = rodada(2, { arte: 8.4, geral: 8.6, fatos: 8.8, qa: 9.0 }, { reavaliacao: { notas: { arte: 8.6, geral: 8.4, fatos: 8.8, qa: 9.1 } } });
+  const t = trajetoria([r1, r2]);
+  assert.deepEqual(t.estabilidade, { arte: 0.2, geral: 0.2, fatos: 0, qa: 0.1, media: 0, rodadas: [2] });
+  assert.deepEqual(t.metas, { em_ate_2_rodadas: true, estabilidade: true });
+  const instavel = trajetoria([rodada(1, { arte: 9, geral: 9, fatos: 9, qa: 9 }, { reavaliacao: { notas: { arte: 8.4, geral: 9, fatos: 9, qa: 9 } } })]);
+  assert.equal(instavel.estabilidade.arte, 0.6);
+  assert.equal(instavel.metas.estabilidade, false);
+});
+
+test('contexto: régua sem meta nem ruído; decisões sem nota nenhuma, da rodada mais nova para a mais velha', () => {
   const primeira = montarContexto(1, REGUA, []);
   assert.ok(primeira.includes('## Régua das notas') && primeira.includes('primeira rodada'));
+  // a régua que o revisor lê não traz a frase de ruído nem "só baixe por problema novo"
+  for (const ancora of ['ruído', '0,3', 'problema novo']) assert.ok(!REGUA.includes(ancora), `régua traz "${ancora}"`);
   const ctx = montarContexto(3, REGUA, [
     rodada(1, { arte: 7, geral: 7, fatos: 7, qa: 8 }, { recusados: [{ lente: 'arte', problema: 'centralizar o pico', porque: 'o brief aprovado pede o pico à esquerda' }] }),
     rodada(2, { arte: 8.4, geral: 8.6, fatos: 8.8, qa: 9 }, { aceitos: [{ lente: 'qa', pagina: 'index.html', problema: 'foco some depois do menu', conserto: 'foco vai para a parte' }] }),
   ]);
-  assert.ok(ctx.indexOf('### Rodada 2 (média 8,7)') < ctx.indexOf('### Rodada 1 (média 7,3)'), ctx);
+  assert.ok(ctx.indexOf('### Rodada 2') >= 0 && ctx.indexOf('### Rodada 2') < ctx.indexOf('### Rodada 1'), ctx);
+  for (const nota of ['média', '8,7', '7,3', '8.6', '8,6']) assert.ok(!ctx.includes(nota), `contexto traz "${nota}"`);
   assert.ok(ctx.includes('- QA (index.html). foco some depois do menu: foco vai para a parte'));
   assert.ok(ctx.includes('- Diretor de arte. centralizar o pico: o brief aprovado pede o pico à esquerda'));
   assert.ok(ctx.includes('Não reabra sem fato novo'));
+});
+
+test('skill revisar: o diretor geral faz o teste do visitante antes de ler o contexto', () => {
+  const linhas = SKILL.split('\n');
+  const geral = linhas.find((l) => l.startsWith('**Diretor geral.**'));
+  assert.ok(geral, 'parágrafo do diretor geral');
+  const foto = geral.indexOf('inicio-390-inteira.jpg');
+  const contexto = geral.indexOf('contexto-rN.md');
+  assert.ok(foto >= 0 && contexto > foto, 'a foto do celular vem antes do contexto no pedido do diretor geral');
+  // nenhuma frase manda TODO pedido começar pelo contexto (isso contaminava o teste do visitante)
+  assert.ok(!SKILL.includes('Todo pedido começa com'), 'regra geral contradiz o diretor geral');
+  // a meta e o ruído não entram no pedido ao revisor
+  const lentes = SKILL.slice(SKILL.indexOf('## 3. As 4 lentes'), SKILL.indexOf('## 4.'));
+  for (const ancora of ['0,3', 'ruído', '8,5']) assert.ok(!lentes.includes(ancora), `lentes trazem "${ancora}"`);
 });
 
 test('revisao: escreve contexto-rN.md, avisa rodada ilegível e devolve a trajetória das notas', () => {

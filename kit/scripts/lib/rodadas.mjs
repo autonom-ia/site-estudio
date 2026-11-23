@@ -1,6 +1,10 @@
 // Rodadas de revisão: lê o que cada rodada decidiu (revisao/rodada-N.json), monta o contexto que
-// os revisores da rodada seguinte recebem (régua + aceitos e recusados) e mede a trajetória das
-// notas (meta e oscilação de cada lente entre rodadas).
+// os revisores da rodada seguinte recebem (régua + aceitos e recusados, sem nota nenhuma: nota
+// anterior ancora o revisor novo) e mede as duas metas em separado:
+// - passar (média >= 8,5, nenhuma lente < 7,5, nenhum bloqueio) em até 2 rodadas;
+// - estabilidade: a mesma lente, no mesmo estado do site, avaliada por dois revisores novos
+//   (notas e reavaliacao.notas, sem conserto no meio), varia no máximo 0,3. Entre rodadas há
+//   conserto, então a diferença ali é progresso, não ruído, e não entra nessa medida.
 //
 // revisao/rodada-N.json (escrito pela skill revisar, junto do rodada-N.md):
 // { "rodada": N,
@@ -8,17 +12,35 @@
 //   "visitante": { "oferta": "…", "proximo_passo": "…", "sem_ajuda": true },
 //   "bloqueios": ["…"],
 //   "aceitos": [{ "lente": "arte", "pagina": "index.html", "problema": "…", "conserto": "…" }],
-//   "recusados": [{ "lente": "fatos", "problema": "…", "porque": "…" }] }
+//   "recusados": [{ "lente": "fatos", "problema": "…", "porque": "…" }],
+//   "reavaliacao": { "notas": { "arte": 7.9, "geral": 8.1, "fatos": 8.5, "qa": 8.8 } } }  ← opcional
 import fs from 'node:fs';
 import path from 'node:path';
 import { lerTexto } from './json.mjs';
 
 export const LENTES = Object.freeze(['arte', 'geral', 'fatos', 'qa']);
 export const NOME_DA_LENTE = Object.freeze({ arte: 'Diretor de arte', geral: 'Diretor geral', fatos: 'Revisor de fatos', qa: 'QA' });
-export const META = Object.freeze({ media: 8.5, minima: 7.5, ruido_lente: 0.3, ruido_media: 0.1 });
+export const META = Object.freeze({ media: 8.5, minima: 7.5, rodadas: 2, estabilidade_lente: 0.3, teto_geral_visitante: 7 });
 
 const ehTexto = (v) => typeof v === 'string' && v.trim().length > 0;
 const umaCasa = (v) => Math.round(v * 10) / 10;
+const ehNota = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 10;
+// Soma em centésimos: a comparação com 8,5 não depende do arredondamento de ponto flutuante.
+const centesimos = (v) => Math.round(v * 100);
+const mediaExata = (notas) => LENTES.reduce((a, l) => a + notas[l], 0) / LENTES.length;
+const atingeMedia = (notas) => LENTES.reduce((a, l) => a + centesimos(notas[l]), 0) >= centesimos(META.media) * LENTES.length;
+
+function errosDeNotas(notas, prefixo) {
+  return LENTES.filter((l) => !ehNota(notas ? notas[l] : undefined)).map((l) => `${prefixo} "${l}" precisa ser um número de 0 a 10`);
+}
+
+function errosDoVisitante(v) {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return ['falta "visitante" (o teste do visitante do diretor geral)'];
+  const erros = [];
+  for (const campo of ['oferta', 'proximo_passo']) if (!ehTexto(v[campo])) erros.push(`"visitante.${campo}" precisa ser a resposta do visitante`);
+  if (typeof v.sem_ajuda !== 'boolean') erros.push('"visitante.sem_ajuda" precisa ser true ou false');
+  return erros;
+}
 
 // Lista os problemas de um rodada-N.json; vazia = válido.
 export function validarRodada(obj, n) {
@@ -27,9 +49,11 @@ export function validarRodada(obj, n) {
   if (obj.rodada !== n) erros.push(`"rodada" deveria ser ${n}`);
   const notas = obj.notas && typeof obj.notas === 'object' ? obj.notas : null;
   if (!notas) erros.push('falta "notas"');
-  for (const l of LENTES) {
-    const v = notas ? notas[l] : undefined;
-    if (typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 10) erros.push(`nota "${l}" precisa ser um número de 0 a 10`);
+  erros.push(...errosDeNotas(notas, 'nota'));
+  erros.push(...errosDoVisitante(obj.visitante));
+  if (obj.reavaliacao !== undefined) {
+    const reav = obj.reavaliacao && typeof obj.reavaliacao === 'object' ? obj.reavaliacao.notas : null;
+    erros.push(...errosDeNotas(reav && typeof reav === 'object' ? reav : null, 'reavaliacao: nota'));
   }
   for (const campo of ['aceitos', 'recusados']) {
     if (!Array.isArray(obj[campo])) {
@@ -68,26 +92,43 @@ export function lerRodadas(pastaRevisao, ate) {
   return { rodadas, ilegiveis };
 }
 
-// Nota de cada rodada, se passou, e a maior oscilação de cada lente entre rodadas seguidas.
+// O que o código impõe sozinho, sem depender do orquestrador copiar para "bloqueios".
+function alertasDaRodada(r) {
+  if (r.visitante.sem_ajuda !== false) return [];
+  return r.notas.geral > META.teto_geral_visitante ? ['visitante_sem_ajuda', 'geral_acima_do_teto'] : ['visitante_sem_ajuda'];
+}
+
+function resumoDaRodada(r) {
+  const valores = LENTES.map((l) => r.notas[l]);
+  const alertas = alertasDaRodada(r);
+  const bloqueios = (Array.isArray(r.bloqueios) ? r.bloqueios.length : 0) + (alertas.includes('visitante_sem_ajuda') ? 1 : 0);
+  const passou = atingeMedia(r.notas) && Math.min(...valores) >= META.minima && bloqueios === 0;
+  const lentes = Object.fromEntries(LENTES.map((l) => [l, r.notas[l]]));
+  return { rodada: r.rodada, ...lentes, media: umaCasa(mediaExata(r.notas)), bloqueios, alertas, passou };
+}
+
+// Maior diferença de cada lente entre a avaliação e a reavaliação do mesmo estado; null se não houve.
+function estabilidade(rodadas) {
+  const medidas = rodadas.filter((r) => r.reavaliacao && r.reavaliacao.notas);
+  if (!medidas.length) return null;
+  const maior = (f) => umaCasa(Math.max(...medidas.map(f)));
+  const resultado = Object.fromEntries(LENTES.map((l) => [l, maior((r) => Math.abs(r.notas[l] - r.reavaliacao.notas[l]))]));
+  resultado.media = maior((r) => Math.abs(mediaExata(r.notas) - mediaExata(r.reavaliacao.notas)));
+  resultado.rodadas = medidas.map((r) => r.rodada);
+  return resultado;
+}
+
+// Nota de cada rodada, se passou, e as duas metas (rodadas e estabilidade) medidas em separado.
 export function trajetoria(rodadas) {
-  const notas = rodadas.map((r) => {
-    const valores = LENTES.map((l) => r.notas[l]);
-    const media = umaCasa(valores.reduce((a, b) => a + b, 0) / valores.length);
-    const bloqueios = Array.isArray(r.bloqueios) ? r.bloqueios.length : 0;
-    const passou = media >= META.media && Math.min(...valores) >= META.minima && bloqueios === 0;
-    return { rodada: r.rodada, ...Object.fromEntries(LENTES.map((l) => [l, r.notas[l]])), media, bloqueios, passou };
-  });
-  const oscilacao = {};
-  for (const l of [...LENTES, 'media']) {
-    let maior = 0;
-    for (let i = 1; i < notas.length; i += 1) {
-      if (notas[i].rodada !== notas[i - 1].rodada + 1) continue;
-      maior = Math.max(maior, Math.abs(notas[i][l] - notas[i - 1][l]));
-    }
-    oscilacao[l] = umaCasa(maior);
-  }
+  const notas = rodadas.map(resumoDaRodada);
   const primeira = notas.find((n) => n.passou);
-  return { notas, oscilacao, passou_na_rodada: primeira ? primeira.rodada : null };
+  const passouNaRodada = primeira ? primeira.rodada : null;
+  const est = estabilidade(rodadas);
+  const metas = {
+    em_ate_2_rodadas: passouNaRodada !== null && passouNaRodada <= META.rodadas,
+    estabilidade: est ? LENTES.every((l) => centesimos(est[l]) <= centesimos(META.estabilidade_lente)) : null,
+  };
+  return { notas, passou_na_rodada: passouNaRodada, estabilidade: est, metas };
 }
 
 function linhaDeItem(item, chaveFinal) {
@@ -119,8 +160,7 @@ export function montarContexto(n, regua, rodadas) {
     '',
   );
   for (const r of [...rodadas].reverse()) {
-    const media = umaCasa(LENTES.reduce((a, l) => a + r.notas[l], 0) / LENTES.length);
-    partes.push(`### Rodada ${r.rodada} (média ${String(media).split('.').join(',')})`, '');
+    partes.push(`### Rodada ${r.rodada}`, '');
     partes.push('Aceitos:', ...(r.aceitos.length ? r.aceitos.map((i) => linhaDeItem(i, 'conserto')) : ['- nenhum']), '');
     partes.push('Recusados:', ...(r.recusados.length ? r.recusados.map((i) => linhaDeItem(i, 'porque')) : ['- nenhum']), '');
   }

@@ -26,7 +26,7 @@ A mesma régua vale em todas as rodadas. Dê a nota pelo degrau que o site alcan
 - **8**: tudo confere e cada afirmação tem linha em `fatos.md`.
 - **9**: além disso, nenhum dado repetido diferente entre páginas, e pendência de fonte aparece como pendência (não como fato).
 - **10**: nada a conferir de novo.
-- Pendência que só o dono do negócio resolve (confirmar horário, autorizar foto) vai para "bloqueia publicar"; **não** baixa a nota rodada após rodada.
+- Pendência que só o dono do negócio resolve (confirmar horário, autorizar foto) vai para "bloqueia publicar"; **não** baixa a nota.
 
 ### QA
 - **5**: alguém não consegue usar: teclado preso, botão sem nome, texto ilegível, página que rola para o lado.
@@ -37,7 +37,7 @@ A mesma régua vale em todas as rodadas. Dê a nota pelo degrau que o site alcan
 - **10**: nada a apontar.
 
 ### Regras para todas as lentes
-- A nota só cai por problema novo ou por correção que não pegou. Diga qual dos dois.
-- Diferença de até **0,3** numa lente, de uma rodada para a outra, é ruído, não progresso nem piora.
+- Dê a nota pelo que você vê agora, degrau por degrau desta régua; não compare com outra versão do site.
+- Item em "Aceitos" cuja correção não pegou volta como problema, dizendo que a correção não pegou.
 - Não reabra o que está em "Recusados" sem fato novo.
 - Cada problema vem com página, tamanho de tela, parte e conserto concreto.

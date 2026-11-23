@@ -1,8 +1,8 @@
 // Prepara a rodada N de revisão: escreve revisao/contexto-rN.md com a régua das notas
 // (kit/regua-revisao.md) e o que as rodadas anteriores aceitaram e recusaram (rodada-K.json).
 // Cada revisor lê esse arquivo antes de avaliar: o que já foi decidido não volta a cada rodada.
-// Devolve também a trajetória das notas (média, se passou, oscilação de cada lente), que é como
-// se mede a meta "8,5 em até 2 rodadas, com cada lente variando no máximo 0,3".
+// Devolve também a trajetória das notas (média, se passou, alertas) e as duas metas medidas em
+// separado: passar em até 2 rodadas; estabilidade de até 0,3 por lente numa reavaliação do mesmo estado.
 import fs from 'node:fs';
 import path from 'node:path';
 import { nomeDoSite } from '../lib/args.mjs';

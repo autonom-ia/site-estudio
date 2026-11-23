@@ -21,7 +21,7 @@ A checagem mecânica vem antes do julgamento: o diretor de arte não gasta olho 
 ## 2. O pacote
 
 Cada revisor recebe só caminhos de arquivos, nunca a sua opinião:
-- `sites/<nome>/revisao/contexto-rN.md` (a régua das notas e o que já foi decidido), **sempre a primeira leitura**;
+- `sites/<nome>/revisao/contexto-rN.md` (a régua das notas e o que já foi aceito e recusado, sem nota de rodada nenhuma), **a primeira leitura**; no diretor geral, logo depois do teste do visitante;
 - `sites/<nome>/brief.md` (objetivo, público, ação principal, mapa do site);
 - `sites/<nome>/direcao.md` (tese visual, tipografia, foto, cor, movimento);
 - `sites/<nome>/referencias.md` (os princípios aprendidos);
@@ -32,15 +32,15 @@ Cada revisor recebe só caminhos de arquivos, nunca a sua opinião:
 - `sites/<nome>/revisao/preflight-rN.json` e `desempenho-rN.json` (relatório mecânico);
 - o endereço do site aberto por `./estudio abrir <nome>`, quando o revisor puder usar um navegador.
 
-O que **nunca** entra no pedido ao revisor: a nota esperada ou a meta, qual versão é a nova, o problema que você acha que existe, "justifique por que não deu mais", nem qualquer parte desta conversa.
+O que **nunca** entra no pedido ao revisor: a nota esperada ou a meta, a nota de rodada anterior, o que é ruído entre notas, qual versão é a nova, o problema que você acha que existe, "justifique por que não deu mais", nem qualquer parte desta conversa.
 
 ## 3. As 4 lentes
 
-Todo pedido começa com: "Leia primeiro <contexto-rN.md>: dê a nota pela régua dele e não reabra o que está em Recusados sem fato novo." Peça a cada revisor: nota de 0 a 10 (uma casa decimal) **por página** e a nota geral, os problemas do mais grave ao menos grave (cada um com página, tamanho de tela, parte, o que está errado e o conserto concreto) e o que está bom e não deve ser mexido. O revisor só lê; não edita nada.
+O pedido do diretor de arte, do revisor de fatos e do QA começa com: "Leia primeiro <contexto-rN.md>: dê a nota pela régua dele e não reabra o que está em Recusados sem fato novo." O do diretor geral começa pelo teste do visitante e só depois manda ler o contexto (ver abaixo): quem já leu o que foi corrigido não é mais um visitante novo. Peça a cada revisor: nota de 0 a 10 (uma casa decimal) **por página** e a nota geral, os problemas do mais grave ao menos grave (cada um com página, tamanho de tela, parte, o que está errado e o conserto concreto) e o que está bom e não deve ser mexido. O revisor só lê; não edita nada.
 
 **Diretor de arte.** "Você é diretor de arte de sites premiados. Leia <direcao.md> e <referencias.md>, depois olhe as fotos em <prints-rN>, começando pelo celular, e o código em <site>. Avalie: a tese visual de <direcao.md> se cumpre em todas as páginas? A tipografia tem personalidade e cria hierarquia sem precisar de caixa? O ritmo varia (tela cheia, respiro, pico)? A foto é real, bem cortada e com luz que serve à mensagem? O movimento tem propósito e não atrapalha a leitura? O computador e o celular contam a mesma história? Há grade de cartões com borda e fundo, ícone em quadradinho, gradiente genérico ou qualquer coisa com cara de gerada? Faça o teste: trocando o nome do negócio, esta página serviria para outro? Aponte cada parte que falha."
 
-**Diretor geral.** Começa pelo **teste do visitante**, dentro desta lente (não é um quinto revisor): "Antes de ler qualquer outro arquivo, abra só <prints-rN>/inicio-390-inteira.jpg, como alguém que achou o site no celular e nunca ouviu falar do negócio. Responda em uma linha cada: 1) o que este lugar oferece; 2) qual é o próximo passo que a página pede; 3) dá para fazer esse passo sozinho, só com o celular, sem perguntar nada a ninguém (sim ou não, e por quê). Só depois siga." E então: "Você dirige o site. Leia <brief.md>, depois veja as fotos em <prints-rN> na ordem das páginas e leia o texto das páginas em <site>. Avalie: o site cumpre o objetivo do brief para esse público? A ação principal é óbvia em 5 segundos, no celular, sem rolar? Cada parte tem uma mensagem só, e a sequência conta uma história que leva à ação? O tom combina com <marca.md>? O texto soa como gente da marca falando, sem jargão, sem frase de efeito vazia, sem 'bem-vindo ao nosso site'? O fecho de cada página diz o que fazer? Compare suas 3 respostas do teste do visitante com o objetivo e a ação principal do brief: se não batem, ou se a 3 é não, esse é o problema mais grave da sua lista."
+**Diretor geral.** Começa pelo **teste do visitante**, dentro desta lente (não é um quinto revisor): "Antes de ler qualquer outro arquivo, abra só <prints-rN>/inicio-390-inteira.jpg, como alguém que achou o site no celular e nunca ouviu falar do negócio. Responda em uma linha cada: 1) o que este lugar oferece; 2) qual é o próximo passo que a página pede; 3) dá para fazer esse passo sozinho, só com o celular, sem perguntar nada a ninguém (sim ou não, e por quê). Escreva as 3 respostas antes de abrir qualquer outro arquivo e não as mude depois." E então: "Agora leia <contexto-rN.md>: dê a nota pela régua dele e não reabra o que está em Recusados sem fato novo. Você dirige o site. Leia <brief.md>, depois veja as fotos em <prints-rN> na ordem das páginas e leia o texto das páginas em <site>. Avalie: o site cumpre o objetivo do brief para esse público? A ação principal é óbvia em 5 segundos, no celular, sem rolar? Cada parte tem uma mensagem só, e a sequência conta uma história que leva à ação? O tom combina com <marca.md>? O texto soa como gente da marca falando, sem jargão, sem frase de efeito vazia, sem 'bem-vindo ao nosso site'? O fecho de cada página diz o que fazer? Compare suas 3 respostas do teste do visitante com o objetivo e a ação principal do brief: se não batem, ou se a 3 é não, esse é o problema mais grave da sua lista."
 
 **Revisor de fatos.** "Você confere fatos. Liste todo número, preço, endereço, telefone, horário, @, e-mail, nome, ano, prêmio, depoimento e afirmação de fato que aparece no texto das páginas em <site>, nos links de contato e nos dados estruturados (JSON-LD). Para cada um, procure a fonte em <fatos.md> e nos arquivos de <referencias>. Marque: confere, diverge (diga o certo), sem fonte. Marque também afirmação absoluta que a fonte não sustenta ('o melhor', 'o único', 'desde sempre') e depoimento sem origem. Não use conhecimento de fora como fonte."
 
@@ -60,7 +60,7 @@ Cada rodada usa revisores novos. Nunca reaproveite o da rodada anterior.
 
 ## 5. Juntar e conferir
 
-1. Nota da rodada = média das notas gerais das 4 lentes. **Passa com 8,5 ou mais e nenhuma lente abaixo de 7,5.** Fato sem fonte ou divergente, problema de QA que impede alguém de usar o site (teclado preso, botão sem nome, texto ilegível) e teste do visitante com "não" na terceira pergunta bloqueiam mesmo com média alta.
+1. Nota da rodada = média das notas gerais das 4 lentes. **Passa com 8,5 ou mais e nenhuma lente abaixo de 7,5.** Fato sem fonte ou divergente, problema de QA que impede alguém de usar o site (teclado preso, botão sem nome, texto ilegível) e teste do visitante com "não" na terceira pergunta bloqueiam mesmo com média alta. Visitante com "não" também põe o diretor geral no teto 7: se a nota dele veio acima, devolva a ele.
 2. Revisor também erra. Antes de aplicar cada correção, confira: o fato contra a fonte; o problema visual contra a foto; a sugestão contra o brief aprovado e o piloto aprovado. Mudança que contraria o que a pessoa aprovou vira pergunta para ela, não correção.
 3. Grave `sites/<nome>/revisao/rodada-N.md`: as 4 notas (por página e geral), a média, as respostas do teste do visitante, os problemas aceitos (com a correção feita), os recusados (com o porquê). Grave também `sites/<nome>/revisao/rodada-N.json`, que o comando `revisao` passa aos revisores da rodada seguinte:
    ```json
@@ -73,7 +73,7 @@ Cada rodada usa revisores novos. Nunca reaproveite o da rodada anterior.
      "recusados": [{ "lente": "fatos", "problema": "o que foi pedido", "porque": "por que ficou como está" }]
    }
    ```
-   `lente` é `arte`, `geral`, `fatos` ou `qa`. `bloqueios` lista o que impede passar mesmo com média alta (fato sem fonte, QA que impede o uso, visitante sem ajuda = não); pendência que só o dono do negócio resolve não entra aqui, vai para o `andamento.md`.
+   `lente` é `arte`, `geral`, `fatos` ou `qa`. `visitante` é obrigatório; `sem_ajuda: false` já conta como bloqueio no comando `revisao`, que também acusa em `dados.notas[].alertas` o diretor geral acima do teto 7. `reavaliacao` só existe quando você mede a estabilidade (ver "Como medir a meta"). `bloqueios` lista o que impede passar mesmo com média alta (fato sem fonte, QA que impede o uso, visitante sem ajuda = não); pendência que só o dono do negócio resolve não entra aqui, vai para o `andamento.md`.
 4. Atualize o `andamento.md` (`revisão: rodada N, nota X`).
 
 ## 6. Rodadas
@@ -82,11 +82,13 @@ Cada rodada usa revisores novos. Nunca reaproveite o da rodada anterior.
 - **Não passou e N < 3:** corrija os problemas aceitos, do mais grave ao menos grave, no `_gerador/`. Rode `montar`, `preflight`, `prints --rodada N+1` (leia as páginas mexidas, nos quatro tamanhos), `revisao --rodada N+1` e uma nova rodada com revisores novos, que também conferem se a correção anterior pegou.
 - **Não passou na rodada 3:** pare. Diga à pessoa, em até 4 frases, a nota, o que melhorou e os 2 ou 3 problemas que faltam, com a página de cada um. Pergunte: "Como você prefere seguir?" com "Corrigir esses pontos e revisar de novo ★", "Entregar assim" e "Eu mesmo vou ajustar".
 
-Diferença de até 0,3 numa lente, ou de até 0,1 na média, entre rodadas é ruído, não progresso.
+Só para você, nunca no pedido ao revisor: diferença de até 0,3 numa lente entre rodadas pode ser ruído do revisor, não progresso.
 
 ## Como medir a meta
 
-A meta da revisão é passar em até 2 rodadas, com cada lente variando no máximo 0,3 de uma rodada para a outra. Depois de gravar o `rodada-N.json`, `./estudio revisao <nome>` devolve em `dados.notas` a média de cada rodada e se passou, em `dados.passou_na_rodada` a primeira rodada que passou e em `dados.oscilacao` a maior variação de cada lente. Meta cumprida: `passou_na_rodada` é 1 ou 2 e nenhum valor de `oscilacao` passa de 0,3.
+São duas metas, medidas em separado. Depois de gravar o `rodada-N.json`, rode `./estudio revisao <nome>` e leia `dados`:
+- **Passar em até 2 rodadas:** `dados.passou_na_rodada` é 1 ou 2 (`dados.metas.em_ate_2_rodadas` é `true`). A média é comparada sem arredondar: 8,45 não passa.
+- **Estabilidade (cada lente varia no máximo 0,3):** não se mede entre rodadas, porque entre elas houve conserto. Mede-se reavaliando o **mesmo estado** do site: na rodada que você quer medir, sem mexer em nada, abra mais 4 revisores novos, com o mesmo pacote e o mesmo `contexto-rN.md`, e grave as notas gerais deles em `reavaliacao.notas` do `rodada-N.json`. `dados.estabilidade` traz a maior diferença de cada lente entre as duas avaliações; `dados.metas.estabilidade` é `true` quando nenhuma lente passa de 0,3, e `null` enquanto não houver reavaliação. Os revisores da reavaliação não sabem que são reavaliação nem veem a nota dos primeiros.
 
 ## Quando a pessoa pede só uma nota
 

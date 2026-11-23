@@ -249,7 +249,7 @@
   },
   "REVISAO_PRONTA": {
     "texto": "Preparei o que os especialistas vão ler antes de olhar o site.",
-    "acao": "Inclua arquivos.contexto no pacote de cada revisor, como primeira leitura. dados.notas e dados.oscilacao mostram a trajetória: passou_na_rodada diz em que rodada a meta foi batida."
+    "acao": "Inclua arquivos.contexto no pacote de cada revisor, como primeira leitura. dados.notas mostra cada rodada (alertas incluídos); dados.metas diz se passou em até 2 rodadas e se a reavaliação ficou estável (null = não medida)."
   },
   "RODADA_ILEGIVEL": {
     "texto": "Não consegui ler as anotações da conferência anterior. Vou arrumar antes de seguir.",
