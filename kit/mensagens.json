@@ -247,6 +247,14 @@
     "texto": "Já estou fotografando este site agora. Espero terminar antes de tirar outras.",
     "acao": "Não rode prints duas vezes ao mesmo tempo para a mesma rodada. Espere o outro terminar e use as fotos dele. Não apague o arquivo dados.pasta + .trava: ele sai sozinho quando o outro termina ou quando o processo dele não existe mais."
   },
+  "REVISAO_PRONTA": {
+    "texto": "Preparei o que os especialistas vão ler antes de olhar o site.",
+    "acao": "Inclua arquivos.contexto no pacote de cada revisor, como primeira leitura. dados.notas e dados.oscilacao mostram a trajetória: passou_na_rodada diz em que rodada a meta foi batida."
+  },
+  "RODADA_ILEGIVEL": {
+    "texto": "Não consegui ler as anotações da conferência anterior. Vou arrumar antes de seguir.",
+    "acao": "Leia dados.erro, corrija dados.arquivo no formato da skill revisar (rodada-N.json) e rode revisao de novo antes de chamar os revisores."
+  },
   "FOTO_LISA": {
     "texto": "Uma foto saiu quase toda de uma cor só.",
     "acao": "Abra dados.arquivo. Se não foi de propósito, algo não carregou ou ficou invisível."
