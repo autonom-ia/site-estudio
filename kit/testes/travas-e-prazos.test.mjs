@@ -181,10 +181,13 @@ test('copiarPasta recusa origem que é link (não copia o que está do outro lad
 
 test('servidor: redirecionamento de pasta com # ou ? no nome codifica cada pedaço', async () => {
   const raiz = temporaria('estudio-srv-redir-');
-  for (const pasta of ['a#b', 'a?b', 'c d']) escrever(path.join(raiz, 'x', pasta, 'index.html'), `<p>${pasta}</p>`);
+  // "?" não vale em nome de pasta no Windows: lá o caso a?b fica de fora
+  const pastas = process.platform === 'win32' ? ['a#b', 'c d'] : ['a#b', 'a?b', 'c d'];
+  for (const pasta of pastas) escrever(path.join(raiz, 'x', pasta, 'index.html'), `<p>${pasta}</p>`);
   const srv = await servir(raiz);
   try {
-    const casos = [['/x/a%23b', '/x/a%23b/', 'a#b'], ['/x/a%3Fb', '/x/a%3Fb/', 'a?b'], ['/x/c%20d', '/x/c%20d/', 'c d']];
+    const casos = [['/x/a%23b', '/x/a%23b/', 'a#b'], ['/x/a%3Fb', '/x/a%3Fb/', 'a?b'], ['/x/c%20d', '/x/c%20d/', 'c d']]
+      .filter(([, , pasta]) => pastas.includes(pasta));
     for (const [pedido, destino, texto] of casos) {
       const r = await fetch(`${srv.origem}${pedido}`, { redirect: 'manual' });
       assert.equal(r.status, 301, pedido);
