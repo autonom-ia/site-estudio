@@ -6,7 +6,7 @@ Sites de primeira linha, feitos por conversa, no seu computador.
 
 Você conta para o assistente (Claude Code ou Codex) o que é o seu negócio e o que a pessoa precisa fazer quando abre o site. Ele junta os fatos com a fonte, estuda sites de referência, define a ideia visual, mostra o começo do site para você aprovar, faz o resto, confere tudo e entrega a pasta do site e um arquivo pronto para hospedar.
 
-- **Grátis e local.** Nada sobe para a internet, nada é pago, não precisa de conta. O site fica numa pasta do seu computador. Pôr no ar é com você, e o assistente mostra o passo a passo.
+- **Grátis e local.** Nada sobe para a internet sem você pedir, nada é pago, não precisa de conta para fazer o site. O site fica numa pasta do seu computador. Para pôr no ar, você escolhe: num endereço da Autonom.ia (com convite) ou onde preferir, e o assistente mostra o passo a passo.
 - **Feito para ser lembrado.** Tipografia com personalidade, foto de verdade, luz e movimento que conduz o olhar. Nada de site de molde com cartõezinhos.
 - **Celular e computador.** Cada página é medida e fotografada em quatro tamanhos de tela: celular, tablet, notebook e tela grande.
 - **Conferência de verdade.** Antes de entregar, o estúdio mede cada página no navegador (texto vazando, contraste fraco, botão pequeno no celular, link quebrado, número sem fonte), roda as regras de acessibilidade e quatro revisores independentes dão nota: direção de arte, direção geral, fatos e qualidade.
@@ -48,6 +48,18 @@ O caminho é sempre o mesmo:
 7. **Conferência** automática e fotos de cada página em quatro tamanhos, lidas uma a uma.
 8. **Revisão** por quatro revisores independentes, até nota 8,5.
 9. **Entrega**: a pasta do site, o arquivo para hospedar e o passo a passo para pôr no ar (GitHub Pages, Netlify ou Cloudflare Pages).
+
+## Publicar num endereço da Autonom.ia
+
+Quem tem acesso publica o site num endereço próprio, como `seunegocio.sites.autonomia.site`, com cadeado de site seguro e sem pagar nada. O acesso é por convite:
+
+1. Entre em **[sites.autonomia.site](https://sites.autonomia.site)** e clique em **Entrar com o Google**.
+2. Se o seu e-mail ainda não estiver liberado, aparece *Acesso só por convite*. Escreva o seu nome, conte em uma frase o que quer publicar e clique em **Pedir acesso**.
+3. A resposta chega por e-mail. Aprovado, é só voltar ao assistente.
+
+Recebeu um link de convite? Abra o link, entre com o Google e o acesso já fica liberado.
+
+A publicação pelo assistente (você pede **"publique meu site"** e o link aparece na conversa) está chegando. Quem já tiver acesso recebe um e-mail quando estiver pronta.
 
 ## As suas pastas
 
