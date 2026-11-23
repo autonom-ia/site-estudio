@@ -4,8 +4,10 @@
 //    PUBLICAR_AGUARDANDO_LOGIN com o código curto. Devolver na hora é de propósito: a pessoa precisa
 //    ver o código para digitar no navegador, e o assistente só mostra a saída quando o processo acaba.
 // 2. com pedido guardado: consulta (POST /api/estudio/login/consultar) a cada intervalo, até o prazo.
-//    Aprovado: grava a chave (0600, atômico), apaga o pedido e devolve a chave. Sem aprovação no
+//    Aprovado: grava a chave (0600, atômico), apaga o pedido e devolve a chave, dizendo se a aprovação
+//    chegou durante a espera (aí a chamada já gastou tempo e não publica junto). Sem aprovação no
 //    prazo: PUBLICAR_AGUARDANDO_LOGIN de novo, com o mesmo pedido para a próxima chamada.
+//    O pedido guardado não vence pelo relógio daqui: o serviço responde 404/410 quando ele acabou.
 // O código de dispositivo e a chave nunca vão para "dados".
 import os from 'node:os';
 import { KitErro } from './saida.mjs';
@@ -74,13 +76,13 @@ async function consultar(cfg, pedido) {
   throw erroDoServico(r);
 }
 
-// Consulta até o prazo. Devolve a chave, 'aguardando' ou 'acabou'. Se nenhuma consulta teve
+// Consulta até o prazo. Devolve { chave, email, esperou }, 'aguardando' ou 'acabou'. Se nenhuma consulta teve
 // resposta, o serviço está fora de alcance: PUBLICAR_SEM_CONEXAO (o pedido fica guardado).
 async function consultarAtePrazo(cfg, pedido, ferr) {
   const limite = Date.now() + cfg.tempos.prazoMs;
   let ultimoErroDeRede = null;
   let respondeu = false;
-  for (;;) {
+  for (let volta = 1; ; volta += 1) {
     let r;
     try {
       r = await consultar(cfg, pedido);
@@ -89,7 +91,7 @@ async function consultarAtePrazo(cfg, pedido, ferr) {
       throw erro;
     }
     if (r instanceof ErroDeRede) ultimoErroDeRede = r;
-    else if (r !== 'aguardando') return r;
+    else if (r !== 'aguardando') return typeof r === 'string' ? r : { ...r, esperou: volta > 1 };
     else respondeu = true;
     if (Date.now() + cfg.tempos.intervaloMs > limite) {
       if (!respondeu && ultimoErroDeRede) throw semConexao(ultimoErroDeRede);
@@ -99,7 +101,7 @@ async function consultarAtePrazo(cfg, pedido, ferr) {
   }
 }
 
-// Devolve { chave } quando há acesso, ou { resultado } (PUBLICAR_AGUARDANDO_LOGIN) para devolver já.
+// Devolve { chave, esperou } quando há acesso, ou { resultado } (PUBLICAR_AGUARDANDO_LOGIN) para devolver já.
 export async function entrar(cfg, ferr = FERR) {
   const guardado = lerPedido(cfg.base, ferr);
   if (!guardado) return { resultado: aguardando(await iniciar(cfg, ferr), true) };
@@ -109,5 +111,5 @@ export async function entrar(cfg, ferr = FERR) {
   // Pedido vencido, já usado ou desconhecido no serviço: começa outro e mostra o código novo.
   if (r === 'acabou') return { resultado: aguardando(await iniciar(cfg, ferr), true) };
   gravarChave(cfg.base, r.chave, r.email, ferr);
-  return { chave: r.chave };
+  return { chave: r.chave, esperou: r.esperou };
 }

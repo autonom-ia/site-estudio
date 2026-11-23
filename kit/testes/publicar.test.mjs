@@ -4,62 +4,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
-import crypto from 'node:crypto';
-import { spawn } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import { subirServicoFalso } from './servico-falso.mjs';
+import { RAIZ, MENSAGENS, NO_WINDOWS, modo, rodar, preparar, darChave } from './publicar-apoio.mjs';
 import { SERVICO, configuracao, enderecoDeTesteAceito, CODIGOS_TRADUZIDOS } from '../scripts/lib/publicar-servico.mjs';
-import { arquivoChave, arquivoPedido, gravarChave } from '../scripts/lib/publicar-guarda.mjs';
+import { arquivoChave, arquivoPedido } from '../scripts/lib/publicar-guarda.mjs';
 import { KitErro } from '../scripts/lib/saida.mjs';
-
-const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const DESPACHANTE = path.join(RAIZ, 'kit', 'scripts', 'estudio.mjs');
-const MENSAGENS = JSON.parse(fs.readFileSync(path.join(RAIZ, 'kit', 'mensagens.json'), 'utf8'));
-const NO_WINDOWS = process.platform === 'win32';
-const modo = (arquivo) => fs.statSync(arquivo).mode & 0o777;
-
-function rodar(args, env) {
-  return new Promise((resolve, reject) => {
-    const filho = spawn(process.execPath, [DESPACHANTE, ...args], { env: { ...process.env, ESTUDIO_NAO_ABRIR: '1', ...env } });
-    let stdout = '';
-    let stderr = '';
-    filho.stdout.on('data', (d) => { stdout += d; });
-    filho.stderr.on('data', (d) => { stderr += d; });
-    filho.on('error', reject);
-    filho.on('close', (codigo) => {
-      const linhas = stdout.trim().split('\n');
-      resolve({ codigo, json: JSON.parse(linhas[linhas.length - 1]), saida: stdout + stderr });
-    });
-  });
-}
-
-// Um site de verdade (index + foto incompressível de ~4 KB): com parte de 1000 bytes, vira 5+ partes.
-async function preparar(t, opcoes) {
-  const servico = await subirServicoFalso(opcoes);
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-publicar-'));
-  const site = path.join(base, 'sites', 'meu-site', 'site');
-  fs.mkdirSync(path.join(site, 'assets'), { recursive: true });
-  fs.writeFileSync(path.join(site, 'index.html'), '<title>Meu site</title><img src="assets/foto.txt">');
-  fs.writeFileSync(path.join(site, 'assets', 'foto.txt'), crypto.randomBytes(3000).toString('base64'));
-  const ferr = path.join(base, 'ferr');
-  const env = {
-    ESTUDIO_PUBLICAR_URL: servico.base, ESTUDIO_FERRAMENTAS: ferr, ESTUDIO_SITES: path.join(base, 'sites'),
-    ESTUDIO_PUBLICAR_INTERVALO_MS: '20', ESTUDIO_PUBLICAR_PRAZO_MS: '300',
-  };
-  t.after(async () => {
-    await servico.fechar();
-    fs.rmSync(base, { recursive: true, force: true });
-  });
-  return { servico, ferr, env, publicar: (...extra) => rodar(['publicar', 'meu-site', ...extra], env) };
-}
-
-// Chave aceita pelo serviço falso, gravada como o login gravaria.
-function darChave(ctx) {
-  ctx.servico.estado.chaves.add('se_pub_chave-de-teste');
-  gravarChave(ctx.servico.base, 'se_pub_chave-de-teste', '', ctx.ferr);
-}
 
 test('endereço do serviço: produção fixa; o de teste só aceita http://127.0.0.1:<porta>', () => {
   for (const bom of ['http://127.0.0.1:8080', 'http://127.0.0.1:8080/']) assert.equal(enderecoDeTesteAceito(bom), true, bom);
@@ -195,7 +145,7 @@ test('--sair esquece a chave e o pedido deste computador', async (t) => {
 test('mensagens da publicação existem, para leigo, e .gitignore cobre .ferramentas/', () => {
   const novos = ['PUBLICADO', 'PUBLICADO_CERTIFICADO_PENDENTE', 'PUBLICAR_AGUARDANDO_LOGIN', 'PUBLICAR_VERSAO_VOLTOU', 'PUBLICAR_SAIU',
     'PUBLICAR_SEM_CONEXAO', 'PUBLICAR_LOGIN_RECUSADO', 'PUBLICAR_MUITAS_TENTATIVAS', 'PUBLICAR_ENDERECO_DE_TESTE_INVALIDO',
-    'PUBLICAR_RESPOSTA_ESTRANHA', ...CODIGOS_TRADUZIDOS];
+    'PUBLICAR_RESPOSTA_ESTRANHA', 'PUBLICAR_ACESSO_LIBERADO', 'PUBLICAR_CONCLUSAO_INCERTA', ...CODIGOS_TRADUZIDOS];
   const proibidas = ['pasta', 'comando', 'zip', 'json', 'nota', 'rodada', 'preflight'];
   for (const codigo of novos) {
     assert.ok(MENSAGENS[codigo], `${codigo} falta em mensagens.json`);

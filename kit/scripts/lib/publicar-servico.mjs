@@ -6,10 +6,16 @@ import { KitErro } from './saida.mjs';
 export const SERVICO = 'https://sites.autonomia.site';
 const LOCAL = '127.0.0.1';
 
-// Tempos de produção: consulta a cada 5 s, por até 90 s (cabe no limite de 2 min do assistente).
-export const TEMPOS_PADRAO = Object.freeze({ intervaloMs: 5000, prazoMs: 90000 });
+// Tempos de produção: consulta a cada 5 s, por até 90 s. As esperas (cadeado, conferência depois de um
+// concluir sem resposta) também param no que sobra do orçamento da chamada inteira: 100 s contados do
+// começo, para a chamada terminar antes do prazo de 2 min que o assistente dá por padrão. O envio das
+// partes não tem como caber num orçamento fixo; por isso a skill hospedar manda rodar com 5 min.
+export const TEMPOS_PADRAO = Object.freeze({ intervaloMs: 5000, prazoMs: 90000, orcamentoMs: 100000 });
 const TEMPO_DE_CHAMADA_MS = 30000;
 const TEMPO_DE_PARTE_MS = 90000;
+// O concluir cola as partes, abre o pacote e publica no servidor: espera mais que uma chamada comum,
+// mas para antes do corte de 60 s do proxy na frente do serviço.
+export const TEMPO_DE_CONCLUIR_MS = 55000;
 
 // Erros do serviço com tradução própria. O que não estiver aqui vira PUBLICAR_RECUSADO.
 const TRADUCAO = Object.freeze({
@@ -29,6 +35,13 @@ const TRADUCAO = Object.freeze({
   FALTAM_PARTES: 'PUBLICAR_ENVIO_FALHOU',
   PACOTE_CORROMPIDO: 'PUBLICAR_ENVIO_FALHOU',
   VERSAO_INEXISTENTE: 'PUBLICAR_VERSAO_INEXISTENTE',
+  // Além do contrato: o servidor real também devolve estes.
+  PUBLICACAO_INCOMPLETA: 'PUBLICAR_NO_AR_AJUSTANDO',
+  SITE_INEXISTENTE: 'PUBLICAR_SITE_AINDA_NAO_PUBLICADO',
+  SITE_FORA_DO_AR: 'PUBLICAR_SITE_TIRADO_DO_AR',
+  ENVIO_EM_ANDAMENTO: 'PUBLICAR_ENVIO_EM_ANDAMENTO',
+  PARTE_INVALIDA: 'PUBLICAR_ENVIO_FALHOU',
+  VERSAO_RUIM: 'PUBLICAR_VERSAO_RUIM',
 });
 export const CODIGOS_TRADUZIDOS = Object.freeze([...new Set(Object.values(TRADUCAO)), 'PUBLICAR_PACOTE_RECUSADO', 'PUBLICAR_RECUSADO']);
 
@@ -60,7 +73,8 @@ export function configuracao(env = process.env) {
   if (pedido === undefined || pedido === '') return { base: SERVICO, teste: false, tempos: TEMPOS_PADRAO };
   if (!enderecoDeTesteAceito(pedido)) throw new KitErro('PUBLICAR_ENDERECO_DE_TESTE_INVALIDO', { variavel: 'ESTUDIO_PUBLICAR_URL' });
   const tempos = { ...TEMPOS_PADRAO };
-  for (const [nome, campo] of [['ESTUDIO_PUBLICAR_INTERVALO_MS', 'intervaloMs'], ['ESTUDIO_PUBLICAR_PRAZO_MS', 'prazoMs']]) {
+  const variaveis = [['ESTUDIO_PUBLICAR_INTERVALO_MS', 'intervaloMs'], ['ESTUDIO_PUBLICAR_PRAZO_MS', 'prazoMs'], ['ESTUDIO_PUBLICAR_ORCAMENTO_MS', 'orcamentoMs']];
+  for (const [nome, campo] of variaveis) {
     if (env[nome] === undefined) continue;
     const n = inteiroPositivo(env[nome]);
     if (n === null) throw new KitErro('ARGUMENTO_INVALIDO', { argumento: nome, valor: String(env[nome]) });
@@ -85,6 +99,13 @@ export function enderecoSeguro(texto, cfg, mesmaOrigem = false) {
 }
 
 export const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Quanto uma espera pode durar: o prazo, sem passar do que sobra do orçamento da chamada
+// (cfg.inicio é a hora em que a chamada começou; sem ele, vale só o prazo).
+export function prazoDaEspera(cfg) {
+  if (!Number.isFinite(cfg.inicio)) return cfg.tempos.prazoMs;
+  return Math.max(0, Math.min(cfg.tempos.prazoMs, cfg.inicio + cfg.tempos.orcamentoMs - Date.now()));
+}
 
 // Uma chamada ao serviço. Devolve { status, corpo } (corpo = JSON ou null). Sem resposta: ErroDeRede.
 export async function chamar(cfg, metodo, caminho, { chave, json, bytes, cabecalhos = {}, tempoMs } = {}) {

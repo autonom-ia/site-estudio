@@ -284,12 +284,12 @@
     "acao": "Peça para a pessoa abrir o endereço do site e conferir. As outras versões continuam guardadas por um tempo."
   },
   "PUBLICAR_SAIU": {
-    "texto": "Pronto: este computador não publica mais em seu nome até você autorizar de novo.",
-    "acao": "Os sites que já estão no ar continuam no ar. Para publicar de novo, rode a publicação: ela pede uma nova autorização."
+    "texto": "Pronto: apaguei deste computador o acesso de publicação.",
+    "acao": "Explique que isso apaga só a cópia guardada aqui. Para cortar o acesso de vez (computador emprestado, vendido, ou com cópia de segurança do estúdio em outro lugar), a pessoa precisa também revogar este computador na página da conta: dados.revogar_em. Os sites que já estão no ar continuam no ar. Para publicar de novo, rode a publicação: ela pede uma nova autorização."
   },
   "PUBLICAR_SEM_CONEXAO": {
     "texto": "Não consegui falar com o serviço de publicação agora. Pode ser a internet daqui.",
-    "acao": "Confira se há internet. No Codex, a publicação precisa sair da área protegida (sandbox_permissions: \"require_escalated\"). Tente de novo em alguns minutos; se continuar, diga à pessoa que o serviço parece fora do ar e que nada foi perdido."
+    "acao": "Confira se há internet. No Codex, a publicação precisa sair da área protegida (sandbox_permissions: \"require_escalated\"). Tente de novo em alguns minutos; se continuar, diga à pessoa que o serviço parece fora do ar e que os sites que já estão no ar continuam no ar."
   },
   "PUBLICAR_LOGIN_RECUSADO": {
     "texto": "A autorização deste computador foi recusada no navegador.",
@@ -360,7 +360,35 @@
     "acao": "Veja dados.detalhe e dados.codigo_do_servico, mostre à pessoa o arquivo citado, tire-o de site/ (guarde em material/, se for dela), confira de novo e publique."
   },
   "PUBLICAR_RECUSADO": {
-    "texto": "O serviço de publicação não aceitou agora. Seu site não foi alterado.",
-    "acao": "Veja dados.detalhe (a frase do serviço) e dados.status, diga à pessoa em palavras simples e tente de novo mais tarde."
+    "texto": "O serviço de publicação não aceitou o pedido agora.",
+    "acao": "Veja dados.detalhe (a frase do serviço) e dados.status e diga à pessoa em palavras simples. Antes de tentar de novo, abra o endereço do site e confira se a mudança já está no ar; se não estiver, tente mais tarde."
+  },
+  "PUBLICAR_ACESSO_LIBERADO": {
+    "texto": "Pronto: este computador está autorizado a publicar em seu nome.",
+    "acao": "Rode agora, de novo, exatamente a mesma publicação que acabou de rodar. A pessoa já confirmou: não pergunte outra vez. Esta vez parou aqui só para não estourar o tempo."
+  },
+  "PUBLICAR_CONCLUSAO_INCERTA": {
+    "texto": "O site chegou inteiro ao serviço, mas a confirmação de que foi para o ar não voltou a tempo. Ele pode já estar no ar.",
+    "acao": "Não publique por cima agora. Espere uns 3 minutos e rode a mesma publicação de novo: antes de mandar qualquer coisa, ela confere se esta versão já está no ar e, se estiver, só confirma, sem mandar o site outra vez."
+  },
+  "PUBLICAR_NO_AR_AJUSTANDO": {
+    "texto": "A mudança já foi para o ar, mas um passo final do serviço falhou. Ele acerta sozinho em alguns minutos.",
+    "acao": "Não publique de novo por isso. Peça para a pessoa abrir o endereço do site daqui a uns minutos e conferir. Se depois de 15 minutos ainda estiver estranho, diga para avisar em sites.autonomia.site."
+  },
+  "PUBLICAR_SITE_AINDA_NAO_PUBLICADO": {
+    "texto": "Esse site ainda não foi publicado em sites.autonomia.site, então não há versão anterior para voltar.",
+    "acao": "Confira o nome do site com a pessoa. Para pôr o site no ar pela primeira vez, rode a publicação sem --voltar, com a confirmação dela."
+  },
+  "PUBLICAR_SITE_TIRADO_DO_AR": {
+    "texto": "Esse site está fora do ar no serviço. Enquanto estiver assim, não dá para publicar nem voltar versão nele.",
+    "acao": "Diga à pessoa para pedir a volta do site em sites.autonomia.site. Não tente de novo antes disso."
+  },
+  "PUBLICAR_ENVIO_EM_ANDAMENTO": {
+    "texto": "Já tem um envio deste site sendo concluído no serviço.",
+    "acao": "Não mande de novo agora. Espere uns 3 minutos, abra o endereço do site e veja se a mudança já está no ar; só se não estiver, rode a publicação de novo."
+  },
+  "PUBLICAR_VERSAO_RUIM": {
+    "texto": "Essa versão guardada do site não tem uma página inicial que funcione. Nada mudou no ar.",
+    "acao": "Pergunte à pessoa qual outra versão ela quer, ou volte sem número, para a anterior."
   }
 }

@@ -1,5 +1,8 @@
 // Serviço de publicação falso, para os testes do comando publicar. Segue o contrato HTTP de
-// sites.autonomia.site: login por código (iniciar/consultar), envio em partes, concluir e voltar.
+// sites.autonomia.site: login por código (iniciar/consultar), lista de sites, envio em partes,
+// concluir e voltar. Também simula o que o servidor real faz fora do caminho feliz: pedido com
+// expira_em no passado (relógio diferente), aprovação no meio da espera, resposta do concluir que se
+// perde (socket cai ou o proxy devolve 504) e códigos de erro que o contrato não listava.
 // Toda resposta é JSON; erro é {"ok":false,"codigo","mensagem"}. Só escuta em 127.0.0.1.
 import http from 'node:http';
 import crypto from 'node:crypto';
@@ -35,7 +38,15 @@ export async function subirServicoFalso({ parteMax = 1000 } = {}) {
     voltas: [],
     autorizacoes: [],
     erroAoAbrir: null,
+    erroAoConcluir: null,
+    erroAoVoltar: null,
     enderecoDoSite: null,
+    expiraDelta: 600000, // expira_em = agora + expiraDelta; negativo simula relógio local adiantado
+    aprovarNaConsulta: 0, // aprova os pendentes quando a contagem de consultas chegar a este número
+    concluirCai: null, // 'socket' publica e derruba; '504' publica e responde como proxy; 'sem_publicar' derruba e deixa pendente
+    pendentes: [],
+    aberturas: 0,
+    listagens: 0,
   };
   let base = '';
 
@@ -46,10 +57,11 @@ export async function subirServicoFalso({ parteMax = 1000 } = {}) {
       e.pedidos.set(dispositivo, { estado: 'pendente', nome: dados.nome_maquina });
       return responder(res, 200, {
         ok: true, codigo_dispositivo: dispositivo, codigo_curto: CODIGO_CURTO, endereco: `${base}/estudio/ligar`,
-        expira_em: Date.now() + 600000, intervalo_s: 5,
+        expira_em: Date.now() + e.expiraDelta, intervalo_s: 5,
       });
     }
     e.consultas += 1;
+    if (e.aprovarNaConsulta && e.consultas >= e.aprovarNaConsulta) aprovarPendentes();
     const p = e.pedidos.get(dados.codigo_dispositivo);
     if (!p) return responder(res, 404, { ok: false, estado: 'invalido', erro: 'Pedido desconhecido.' });
     if (p.estado === 'recusado') return responder(res, 403, { ok: false, estado: 'recusado', erro: 'Recusado.' });
@@ -78,17 +90,48 @@ export async function subirServicoFalso({ parteMax = 1000 } = {}) {
     return responder(res, 200, { ok: true, recebidas: envio.partes.size, partes: envio.total });
   }
 
-  function concluir(res, id) {
+  const aprovarPendentes = () => e.pedidos.forEach((p) => { if (p.estado === 'pendente') p.estado = 'aprovado'; });
+  const enderecoDe = (slug) => e.enderecoDoSite || `${base}/no-ar/${slug}/`;
+
+  function publicarNoDisco(slug, zip) {
+    const versao = e.publicados.filter((p) => p.slug === slug).length + 1;
+    e.publicados.push({ slug, versao, zip });
+    return versao;
+  }
+
+  function concluir(req, res, id) {
     const envio = e.envios.get(id);
     if (!envio) return erro(res, 404, 'ENVIO_INEXISTENTE');
     if (envio.partes.size !== envio.total) return erro(res, 409, 'FALTAM_PARTES');
     const zip = Buffer.concat([...Array(envio.total).keys()].map((n) => envio.partes.get(n)));
     if (sha256(zip) !== envio.sha256) return erro(res, 400, 'PACOTE_CORROMPIDO');
-    const versao = e.publicados.filter((p) => p.slug === envio.slug).length + 1;
-    e.publicados.push({ slug: envio.slug, versao, zip });
     e.envios.delete(id);
-    const endereco = e.enderecoDoSite || `${base}/no-ar/${envio.slug}/`;
-    return responder(res, 200, { ok: true, slug: envio.slug, versao, endereco });
+    const modoQueda = e.concluirCai;
+    e.concluirCai = null;
+    if (modoQueda === 'sem_publicar') {
+      e.pendentes.push({ slug: envio.slug, zip });
+      return req.socket.destroy();
+    }
+    const versao = publicarNoDisco(envio.slug, zip);
+    if (modoQueda === 'socket') return req.socket.destroy();
+    if (modoQueda === '504') {
+      res.writeHead(504, { 'content-type': 'text/html' });
+      return res.end('<html>Gateway Timeout</html>');
+    }
+    if (e.erroAoConcluir) return erro(res, e.erroAoConcluir.status, e.erroAoConcluir.codigo);
+    return responder(res, 200, { ok: true, slug: envio.slug, versao, endereco: enderecoDe(envio.slug) });
+  }
+
+  // GET /api/estudio/sites: versão no ar = a última publicada de cada site.
+  function listar(res) {
+    e.listagens += 1;
+    const slugs = [...new Set(e.publicados.map((p) => p.slug))];
+    const sites = slugs.map((slug) => {
+      const versoes = e.publicados.filter((p) => p.slug === slug).map((p) => ({ versao: p.versao, quando: Date.now(), bytes: p.zip.length }));
+      return { slug, endereco: enderecoDe(slug), estado: 'no_ar', versao: versoes[versoes.length - 1].versao, versoes };
+    });
+    const limites = { sites_max: 5, sites_usados: sites.length, publicacoes_hoje: e.publicados.length, publicacoes_max_dia: 20, mb_max: 50 };
+    return responder(res, 200, { ok: true, sites, limites });
   }
 
   async function estudio(req, res, partes) {
@@ -97,13 +140,16 @@ export async function subirServicoFalso({ parteMax = 1000 } = {}) {
     if (!autorizacao.startsWith('Bearer ') || !e.chaves.has(autorizacao.slice('Bearer '.length))) return erro(res, 401, 'CHAVE_INVALIDA');
     if (req.method === 'PUT' && partes[0] === 'envios' && partes[2] === 'partes') return parte(req, res, partes[1], Number(partes[3]));
     const dados = JSON.parse((await lerCorpo(req)).toString('utf8') || '{}');
-    if (partes[0] === 'envios' && partes[2] === 'concluir') return concluir(res, partes[1]);
+    if (req.method === 'GET' && partes.length === 1 && partes[0] === 'sites') return listar(res);
+    if (partes[0] === 'envios' && partes[2] === 'concluir') return concluir(req, res, partes[1]);
     if (partes[0] === 'sites' && partes[2] === 'voltar') {
       e.voltas.push(dados);
+      if (e.erroAoVoltar) return erro(res, e.erroAoVoltar.status, e.erroAoVoltar.codigo);
       if (dados.versao === 99) return erro(res, 404, 'VERSAO_INEXISTENTE');
       return responder(res, 200, { ok: true, versao: dados.versao ?? 1 });
     }
     if (partes[0] === 'sites' && partes[2] === 'envios') {
+      e.aberturas += 1;
       if (e.erroAoAbrir) return erro(res, e.erroAoAbrir.status, e.erroAoAbrir.codigo);
       const id = crypto.randomBytes(8).toString('hex');
       const total = Math.max(1, Math.ceil(dados.bytes / parteMax));
@@ -129,7 +175,9 @@ export async function subirServicoFalso({ parteMax = 1000 } = {}) {
   return {
     base,
     estado: e,
-    aprovar: () => e.pedidos.forEach((p) => { if (p.estado === 'pendente') p.estado = 'aprovado'; }),
+    aprovar: aprovarPendentes,
+    // O servidor termina, mais tarde, o concluir cuja resposta se perdeu ('sem_publicar').
+    publicarPendentes: () => e.pendentes.splice(0).forEach((p) => publicarNoDisco(p.slug, p.zip)),
     recusar: () => e.pedidos.forEach((p) => { p.estado = 'recusado'; }),
     revogarTudo: () => e.chaves.clear(),
     fechar: () => new Promise((resolve) => { servidor.closeAllConnections(); servidor.close(resolve); }),

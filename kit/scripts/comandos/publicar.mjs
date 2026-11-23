@@ -6,8 +6,10 @@
 //   ./estudio publicar <nome> --voltar [n]  põe no ar a versão n (sem n: a anterior).
 //   ./estudio publicar --sair               esquece a chave e o pedido de acesso deste computador.
 // Sem chave guardada, começa o login por código (lib/publicar-login.mjs) e devolve
-// PUBLICAR_AGUARDANDO_LOGIN; a próxima chamada continua o mesmo pedido. Chave recusada pelo serviço
-// (401): apaga a chave e começa o login de novo. A chave nunca aparece na saída.
+// PUBLICAR_AGUARDANDO_LOGIN; a próxima chamada continua o mesmo pedido. Se a aprovação chegou durante a
+// espera, devolve PUBLICAR_ACESSO_LIBERADO e publica só na próxima chamada (a espera já gastou o tempo
+// da chamada). Chave recusada pelo serviço (401): apaga a chave e começa o login de novo. A chave nunca
+// aparece na saída. --sair só apaga a cópia deste computador: cortar de vez é revogar na página da conta.
 import { nomeDoSite } from '../lib/args.mjs';
 import { abrirSite } from '../lib/site.mjs';
 import { montarPacote } from '../lib/pacote.mjs';
@@ -30,21 +32,21 @@ function lerVoltar({ posicionais, opcoes }) {
 
 // Roda "fazer" com a chave guardada; sem chave, ou com a chave recusada, passa pelo login.
 async function comAcesso(cfg, fazer) {
-  let chave = lerChave(cfg.base);
-  if (!chave) {
-    const e = await entrar(cfg);
-    if (e.resultado) return e.resultado;
-    chave = e.chave;
+  const guardada = lerChave(cfg.base);
+  let recusada = false;
+  if (guardada) {
+    try {
+      return await fazer(guardada);
+    } catch (erro) {
+      if (!(erro instanceof KitErro) || erro.codigo !== 'PUBLICAR_CHAVE_RECUSADA') throw erro;
+      apagar(arquivoChave());
+      recusada = true;
+    }
   }
-  try {
-    return await fazer(chave);
-  } catch (erro) {
-    if (!(erro instanceof KitErro) || erro.codigo !== 'PUBLICAR_CHAVE_RECUSADA') throw erro;
-    apagar(arquivoChave());
-    const e = await entrar(cfg);
-    if (e.resultado) return { ...e.resultado, dados: { ...e.resultado.dados, chave_recusada: true } };
-    return fazer(e.chave);
-  }
+  const e = await entrar(cfg);
+  if (e.resultado) return recusada ? { ...e.resultado, dados: { ...e.resultado.dados, chave_recusada: true } } : e.resultado;
+  if (e.esperou) return { ok: true, codigo: 'PUBLICAR_ACESSO_LIBERADO', dados: {} };
+  return fazer(e.chave);
 }
 
 async function publicarSite(cfg, nome) {
@@ -70,10 +72,10 @@ async function publicarSite(cfg, nome) {
 }
 
 export default async function publicar(args) {
-  const cfg = configuracao();
+  const cfg = { ...configuracao(), inicio: Date.now() };
   if (args.opcoes.sair !== undefined) {
     const tinha = esquecerTudo();
-    return { ok: true, codigo: 'PUBLICAR_SAIU', dados: { tinha_acesso: tinha.chave, tinha_pedido: tinha.pedido } };
+    return { ok: true, codigo: 'PUBLICAR_SAIU', dados: { tinha_acesso: tinha.chave, tinha_pedido: tinha.pedido, revogar_em: `${cfg.base}/conta` } };
   }
   const v = lerVoltar(args);
   const nome = nomeDoSite(v.args);

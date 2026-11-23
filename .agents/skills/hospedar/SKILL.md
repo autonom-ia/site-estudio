@@ -28,16 +28,18 @@ Os três têm plano grátis que serve para um site como este. As telas desses se
 
 Diga, com estas palavras ou parecidas: "Eu publico só com a sua confirmação, em sites.autonomia.site. Se você ainda não tem acesso, peça em sites.autonomia.site." Pergunte "Posso publicar o site {{nome}} agora?" com "Pode publicar ★" e "Ainda não". Só siga com o sim dela; cada publicação nova pede um sim novo.
 
-1. Rode `./estudio publicar <nome>`. No Codex, fora da área protegida (ele usa a internet). Pode levar até uns 3 minutos.
+1. Rode `./estudio publicar <nome>`. No Codex, fora da área protegida (ele usa a internet). Dê a ele até 5 minutos para terminar: no Claude Code, rode com `timeout` de 300000. Quase sempre termina em menos de 2 minutos, mas um site grande numa internet lenta demora mais, e cortar no meio deixa você sem a resposta.
 2. `PUBLICAR_AGUARDANDO_LOGIN`: é a primeira vez neste computador (ou o acesso dele venceu). Mostre `dados.codigo_curto` bem visível e diga: "Abri a página de autorização no navegador (`dados.endereco`). Entre com o Google, digite o código e clique em Autorizar. Me avise quando fizer." O navegador mostra o nome do computador, a hora e o lugar de quem pediu: só autorize se foi ela que acabou de pedir. Quando ela avisar, rode o mesmo `./estudio publicar <nome>` de novo; ele continua o mesmo pedido. Se de novo vier `PUBLICAR_AGUARDANDO_LOGIN`, pergunte se ela já digitou o código e repita.
+   `PUBLICAR_ACESSO_LIBERADO`: ela autorizou enquanto a publicação esperava. Rode o mesmo `./estudio publicar <nome>` de novo na hora, sem perguntar outra vez.
 3. `PUBLICADO`: diga o endereço (`dados.endereco`) e confira com ela (seção 6). `PUBLICADO_CERTIFICADO_PENDENTE`: o site subiu, mas o cadeado leva alguns minutos; peça para abrir daqui a pouco e não publique de novo só por isso.
-4. Qualquer outro código: diga o `texto` de `kit/mensagens.json` e faça a `acao`. Nenhum erro deixa o site no ar pela metade.
+4. `PUBLICAR_CONCLUSAO_INCERTA`: o site chegou inteiro, mas a confirmação não voltou a tempo. Não publique por cima: espere uns 3 minutos e rode o mesmo `./estudio publicar <nome>`; ele confere primeiro se a versão já está no ar e, se estiver, só confirma.
+5. Qualquer outro código: diga o `texto` de `kit/mensagens.json` e faça a `acao`. Nenhum erro deixa o site no ar pela metade.
 
 **Atualizar depois:** depois de mudar o site (montar, conferir e `preflight` aprovado), pergunte de novo e rode `./estudio publicar <nome>`. Cada publicação vira uma versão nova; as anteriores ficam guardadas por um tempo.
 
 **Voltar para a versão anterior:** se a pessoa pedir, confirme e rode `./estudio publicar <nome> --voltar` (a anterior) ou `./estudio publicar <nome> --voltar <número>` (`PUBLICAR_VERSAO_VOLTOU`).
 
-**Tirar este computador do acesso:** se a pessoa pedir (computador emprestado, vendido ou de outra pessoa), rode `./estudio publicar --sair`. Tirar um site do ar é pela página da conta, em sites.autonomia.site.
+**Tirar este computador do acesso:** se a pessoa pedir (computador emprestado, vendido ou de outra pessoa), rode `./estudio publicar --sair`. Isso apaga só a cópia guardada aqui. Para cortar de vez, diga: "Entre na página da sua conta em sites.autonomia.site (`dados.revogar_em`) e revogue este computador." Sem isso, uma cópia de segurança antiga do estúdio ainda publicaria em nome dela. Tirar um site do ar também é pela página da conta.
 
 O acesso deste computador fica guardado em `.ferramentas/publicar/`. Nunca abra, mostre, copie nem envie esses arquivos.
 

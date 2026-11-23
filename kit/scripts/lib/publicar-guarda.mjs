@@ -10,6 +10,11 @@ import { KitErro } from './saida.mjs';
 export const pastaPublicar = (ferr = FERR) => path.join(ferr, 'publicar');
 export const arquivoPedido = (ferr = FERR) => path.join(pastaPublicar(ferr), 'pedido.json');
 export const arquivoChave = (ferr = FERR) => path.join(pastaPublicar(ferr), 'chave.json');
+// Envio cujo concluir ficou sem resposta: a próxima publicação do site confere antes de mandar de novo.
+export const arquivoConferir = (nome, ferr = FERR) => path.join(pastaPublicar(ferr), `conferir-${nome}.json`);
+
+// Pedido guardado há mais que isso (pelo relógio deste computador, contra ele mesmo) é lixo.
+const GUARDA_DO_PEDIDO_MS = 24 * 60 * 60 * 1000;
 
 // Grava só para o dono: cria o temporário já 0600 e troca pelo rename.
 export function gravarPrivado(arquivo, objeto) {
@@ -58,19 +63,33 @@ export function gravarChave(base, chave, email, ferr = FERR) {
   gravarPrivado(arquivoChave(ferr), { servico: base, chave, email: typeof email === 'string' ? email : '', criada_em: Date.now() });
 }
 
-// Pedido de acesso ainda válido para este serviço, ou null (vencido ou de outro serviço é apagado).
+// Pedido de acesso guardado para este serviço, ou null (de outro serviço ou lixo é apagado).
+// Não compara o expira_em do serviço com o relógio daqui: os relógios podem discordar, e o serviço
+// estende o prazo quando a pessoa autoriza. Quem diz que o pedido acabou é o serviço (404/410).
 export function lerPedido(base, ferr = FERR, agora = Date.now()) {
   const p = lerPrivado(arquivoPedido(ferr));
   if (!p) return null;
   const valido = p.servico === base && typeof p.codigo_dispositivo === 'string' && p.codigo_dispositivo &&
-    typeof p.codigo_curto === 'string' && Number.isFinite(p.expira_em) && p.expira_em > agora;
+    typeof p.codigo_curto === 'string' && !(Number.isFinite(p.guardado_em) && agora - p.guardado_em > GUARDA_DO_PEDIDO_MS);
   if (valido) return p;
   apagar(arquivoPedido(ferr));
   return null;
 }
 
 export function gravarPedido(base, pedido, ferr = FERR) {
-  gravarPrivado(arquivoPedido(ferr), { servico: base, ...pedido });
+  gravarPrivado(arquivoPedido(ferr), { servico: base, ...pedido, guardado_em: Date.now() });
+}
+
+// Versão que estava no ar antes do concluir sem resposta ({ versao_antes }), ou null.
+export function lerConferir(base, nome, ferr = FERR) {
+  const c = lerPrivado(arquivoConferir(nome, ferr));
+  if (c && c.servico === base && (c.versao_antes === null || Number.isInteger(c.versao_antes))) return c;
+  if (c) apagar(arquivoConferir(nome, ferr));
+  return null;
+}
+
+export function gravarConferir(base, nome, versaoAntes, ferr = FERR) {
+  gravarPrivado(arquivoConferir(nome, ferr), { servico: base, versao_antes: versaoAntes });
 }
 
 // --sair: apaga chave e pedido. Devolve o que existia.
