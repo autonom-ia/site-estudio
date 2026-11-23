@@ -1,4 +1,4 @@
-// ./estudio ler <nome> --instagram @perfil --negocio "Nome do negócio, cidade" [--google <endereço>]
+// ./estudio ler <nome> --instagram perfil --negocio "Nome do negócio, cidade" [--google <endereço>]
 //   [--site <endereço>] [--posts 24]
 // Lê sozinho, sem login, as páginas públicas do negócio: o Instagram (legenda, data e foto de cada
 // publicação), o perfil do Google (endereço, telefone, horário, nota e avaliações sem o nome de quem
@@ -12,17 +12,25 @@ import { lerFontes } from '../lib/ler.mjs';
 import { falha } from '../lib/saida.mjs';
 import { progresso } from '../lib/executar.mjs';
 
-const texto = (v) => (typeof v === 'string' ? v.trim() : '');
+// Opção dada sem valor (ou só com espaço) é erro, nunca fonte pulada em silêncio. No PowerShell,
+// "@perfil" sem aspas some antes de chegar aqui; por isso a skill escreve o @ sem a arroba.
+function texto(opcoes, nome) {
+  const v = opcoes[nome];
+  if (v === undefined) return '';
+  const limpo = typeof v === 'string' ? v.trim() : '';
+  if (!limpo) falha('ARGUMENTO_INVALIDO', { argumento: `--${nome}`, valor: String(v) });
+  return limpo;
+}
 
 export default async function ler(args) {
   const nome = nomeDoSite(args);
   const c = abrirPastaDoSite(nome);
   const o = args.opcoes;
   const pedido = {
-    instagram: texto(o.instagram),
-    negocio: texto(o.negocio),
-    google: texto(o.google),
-    site: texto(o.site),
+    instagram: texto(o, 'instagram'),
+    negocio: texto(o, 'negocio'),
+    google: texto(o, 'google'),
+    site: texto(o, 'site'),
     posts: inteiro(o, 'posts', 24, 1, 60),
   };
   if (!pedido.instagram && !pedido.negocio && !pedido.google && !pedido.site) falha('LER_SEM_ENDERECO', { opcoes: ['--instagram', '--negocio', '--google', '--site'] });

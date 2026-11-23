@@ -6,26 +6,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { lerInstagram, BASE_INSTAGRAM, MINIMO_DE_POSTS } from './ler-instagram.mjs';
 import { lerGoogle, BASE_GOOGLE } from './ler-google.mjs';
-import { lerSite, contatosDosLinks } from './ler-site.mjs';
+import { lerSite, contatosDosLinks, ehSiteDoNegocio } from './ler-site.mjs';
 import { hoje } from './leitor.mjs';
 import { escreverJson, escreverTexto, lerTexto } from './json.mjs';
 import { aviso } from './saida.mjs';
 import * as R from './registros.mjs';
 
+export { ehSiteDoNegocio };
+
 // Fotos menores que isto pedem o original à pessoa (tela cheia no computador).
 export const LARGURA_BOA = 1080;
-// Endereço que é rede social ou conversa, não o site do negócio.
-const NAO_E_SITE = Object.freeze(['instagram.com', 'facebook.com', 'fb.com', 'wa.me', 'whatsapp.com', 'tiktok.com', 'youtube.com', 'linktr.ee']);
-
-export function ehSiteDoNegocio(url) {
-  try {
-    const u = new URL(url);
-    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
-    return !NAO_E_SITE.some((h) => u.hostname === h || u.hostname.endsWith(`.${h}`));
-  } catch {
-    return false;
-  }
-}
 
 async function tentar(fn) {
   try {
@@ -85,6 +75,10 @@ async function parteSite(endereco, ctx) {
     return null;
   }
   const s = r.valor;
+  if (s.desvio) {
+    ctx.avisos.push(aviso('LER_SITE_OUTRO_ENDERECO', { endereco, final: s.desvio }));
+    return null;
+  }
   const dir = path.join(ctx.pasta, 'site');
   escreverJson(path.join(dir, 'paginas.json'), s.paginas.map(({ texto, ...resto }) => resto));
   escreverTexto(path.join(dir, 'texto.md'), R.textoDoSite(s.paginas, ctx.data));

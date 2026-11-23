@@ -29,7 +29,7 @@ depois de uma prova técnica que passe nos critérios do fim deste documento.
 
 ## Desenho proposto
 
-`./estudio ler <nome> --instagram @perfil --com-login`
+`./estudio ler <nome> --instagram perfil --com-login`
 
 1. **Janela visível, perfil próprio.** O estúdio abre o Chrome **com janela**, com uma pasta de
    perfil só dele: `.ferramentas/perfil-instagram/`. A pasta já está no `.gitignore`, o `atualizar`

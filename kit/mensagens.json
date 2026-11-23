@@ -281,7 +281,7 @@
   },
   "LER_SEM_ENDERECO": {
     "texto": "Preciso do @ do Instagram ou do nome do negócio para começar a ler.",
-    "acao": "Pergunte o @ e o nome com a cidade e rode ./estudio ler <nome> --instagram @perfil --negocio \"Nome, cidade\"."
+    "acao": "Pergunte o @ e o nome com a cidade e rode ./estudio ler <nome> --instagram perfil --negocio \"Nome, cidade\" (o @ sem a arroba)."
   },
   "LER_INSTAGRAM_POUCOS": {
     "texto": "Do Instagram, sem entrar na conta, consegui ler {{posts}} publicações. Se faltar alguma, dá para ler o resto pela extensão do Claude no Chrome.",
@@ -310,6 +310,10 @@
   "LER_GOOGLE_FALHOU": {
     "texto": "Não consegui abrir o perfil do Google agora.",
     "acao": "Leia dados.detalhe. Rode de novo uma vez; se repetir, peça à pessoa o link do perfil no Google Maps e rode com --google <link>."
+  },
+  "LER_SITE_OUTRO_ENDERECO": {
+    "texto": "O endereço do site leva para outra página, que não parece ser do negócio. Não li essa página.",
+    "acao": "Confira com a pessoa se dados.final é o site do próprio negócio. Se for, rode de novo com --site <dados.final>. Se não for (loja de pedidos, link curto, página de links ou rede social), siga sem o site e não use nada dessa página."
   },
   "LER_SITE_FALHOU": {
     "texto": "Não consegui abrir o site atual.",

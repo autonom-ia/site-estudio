@@ -14,6 +14,37 @@ const NAO_E_PAGINA = Object.freeze([
 
 const semWww = (host) => (host.startsWith('www.') ? host.slice(4) : host);
 
+// Endereço que não é o site do próprio negócio: rede social, conversa, link curto, página de links,
+// loja de pedidos e cardápio de terceiros. Ler um desses anotaria o contato de outro como fato.
+const NAO_E_SITE = Object.freeze([
+  'instagram.com', 'facebook.com', 'fb.com', 'fb.me', 'm.me', 'wa.me', 'wa.link', 'whatsapp.com', 'tiktok.com', 'youtube.com', 'youtu.be',
+  'x.com', 'twitter.com', 'threads.net', 'linkedin.com', 'pinterest.com', 'kwai.com', 'google.com', 'goo.gl', 'g.co', 'g.page',
+  'bit.ly', 'tinyurl.com', 't.co', 'cutt.ly', 'is.gd', 'ow.ly', 'rebrand.ly', 's.id', 'encurtador.com.br',
+  'linktr.ee', 'linkme.bio', 'beacons.ai', 'lnk.bio', 'taplink.cc', 'taplink.at', 'campsite.bio', 'bio.link', 'linkin.bio', 'solo.to', 'linkbio.co', 'hoo.be', 'msha.ke',
+  'ifood.com.br', 'rappi.com.br', 'aiqfome.com', 'ubereats.com', '99app.com', 'goomer.app', 'anota.ai', 'cardapioweb.com', 'menudino.com', 'deliverydireto.com.br',
+]);
+
+export function ehSiteDoNegocio(url) {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+    return !NAO_E_SITE.some((h) => u.hostname === h || u.hostname.endsWith(`.${h}`));
+  } catch {
+    return false;
+  }
+}
+
+// A primeira página abriu no mesmo endereço pedido (com ou sem www, http ou https) e ele é do negócio?
+// Redirecionamento para outro endereço para a leitura: quem confirma o novo endereço é a pessoa.
+export function abriuNoMesmoSite(pedido, final) {
+  if (!ehSiteDoNegocio(final)) return false;
+  try {
+    return semWww(new URL(pedido).hostname) === semWww(new URL(final).hostname);
+  } catch {
+    return false;
+  }
+}
+
 // Roda na página: rola até o fim (fotos que só carregam ao aparecer) e volta ao topo.
 async function rolarAteOFim() {
   for (let i = 0; i < 8; i += 1) {
@@ -115,9 +146,11 @@ export function fatosDoJsonLd(textos) {
   return fatos;
 }
 
-// Visita o site a partir do endereço dado. Devolve { inicio, paginas, contatos, declarados, fotos }.
+// Visita o site a partir do endereço dado. Devolve { inicio, paginas, contatos, declarados, fotos }, ou
+// { desvio } (sem ler nada) quando a primeira página abre em outro endereço ou fora do site do negócio.
 export async function lerSite(leitor, endereco, { maximo = TETO_DE_PAGINAS, pasta, aoAvancar = () => {} } = {}) {
-  const fila = [semAncora(new URL(endereco).href)];
+  const fila0 = semAncora(new URL(endereco).href);
+  const fila = [fila0];
   const vistas = new Set(fila);
   const paginas = [];
   let origem = fila[0];
@@ -128,6 +161,7 @@ export async function lerSite(leitor, endereco, { maximo = TETO_DE_PAGINAS, past
       await leitor.ir(url);
       await leitor.avaliar(rolarAteOFim);
       const lida = await leitor.avaliar(lerPaginaDoSite);
+      if (!paginas.length && !abriuNoMesmoSite(fila0, lida.url)) return { inicio: fila0, desvio: lida.url };
       if (!paginas.length) origem = lida.url;
       paginas.push(lida);
       for (const l of linksDoMesmoSite(lida.links, origem)) {
