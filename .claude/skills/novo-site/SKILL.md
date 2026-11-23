@@ -11,6 +11,17 @@ Comandos: `./estudio <comando>` (no PowerShell, `.\estudio.cmd <comando>`), de d
 
 **Regra de ouro:** código só confere fato (link morto, letra que não carregou, contraste, texto vazando, número sem fonte). Gosto, história, layout e voz são seus e dos revisores; a palavra final é da pessoa. Nenhum comando diz se o site é bonito.
 
+## As quatro regras da primeira versão
+
+Um piloto com um negócio de verdade mostrou o que leva a primeira versão de "parece modelo" para "ficou muito bom" sem rodadas a mais de revisão. Valem desde o primeiro desenho:
+
+1. **Coleta visual antes da direção.** Antes de escrever `direcao.md`, junte em `material/fotos/` até 20 fotos reais do negócio (o lugar, a gente, o trabalho), cada uma com a legenda e a data de onde veio, e em `material/referencias/` prints de 3 a 5 sites do mesmo ramo. Sem esse material na pasta, a direção nasce da imaginação e sai genérica. Foto tirada de rede social chega pequena (perto de 640 px de largura): avise a pessoa em uma frase e peça os arquivos originais. Se a pessoa não tem foto nenhuma, não trave: a Etapa 4 diz como seguir.
+2. **Assinatura tipográfica no topo.** A primeira tela não é "título com subtítulo": é o nome ou a promessa composta como cartaz, em linhas com pesos (ou larguras) diferentes da letra de título da marca. A anatomia está em `_gerador/secoes/abertura.mjs` do molde.
+3. **Um único momento forte, com a ação logo abaixo.** A página inicial tem um pico só, o "momento mais forte" do brief: uma foto, um número ou uma frase em tamanho de cartaz. A ação principal vem logo abaixo dele, não três telas depois. Dois picos na mesma página se anulam.
+4. **Fotos reais pequenas e agrupadas, nunca esticadas.** Foto de celular ou de rede social não aguenta a tela inteira. Em grupo, cada uma no máximo do tamanho do arquivo, ela mostra o lugar e a gente de verdade. Nunca exiba uma foto maior que o arquivo dela. A anatomia está em `_gerador/secoes/fotos.mjs` do molde.
+
+E as letras nascem leves: baixe com `./estudio fonte` (skill `minha-marca`), que traz só o alfabeto latino em `.woff2` e a licença com o nome da família. O `checar` reprova letra sem licença (`fonte-sem-licenca`) e avisa letra pesada (`fonte-pesada`).
+
 ## O andamento
 
 Cada site tem `sites/<nome>/andamento.md`, que você escreve e atualiza ao fim de cada etapa:
@@ -32,7 +43,7 @@ Se a sessão cair, você volta daqui. Aprovação só vale com as palavras da pe
 Se ainda não sabe o nome do negócio, faça antes a pergunta 1 da coleta (etapa 1): é dela que sai o nome. Escolha um nome curto (letras minúsculas, números e hífen) e rode:
 `./estudio novo <nome> --titulo "<nome do negócio>"`
 
-- `SITE_CRIADO`: a pasta está em `arquivos.pasta`, com `brief.md`, `fatos.md`, `referencias.md`, `direcao.md`, `material/`, `_gerador/` e `site/` (marca e motor de movimento já copiados, e o molde de um negócio fictício já montado, com a página inicial e uma página). Todo texto do molde será trocado. Cada seção do molde, o cabeçalho e a nota do rodapé levam `data-molde`, a `_gerador/ordem.mjs` leva `molde: true` e as linhas do `fatos.md` do molde têm a fonte "Exemplo fictício do Site Estúdio": o `checar` reprova com `resto-do-molde` e o `fatos` com `fonte-de-exemplo` enquanto sobrar algum. Tire o `data-molde` de uma parte só depois de reescrevê-la com o conteúdo do brief, apague o `molde: true` quando nome, negócio e páginas forem os de verdade, e apague do `fatos.md` toda linha do exemplo. Nunca tire a marca para passar na conferência sem trocar o conteúdo.
+- `SITE_CRIADO`: a pasta está em `arquivos.pasta`, com `brief.md`, `fatos.md`, `referencias.md`, `direcao.md`, `material/`, `_gerador/` e `site/` (marca e motor de movimento já copiados, e o molde de um negócio fictício já montado, com a página inicial e uma página). O molde é uma oficina de bicicletas inventada: ele mostra a anatomia das quatro regras, não a direção do seu site. Todo texto do molde será trocado. Cada seção do molde, o cabeçalho e a nota do rodapé levam `data-molde`, a `_gerador/ordem.mjs` leva `molde: true` e as linhas do `fatos.md` do molde têm a fonte "Exemplo fictício do Site Estúdio": o `checar` reprova com `resto-do-molde` e o `fatos` com `fonte-de-exemplo` enquanto sobrar algum. Tire o `data-molde` de uma parte só depois de reescrevê-la com o conteúdo do brief, apague o `molde: true` quando nome, negócio e páginas forem os de verdade, e apague do `fatos.md` toda linha do exemplo. Nunca tire a marca para passar na conferência sem trocar o conteúdo.
 - Aviso `MARCA_DE_EXEMPLO`: diga em uma frase que está usando a marca de exemplo e ofereça a skill `minha-marca` depois.
 - `SITE_JA_EXISTE`: pergunte se é para continuar aquele ou criar com outro nome. Nunca apague o existente.
 
@@ -50,7 +61,11 @@ Sem marca guardada (`minha-marca/tokens.css`), faça a marca agora com a skill `
 
 Leia tudo: os arquivos de `referencias/` e as páginas públicas que a pessoa indicar (site atual, Instagram, página no Google), com a ferramenta de ler páginas da internet do seu programa. Ler a internet é permitido; publicar ou enviar qualquer coisa, não. Copie para `material/` só o que a pessoa mandou ou autorizou usar.
 
-Escreva `fatos.md`: cada fato com a fonte e a data em que você conferiu. Fato é todo número, preço, endereço, telefone, horário, @, e-mail, nome de pessoa, ano de fundação, prêmio e depoimento. Fonte é o documento, a página (com o endereço), a foto do cardápio, ou "a própria pessoa disse em <data>". Sem fonte, o fato fica fora do site. Siga o formato que já vem no `fatos.md` do molde, a tabela `Fato | Fonte | Data`, uma linha por fato, escrito como aparece na página (o telefone com os mesmos dígitos, o @ igual): o comando `fatos` lê essa tabela e reprova linha sem fonte.
+Faça a coleta visual da regra 1 agora: as fotos com legenda em `material/fotos/` e os prints do ramo em `material/referencias/`.
+
+Escreva `fatos.md`: cada fato com a fonte e a data em que você conferiu. Fato é todo número, preço, endereço, telefone, horário, @, e-mail, nome de pessoa, ano de fundação, prêmio e depoimento. Fonte é o documento, a página (com o endereço), a foto da tabela de preços, ou "a própria pessoa disse em <data>". Sem fonte, o fato fica fora do site. Siga o formato que já vem no `fatos.md` do molde, a tabela `Fato | Fonte | Data`, uma linha por fato, escrito como aparece na página (o telefone com os mesmos dígitos, o @ igual): o comando `fatos` lê essa tabela e reprova linha sem fonte.
+
+**Todo texto da página nasce de uma linha do `fatos.md`.** Não só número e contato: cada frase sobre o negócio (o que faz, como faz, para quem, desde quando) tem a linha dela, escrita como a fonte diz. A frase da página pode ser mais bonita que a linha, mas nunca diz mais do que ela: não generalize ("o melhor do bairro"), não invente costume, lugar ou produto que a fonte não cita. Sem linha, a frase sai ou vira pergunta para a pessoa. O comando `fatos` confere número, contato e @; a frase quem confere é o revisor de fatos (skill `revisar`), lendo uma por uma contra o `fatos.md`.
 
 ## Etapa 2. Brief (portão 1)
 
@@ -72,7 +87,7 @@ Antes de desenhar, estude de 6 a 10 sites **reais** e no ar, do mesmo tipo de ne
 
 Para cada referência, abra a página (e, se tiver ferramenta de navegador, tire uma foto) e escreva em `referencias.md`:
 - o endereço e por que ele entrou;
-- **o princípio** que faz funcionar, em uma frase (exemplo: "a foto do produto ocupa a tela inteira e o título é curto, então a vontade vem antes da explicação"; "o cardápio é tipografia pura, com preço alinhado, sem ícone");
+- **o princípio** que faz funcionar, em uma frase (exemplo: "a foto do produto ocupa a tela inteira e o título é curto, então a vontade vem antes da explicação"; "a tabela de preços é tipografia pura, com preço alinhado, sem ícone");
 - como esse princípio serve ao objetivo **deste** brief;
 - o que **não** vale trazer (o que é da marca deles, o que não combina com o público daqui).
 
@@ -80,13 +95,16 @@ Nunca copie layout, texto, foto, logo ou cor de uma referência. Referência ens
 
 ## Etapa 4. Direção visual
 
-1. Se estiverem instaladas, carregue as skills `frontend-design` e `ui-ux-pro-max`. Use-as para a direção, a tipografia, a cor e o movimento.
-2. Leia `minha-marca/marca.md` (se existir), o brief e `referencias.md`.
+1. Confira a coleta visual (regra 1). Os prints do ramo em `material/referencias/` você junta sozinho: faltando, volte à coleta antes de escrever a direção. As fotos dependem da pessoa: se ela não tem nenhuma (o negócio vai abrir, ou não há foto agora), não trave. Anote em `brief.md` > **Insumos faltando**, siga com uma direção que compensa (tipografia como imagem, textura, cor) e diga à pessoa, em uma frase, o que fotografar com o celular.
+2. Se estiverem instaladas, carregue as skills `frontend-design` e `ui-ux-pro-max`. Use-as para a direção, a tipografia, a cor e o movimento.
+3. Leia `minha-marca/marca.md` (se existir), o brief, `referencias.md` e olhe as fotos de `material/`.
 
 Escreva `sites/<nome>/direcao.md`, nesta ordem (tipografia e foto vêm antes de qualquer outra decisão):
-- **Tese visual, em uma frase.** Como o site vai parecer e por quê, ligada ao negócio e ao público. Exemplo: "Uma padaria de madrugada: fundo escuro e quente, foto de forno com luz de lado, letra de título pesada e curta, como placa pintada à mão." Se a frase serve para qualquer negócio, ela ainda não é uma tese.
-- **Tipografia.** As duas famílias e o papel de cada uma; a escala (título enorme, apoio, texto, legenda) com `clamp()`; altura de linha; largura máxima do texto corrido (entre 60 e 75 caracteres). A letra de título deve ter personalidade.
-- **Foto.** Que tipo (gente real, produto, lugar), luz, enquadramento, cor. A melhor foto real do negócio abre a página. Sem foto boa, a direção diz como compensar (tipografia como imagem, textura, cor) e o que a pessoa pode fotografar com o celular para melhorar. Nunca use banco de imagem genérico, e imagem gerada só com o OK da pessoa.
+- **Tese visual, em uma frase.** Como o site vai parecer e por quê, ligada ao negócio e ao público. Exemplo: "Um consultório de fisioterapia que parece manhã: branco quente, foto de gente se movendo com luz de janela, letra de título leve e larga." Se a frase serve para qualquer negócio, ela ainda não é uma tese.
+- **Assinatura tipográfica do topo** (regra 2). As linhas do cartaz e o peso de cada uma.
+- **O momento forte e a ação** (regra 3). Qual é o pico único da página inicial e qual ação vem logo abaixo.
+- **Tipografia.** As duas famílias e o papel de cada uma, baixadas leves com `./estudio fonte`; a escala (título enorme, apoio, texto, legenda) com `clamp()`; altura de linha; largura máxima do texto corrido (entre 60 e 75 caracteres). A letra de título deve ter personalidade.
+- **Foto.** Que tipo (gente real, produto, lugar), luz, enquadramento, cor, vindas da coleta. Fotos reais pequenas e agrupadas, nunca esticadas (regra 4); só uma foto que aguenta a tela inteira (original grande e nítido) pode abrir a página. Sem foto boa, a direção diz como compensar (tipografia como imagem, textura, cor) e o que a pessoa pode fotografar com o celular para melhorar. Nunca use banco de imagem genérico, e imagem gerada só com o OK da pessoa.
 - **Cor.** A paleta da marca e a tabela de contraste medida (mínimo 4,5:1 no texto, 3:1 no título grande).
 - **Composição.** Grade, respiro, assimetria, onde a tela fica cheia e onde respira, como as partes se emendam. Sem grade de cartões com borda e fundo.
 - **Movimento.** O que anima e por quê (o que conduz o olhar ou conta a história), o que nunca anima, durações e curvas, rolagem suave (Lenis) sim ou não, passagem entre páginas (View Transitions), e como fica com movimento reduzido (o conteúdo aparece inteiro, parado).
@@ -98,23 +116,23 @@ Ajuste `site/assets/marca/tokens.css` do site, se a direção pedir algo além d
 
 Leia o gerador do site antes: `sites/<nome>/_gerador/ordem.mjs` (as páginas e a ordem das partes), os arquivos de `_gerador/secoes/` (uma parte por arquivo) e o `_gerador/montar.mjs`. O cabeçalho de cada um explica como se escreve. Leia também a pasta `site/assets/vendor/` para saber o que já está disponível (GSAP, ScrollTrigger, Lenis).
 
-Faça só três partes da página inicial: o **topo** (a primeira tela, que diz o que é e mostra a ação principal), uma **parte comum** (a mais frequente do site) e o **pico** (o momento mais forte do brief). Elas substituem as partes do molde.
+Faça só três partes da página inicial: o **topo** (a primeira tela, com a assinatura tipográfica da regra 2, que diz o que é e mostra a ação principal), uma **parte comum** (a mais frequente do site) e o **pico** (o único momento forte do brief, com a ação logo abaixo, regra 3). Elas substituem as partes do molde.
 
 Como uma parte é feita:
 - Um arquivo por parte em `_gerador/secoes/<nome>.mjs`, listado em `ordem.mjs`. O HTML de `site/` sai do `./estudio montar <nome>`; nunca edite um `index.html` de `site/` à mão. O estilo vai em `site/assets/css/site.css` e o movimento em `site/assets/js/site.js`, que o `montar` não toca.
 - HTML semântico: um `h1` por página, títulos em ordem, `main`, `nav`, `footer`, botões que são `<a>` ou `<button>` de verdade, imagens com `alt` que descreve, `width` e `height` sempre.
 - CSS moderno: tipografia fluida com `clamp()`, container queries, `:has()`, `color-mix()`, subgrid quando a grade pedir. Pense primeiro no celular.
 - Movimento com GSAP e ScrollTrigger já copiados em `site/assets/vendor/`, Lenis quando a direção pede rolagem suave, View Transitions na passagem entre páginas. Tudo dentro de `prefers-reduced-motion: no-preference`; sem isso, o conteúdo aparece inteiro e parado. Nada fica invisível esperando um script.
-- Fotos em `site/assets/`, em WebP ou JPG, na largura em que aparecem (não uma foto de 6000 px num espaço de 800). `loading="lazy"` em tudo que não está no topo.
+- Fotos em `site/assets/`, em WebP ou JPG, na largura em que aparecem (não uma foto de 6000 px num espaço de 800) e nunca exibidas maiores que o arquivo (regra 4). `loading="lazy"` em tudo que não está no topo.
 - Contato sem servidor: link de WhatsApp, `tel:` e `mailto:`, com os dados de `fatos.md`.
-- A cabeça de cada página sai do `ordem.mjs`: `idioma`, o `titulo` e a `descricao` próprios de cada página, e os dados do negócio em `site.negocio`, que viram JSON-LD (escolha o `tipo` mais certo, como `Bakery`, `Dentist` ou `LocalBusiness`), só com fatos de `fatos.md`. O endereço completo do site (`site.endereco`) e a imagem de compartilhamento (`site.imagemSocial`) ficam vazios até a pessoa ter onde hospedar (skill `hospedar`).
+- A cabeça de cada página sai do `ordem.mjs`: `idioma`, o `titulo` e a `descricao` próprios de cada página, e os dados do negócio em `site.negocio`, que viram JSON-LD (escolha o `tipo` mais certo, como `Dentist`, `HairSalon` ou `LocalBusiness`), só com fatos de `fatos.md`. O endereço completo do site (`site.endereco`) e a imagem de compartilhamento (`site.imagemSocial`) ficam vazios até a pessoa ter onde hospedar (skill `hospedar`).
 - Sem `<select>` nativo, sem travessão no texto (use vírgula, dois-pontos ou ponto), nenhum endereço da internet carregado pela página.
 
 O que faz a parte ser boa:
 - Hierarquia por tipografia grande, foto, luz, cor e movimento. Nada de grade de cartões, nada de lista de serviços com ícone em quadradinho, nada de "Bem-vindo ao nosso site".
 - Teste anti-genérico: troque o nome do negócio; se a parte serve para outro, refaça.
 - A ação principal está clara em 5 segundos, no celular, sem rolar.
-- O texto soa como gente da marca falando, curto, com verbo.
+- O texto soa como gente da marca falando, curto, com verbo, e cada frase tem a sua linha no `fatos.md`.
 
 Conferir antes de mostrar:
 1. `./estudio montar <nome>` (`SITE_MONTADO`). `MONTAR_FALHOU`: o erro está em `dados.detalhe`, numa parte do `_gerador/`; corrija e monte de novo.

@@ -3,15 +3,15 @@
 export default function visita({ esc, site }) {
   const n = site.negocio;
   const horarios = [
-    ['Terça a sexta', 'das 7h às 19h'],
-    ['Sábado e domingo', 'das 7h às 13h'],
-    ['Segunda', 'fechado para o forno descansar'],
+    ['Terça a sexta', 'das 9h às 18h'],
+    ['Sábado', 'das 9h às 13h'],
+    ['Domingo e segunda', 'fechada'],
   ];
   return `<section class="visita" id="visita" data-secao="visita" data-molde="visita" aria-labelledby="visita-titulo">
   <div class="envelope visita__grade">
     <div class="visita__convite" data-revela>
-      <h2 id="visita-titulo">Venha cedo.</h2>
-      <p>A primeira fornada sai às sete. Quem chega primeiro escolhe o pão mais bonito do cesto.</p>
+      <h2 id="visita-titulo">Passe na oficina.</h2>
+      <p>Sem hora marcada também dá: a bancada olha na hora e passa o preço.</p>
     </div>
     <div class="visita__dados" data-revela>
       <h3 class="sobretitulo">Horários</h3>

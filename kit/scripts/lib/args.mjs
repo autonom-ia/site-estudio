@@ -4,7 +4,7 @@ import { nomeValido, sugerirNome } from './caminhos.mjs';
 
 // Opções que são só um interruptor: nunca levam o token seguinte como valor, para que
 // "abrir --sem-navegador meu-site" e "abrir meu-site --sem-navegador" deem no mesmo.
-export const OPCOES_SEM_VALOR = Object.freeze(['sem-navegador', 'sem-secoes', 'reduzido', 'conferir', 'rapido', 'confirmar', 'de-novo']);
+export const OPCOES_SEM_VALOR = Object.freeze(['sem-navegador', 'sem-secoes', 'reduzido', 'conferir', 'rapido', 'confirmar', 'de-novo', 'italico', 'larguras']);
 
 export function lerArgs(lista) {
   const posicionais = [];

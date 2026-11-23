@@ -83,7 +83,7 @@ O acesso deste computador fica guardado em `.ferramentas/publicar/`. Nunca abra,
 
 ## 7. Endereço próprio (opcional)
 
-Quando a pessoa quiser um endereço como `cafeaurora.com.br`:
+Quando a pessoa quiser um endereço como `oficinaraio.com.br`:
 
 Em sites.autonomia.site isso ainda não está disponível: o endereço fica `<nome>.sites.autonomia.site`. Para um endereço próprio agora, use Netlify, Cloudflare Pages ou GitHub Pages.
 

@@ -182,16 +182,16 @@ function matar(pid) {
 test('abrir: dois ao mesmo tempo usam a mesma porta e um servidor só; porta de outro programa não é reaproveitada', async () => {
   const base = temporaria('estudio-abrir-');
   const env = { ESTUDIO_SITES: path.join(base, 'sites'), ESTUDIO_FERRAMENTAS: path.join(base, 'ferr') };
-  escrever(path.join(base, 'sites', 'cafe', 'site', 'index.html'), '<p>cafe</p>');
-  const estado = path.join(base, 'ferr', 'servidores', 'cafe.json');
+  escrever(path.join(base, 'sites', 'oficina', 'site', 'index.html'), '<p>oficina</p>');
+  const estado = path.join(base, 'ferr', 'servidores', 'oficina.json');
   const pids = [];
   const intruso = await servir(base);
   try {
     // o estado aponta para uma porta ocupada por outro servidor (sem a identidade do estúdio)
-    escrever(estado, JSON.stringify({ porta: intruso.porta, pid: 1, pasta: path.join(base, 'sites', 'cafe', 'site') }));
+    escrever(estado, JSON.stringify({ porta: intruso.porta, pid: 1, pasta: path.join(base, 'sites', 'oficina', 'site') }));
     const [a, b] = await Promise.all([
-      rodarEstudioAssincrono(['abrir', 'cafe', '--sem-navegador'], env),
-      rodarEstudioAssincrono(['abrir', 'cafe', '--sem-navegador'], env),
+      rodarEstudioAssincrono(['abrir', 'oficina', '--sem-navegador'], env),
+      rodarEstudioAssincrono(['abrir', 'oficina', '--sem-navegador'], env),
     ]);
     assert.equal(a.codigo, 0, JSON.stringify(a.json));
     assert.equal(b.codigo, 0, JSON.stringify(b.json));
@@ -210,16 +210,16 @@ test('abrir: dois ao mesmo tempo usam a mesma porta e um servidor só; porta de 
     assert.equal(info.porta, a.json.dados.porta);
     const id = await (await fetch(`http://127.0.0.1:${info.porta}/__estudio.json`)).json();
     assert.equal(id.pid, info.pid);
-    assert.equal(path.resolve(id.pasta), path.resolve(base, 'sites', 'cafe', 'site'));
-    assert.equal(await (await fetch(`http://127.0.0.1:${info.porta}/`)).text(), '<p>cafe</p>');
+    assert.equal(path.resolve(id.pasta), path.resolve(base, 'sites', 'oficina', 'site'));
+    assert.equal(await (await fetch(`http://127.0.0.1:${info.porta}/`)).text(), '<p>oficina</p>');
     assert.equal(fs.existsSync(`${estado}.trava`), false);
     // de novo: reaproveita o mesmo servidor
-    const c = await rodarEstudioAssincrono(['abrir', 'cafe', '--sem-navegador'], env);
+    const c = await rodarEstudioAssincrono(['abrir', 'oficina', '--sem-navegador'], env);
     assert.equal(c.json.dados.porta, info.porta);
     assert.equal(JSON.parse(fs.readFileSync(estado, 'utf8')).pid, info.pid);
     // trava esquecida por um abrir que morreu (pid que não existe mais, mesmo recente) não impede o próximo
     fs.writeFileSync(`${estado}.trava`, String(spawnSync(process.execPath, ['-e', '']).pid));
-    const d = await rodarEstudioAssincrono(['abrir', 'cafe', '--sem-navegador'], env);
+    const d = await rodarEstudioAssincrono(['abrir', 'oficina', '--sem-navegador'], env);
     assert.equal(d.json.dados.porta, info.porta);
     assert.equal(fs.existsSync(`${estado}.trava`), false);
   } finally {

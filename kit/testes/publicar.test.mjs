@@ -164,6 +164,9 @@ test('mensagens da publicação existem, para leigo, e .gitignore cobre .ferrame
 // Os campos que cada comando realmente manda em `dados`. Um erro de digitação no mensagens.json
 // ({{enderco}}) quebra aqui, em vez de sumir em silêncio na frase.
 const CAMPOS_ENVIADOS = Object.freeze({
+  FONTE_BAIXADA: ['familia', 'kb'],
+  FONTE_NAO_ACHADA: ['familia'],
+  FONTE_SEM_LICENCA: ['familia'],
   PUBLICADO: ['endereco'],
   PUBLICADO_CERTIFICADO_PENDENTE: ['endereco'],
   PUBLICAR_AGUARDANDO_LOGIN: ['codigo_curto', 'endereco'],

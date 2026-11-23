@@ -2,8 +2,8 @@
 export default function cabecalho({ site, paginas, pagina, esc, link, assets }) {
   const itens = [
     ...paginas.filter((p) => p.rota !== pagina.rota && p.menu).map((p) => ({ href: link(p.rota), texto: p.menu })),
-    { href: link('/#cardapio'), texto: 'Cardápio' },
-    { href: link('/#visita'), texto: 'Visite' },
+    { href: link('/#servicos'), texto: 'Preços' },
+    { href: link('/#visita'), texto: 'Onde fica' },
   ];
   return `<header class="topo" data-molde="cabecalho">
   <div class="envelope topo__linha">

@@ -55,6 +55,22 @@
     "texto": "Usei cores e letras provisórias, porque a sua marca ainda não está guardada no estúdio.",
     "acao": "Ofereça a skill minha-marca. Depois de criar minha-marca/tokens.css, copie para site/assets/marca/ do site só tokens.css, a pasta fontes/ (arquivos .woff2, .woff ou .ttf e as licenças OFL) e o logo.svg ou logo.png. Nunca copie marca.md nem outro arquivo de minha-marca/: tudo em site/ vai para o ar."
   },
+  "FONTE_BAIXADA": {
+    "texto": "Baixei a letra {{familia}} já leve ({{kb}} KB), com a licença dela.",
+    "acao": "Cole dados.css no topo do tokens.css da mesma marca, no lugar das linhas @font-face antigas dessa família, e use dados.familia nas variáveis --fonte-titulo ou --fonte-texto. A licença fica ao lado, com o nome da família (dados.licenca): nunca apague nem renomeie para OFL.txt."
+  },
+  "FONTE_NAO_ACHADA": {
+    "texto": "Não achei a letra {{familia}} no catálogo livre do Google Fonts.",
+    "acao": "Confira o nome exato da família (com espaços e maiúsculas, como no site do Google Fonts) e os pesos pedidos. Se a letra não for livre, escolha uma livre parecida e diga isso à pessoa em uma frase."
+  },
+  "FONTE_SEM_LICENCA": {
+    "texto": "A letra {{familia}} não tem licença no repositório oficial, então não baixei.",
+    "acao": "Escolha outra letra livre parecida. Letra sem licença clara nunca entra no site."
+  },
+  "FONTE_DOWNLOAD_FALHOU": {
+    "texto": "Não consegui baixar a letra agora.",
+    "acao": "Veja dados.detalhe. Sem internet, tente de novo depois; no Codex, rode fora da área protegida. Nada foi escrito na pasta."
+  },
   "SERVIDOR_NAO_SUBIU": {
     "texto": "Não consegui abrir o site no navegador.",
     "acao": "Rode de novo fora da área protegida do assistente. Se continuar, rode ./estudio verificar."
@@ -129,7 +145,7 @@
   },
   "_tipos_dos_achados": {
     "texto": "Tipos de achado em dados.vermelhos (RED, reprova) e dados.amarelos (WARN, avisa) de checar, medir, acessibilidade e fatos.",
-    "acao": "checar RED: endereco-externo (CDN ou arquivo de fora carregado pela página), vendor-ausente, arquivo-ausente, link-morto (inclusive âncora que não existe), fonte-quebrada, sem-titulo, sem-descricao, sem-idioma, h1 (precisa de exatamente um), select-nativo, travessao (troque por ponto, vírgula, dois-pontos ou parênteses), erro-de-script, resto-do-molde (seção, cabeçalho ou nota do rodapé com data-molde, ou molde: true em _gerador/ordem.mjs: o texto do negócio fictício ainda está na página; reescreva com o conteúdo do brief e só então tire o data-molde). checar WARN: og-image-relativa, json-ld-quebrado, fonte-nao-declarada. medir RED: rola-para-o-lado, colisao, texto-cortado, contraste, alvo-pequeno (celular). medir WARN: texto-pequeno-celular, contraste-nao-medido (texto sobre foto ou degradê: confira no print), texto-invisivel. acessibilidade: cada item traz regra, impacto, ajuda e nos (alvo). fatos RED: numero, arroba, telefone, email sem linha com fonte em fatos.md (motivo fora-de-fatos, linha-sem-fonte ou fonte-de-exemplo); fonte-de-exemplo (pagina fatos.md: linha que ainda tem a fonte do molde, \"Exemplo fictício do Site Estúdio\"; apague a linha ou troque pelo fato de verdade com a fonte real). Corrija pela causa (seção, CSS, conteúdo ou fatos.md com fonte de verdade) e rode de novo."
+    "acao": "checar RED: endereco-externo (CDN ou arquivo de fora carregado pela página), vendor-ausente, arquivo-ausente, link-morto (inclusive âncora que não existe), fonte-quebrada, sem-titulo, sem-descricao, sem-idioma, h1 (precisa de exatamente um), select-nativo, travessao (troque por ponto, vírgula, dois-pontos ou parênteses), erro-de-script, resto-do-molde (seção, cabeçalho ou nota do rodapé com data-molde, ou molde: true em _gerador/ordem.mjs: o texto do negócio fictício ainda está na página; reescreva com o conteúdo do brief e só então tire o data-molde). checar WARN: og-image-relativa, json-ld-quebrado, fonte-nao-declarada, fonte-pesada (letra que não é .woff2, ou letras somando mais de 100 KB: baixe de novo com ./estudio fonte). checar RED também: fonte-sem-licenca (letra sem a licença com o nome da família ao lado, OFL-<Família>.txt). medir RED: rola-para-o-lado, colisao, texto-cortado, contraste, alvo-pequeno (celular). medir WARN: texto-pequeno-celular, contraste-nao-medido (texto sobre foto ou degradê: confira no print), texto-invisivel. acessibilidade: cada item traz regra, impacto, ajuda e nos (alvo). fatos RED: numero, arroba, telefone, email sem linha com fonte em fatos.md (motivo fora-de-fatos, linha-sem-fonte ou fonte-de-exemplo); fonte-de-exemplo (pagina fatos.md: linha que ainda tem a fonte do molde, \"Exemplo fictício do Site Estúdio\"; apague a linha ou troque pelo fato de verdade com a fonte real). Corrija pela causa (seção, CSS, conteúdo ou fatos.md com fonte de verdade) e rode de novo."
   },
   "SITE_NAO_ACHADO": {
     "texto": "Não achei esse site.",
