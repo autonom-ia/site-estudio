@@ -12,7 +12,7 @@
     "acao": "Leia dados.detalhe. Se for defeito do kit, diga à pessoa que achou um erro do estúdio e mostre o comando que falhou. Não tente contornar editando o kit."
   },
   "COMANDO_DESCONHECIDO": {
-    "texto": "Esse comando não existe no estúdio.",
+    "texto": "Pedi ao estúdio algo que ele não sabe fazer. Vou corrigir.",
     "acao": "Veja dados.disponiveis e use um deles."
   },
   "NODE_ANTIGO": {
@@ -24,11 +24,11 @@
     "acao": "Rode a skill instalar-estudio."
   },
   "ARGUMENTO_FALTANDO": {
-    "texto": "Faltou uma informação no comando. Vou completar.",
+    "texto": "Faltou uma informação no meu pedido ao estúdio. Vou completar.",
     "acao": "Veja dados.argumento e rode o comando de novo com ele."
   },
   "ARGUMENTO_INVALIDO": {
-    "texto": "Passei uma informação errada no comando. Vou corrigir.",
+    "texto": "Passei uma informação errada ao estúdio. Vou corrigir.",
     "acao": "Veja dados.argumento, dados.valor e dados.opcoes e rode de novo."
   },
   "NOME_INVALIDO": {
@@ -52,7 +52,7 @@
     "acao": "Rode o mesmo comando fora da área protegida do assistente (no Claude Code, sem sandbox só neste comando; no Codex, com aprovação de acesso completo). Se continuar, rode ./estudio verificar."
   },
   "MARCA_DE_EXEMPLO": {
-    "texto": "Usei a marca de exemplo, porque a sua ainda não está em minha-marca/.",
+    "texto": "Usei cores e letras provisórias, porque a sua marca ainda não está guardada no estúdio.",
     "acao": "Ofereça a skill minha-marca. Depois de criar minha-marca/tokens.css, copie para site/assets/marca/ do site só tokens.css, a pasta fontes/ (arquivos .woff2, .woff ou .ttf e as licenças OFL) e o logo.svg ou logo.png. Nunca copie marca.md nem outro arquivo de minha-marca/: tudo em site/ vai para o ar."
   },
   "SERVIDOR_NAO_SUBIU": {
@@ -140,7 +140,7 @@
     "acao": "Pergunte se a pessoa quer continuar o existente ou começar outro com nome diferente. Nunca apague o existente."
   },
   "SITE_CRIADO": {
-    "texto": "Criei a pasta do site com o molde (home e uma página) e montei as páginas.",
+    "texto": "Comecei o seu site, com um modelo provisório que eu vou trocar pelo seu conteúdo.",
     "acao": "Escreva o brief.md e o fatos.md com a pessoa e peça aprovação do brief antes de desenhar. O molde é de um negócio fictício: todo texto dele será trocado. O checar reprova (resto-do-molde) enquanto sobrar data-molde em alguma seção ou molde: true em _gerador/ordem.mjs, e o fatos reprova (fonte-de-exemplo) enquanto sobrar linha do exemplo em fatos.md."
   },
   "SITE_SEM_INDEX": {
@@ -148,7 +148,7 @@
     "acao": "Rode ./estudio montar <nome>. Se continuar, confira se _gerador/ordem.mjs tem uma página com rota vazia (a home)."
   },
   "SITE_SEM_PAGINAS": {
-    "texto": "A pasta site/ está sem nenhuma página.",
+    "texto": "O site está sem nenhuma página montada. Vou montar.",
     "acao": "Rode ./estudio montar <nome>."
   },
   "GERADOR_AUSENTE": {
@@ -212,15 +212,15 @@
     "acao": "Veja dados.url. Se for foto, exporte menor (WebP ou AVIF, largura de até 2000 px). Se for vídeo, encurte ou comprima."
   },
   "FATOS_OK": {
-    "texto": "Todo número, contato e @ das páginas está em fatos.md, com fonte.",
+    "texto": "Todo número, contato e @ das páginas tem a fonte guardada.",
     "acao": "Siga em frente. O revisor de fatos ainda confere nomes e logradouros."
   },
   "FATOS_SEM_FONTE": {
-    "texto": "Há números, contatos ou @ nas páginas que não estão em fatos.md com fonte.",
+    "texto": "Há números, contatos ou @ nas páginas sem fonte guardada. Vou conferir antes de seguir.",
     "acao": "Leia dados.vermelhos (pagina, tipo, trecho, motivo). Para cada um: confirme com a pessoa e registre em fatos.md com a fonte, ou tire da página. Nunca invente fonte."
   },
   "FATOS_SEM_ARQUIVO": {
-    "texto": "O site ainda não tem fatos.md.",
+    "texto": "O site ainda não tem a lista de fatos com a fonte de cada um. Vou montar.",
     "acao": "Crie fatos.md com a tabela Fato | Fonte | Data, a partir do que a pessoa informou."
   },
   "PREFLIGHT_OK": {
@@ -248,19 +248,71 @@
     "acao": "Veja dados.altura. As fotos por seção cobrem o resto; considere se a página precisa ser tão longa."
   },
   "SITE_ABERTO": {
-    "texto": "Abri o site no seu navegador.",
-    "acao": "Diga dados.endereco. Explique que o endereço só funciona neste computador."
+    "texto": "Abri o site para você ver no celular e no computador, lado a lado, na mesma tela.",
+    "acao": "O navegador abriu dados.previa (a prévia lado a lado). Não peça para a pessoa mexer na janela. dados.endereco é o site sozinho: é o que vai para os olhares independentes. Os dois só funcionam neste computador; se você roda noutra máquina, diga que o site abriu lá."
   },
   "SERVIDOR_NO_AR": {
-    "texto": "O site está no ar neste computador, sem abrir o navegador.",
-    "acao": "Use dados.endereco (só funciona neste computador). O navegador não foi aberto: abra você, se precisar."
+    "texto": "O site está aberto neste computador, sem abrir o navegador.",
+    "acao": "Use dados.endereco (o site sozinho) ou dados.previa (celular e computador lado a lado). Só funcionam neste computador. O navegador não foi aberto: abra você, se precisar."
+  },
+  "ANTES_GUARDADO": {
+    "texto": "Guardei como o site está agora, para mostrar o antes e o depois.",
+    "acao": "Faça as 2 ou 3 mudanças concretas, rode montar e escreva arquivos.mudancas com {\"pedido\": \"as palavras da pessoa\", \"mudancas\": [{\"titulo\": \"o que mudou, em palavras do dia a dia\", \"porque\": \"como isso atende o pedido\"}]}. Depois rode ./estudio comparar <nome>."
+  },
+  "ANTES_NAO_GUARDADO": {
+    "texto": "Esqueci de guardar como o site estava antes. Vou refazer do jeito certo.",
+    "acao": "Desfaça a mudança, rode ./estudio antes <nome>, refaça a mudança, monte e rode comparar de novo."
+  },
+  "POUCAS_MUDANCAS": {
+    "texto": "Ainda falta mostrar pelo menos duas mudanças concretas.",
+    "acao": "Pedido vago vira 2 ou 3 mudanças que se veem (letra, cor, foto, espaço, movimento, texto). Faça as que faltam, monte e preencha dados.arquivo com cada uma (titulo e porque). Rode comparar de novo."
+  },
+  "NADA_MUDOU": {
+    "texto": "O site ainda está igual ao de antes. Vou aplicar as mudanças.",
+    "acao": "Faltou montar o site depois de mudar o _gerador/, ou a mudança não saiu do lugar. Rode montar e comparar de novo."
+  },
+  "MUDANCAS_DEMAIS": {
+    "texto": "Mudei mais coisas do que dá para comparar de uma vez.",
+    "acao": "Mostre no máximo 3 mudanças por vez (dados.maximo). Junte as pequenas numa só ou deixe as outras para a próxima comparação."
+  },
+  "MUDANCA_SEM_TITULO": {
+    "texto": "Uma das mudanças ficou sem nome. Vou completar.",
+    "acao": "Cada item de mudancas precisa de titulo. dados.ignoradas diz quantos ficaram de fora."
+  },
+  "COMPARACAO_PRONTA": {
+    "texto": "Abri o antes e o depois lado a lado, com cada mudança numerada.",
+    "acao": "Diga em uma frase cada mudança de dados.mudancas, na ordem, e pergunte qual fica: \"O depois ★\", \"Voltar como estava\", \"Outro caminho\". Endereço em dados.endereco (só neste computador)."
+  },
+  "ANDAMENTO_ABRI": {
+    "texto": "Abri o site para você olhar, no celular e no computador lado a lado. Enquanto você olha, eu confiro cada detalhe e vou te contando.",
+    "acao": "Diga logo depois do abrir que começa a conferência (antes do preflight da revisão). Não espere resposta."
+  },
+  "ANDAMENTO_CONFERENCIA": {
+    "texto": "Conferindo se nada vaza da tela, se as letras têm contraste e se todo número tem fonte.",
+    "acao": "Diga antes do preflight e do desempenho."
+  },
+  "ANDAMENTO_FOTOS": {
+    "texto": "Fotografando cada página em quatro tamanhos de tela, do celular à tela grande.",
+    "acao": "Diga antes do prints."
+  },
+  "ANDAMENTO_OLHARES": {
+    "texto": "Quatro olhares independentes estão avaliando o site: a arte, a mensagem, os fatos e o funcionamento.",
+    "acao": "Diga quando abrir as 4 lentes da skill revisar."
+  },
+  "ANDAMENTO_AJUSTES": {
+    "texto": "Eles acharam pontos para melhorar. Estou ajustando e já confiro de novo.",
+    "acao": "Diga quando a revisão não bateu a meta e você vai corrigir. Não fale número nem quantas vezes."
+  },
+  "ANDAMENTO_PRONTO": {
+    "texto": "Terminei de conferir. Recarregue a prévia para ver como ficou.",
+    "acao": "Diga quando a revisão passou, antes da entrega."
   },
   "PACOTE_PRONTO": {
-    "texto": "O site está empacotado num .zip pronto para hospedar.",
+    "texto": "O site está pronto para pôr no ar, guardado num arquivo só.",
     "acao": "Diga arquivos.zip e ofereça a skill hospedar (GitHub Pages, Netlify ou Cloudflare Pages). Anotações (.md) e arquivos-fonte de desenho ficam fora do zip (dados.fora_do_pacote). O arquivo .nojekyll e a pasta .well-known/, se existirem, vão no zip de propósito."
   },
   "PACOTE_ARQUIVO_PRIVADO": {
-    "texto": "Não empacotei: há na pasta site/ arquivos que não podem ir para a internet (senha, chave, configuração, cópia de segurança ou rascunho, arquivo oculto ou link).",
+    "texto": "Ainda não preparei o arquivo para pôr no ar: há no site arquivos que não podem ir para a internet (senha, chave, configuração, cópia de segurança ou rascunho, arquivo oculto ou atalho).",
     "acao": "Mostre dados.arquivos à pessoa. Tire cada um de site/ (guarde em material/ do site, se for dela) e rode o pacote de novo. Cópia de segurança é nome terminado em .old, .backup, .bak, .orig, .tmp, .swp ou ~, ou pasta backup, backups, old, _old ou tmp. Só dois ocultos passam, de propósito: o arquivo .nojekyll e a pasta .well-known/. Nunca apague sem perguntar e nunca contorne a conferência."
   },
   "ARQUIVO_NAO_USADO": {
