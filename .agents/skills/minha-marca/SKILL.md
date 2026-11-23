@@ -14,7 +14,7 @@ Comandos: `./estudio <comando>` (no PowerShell, `.\estudio.cmd <comando>`). Leia
 ```
 minha-marca/
   tokens.css     as variáveis do tema (mesmos nomes de kit/marca-exemplo/tokens.css)
-  fontes/        arquivos .woff2 e a licença de cada fonte
+  fontes/        arquivos .woff2 e a licença de cada fonte (OFL-<Família>.txt)
   logo.svg       ou logo.png (se a pessoa tiver)
   marca.md       tom de voz, palavras que usa e que evita, regras de foto (fica só aqui: nunca vai para o site)
 ```
@@ -23,7 +23,7 @@ minha-marca/
 
 ### 1. Juntar o que já existe (uma pergunta por vez)
 1. "Qual é o nome do seu negócio ou projeto, e o que ele faz, em uma frase?"
-2. "Você tem logo, site, Instagram ou alguma peça pronta (cartão, cardápio, fachada) que eu possa olhar? Pode pôr os arquivos na pasta referencias, ou me passar o endereço." Se tiver, abra e leia as imagens e as páginas. Tire as cores reais delas (hex), não as que você imagina.
+2. "Você tem logo, site, Instagram ou alguma peça pronta (cartão, folheto, fachada) que eu possa olhar? Pode pôr os arquivos na pasta referencias, ou me passar o endereço." Se tiver, abra e leia as imagens e as páginas. Tire as cores reais delas (hex), não as que você imagina.
 3. "Que três palavras descrevem como a sua marca fala?" (exemplo: acolhedora, direta, curiosa).
 4. Só se não houver nada para olhar: proponha 3 direções de cor e letra, cada uma com um nome e uma frase do porquê, e deixe a pessoa escolher. A recomendada primeiro, com ★.
 
@@ -31,9 +31,12 @@ Não pergunte o que dá para ver nas peças. Não pergunte código de cor.
 
 ### 2. Escolher as letras
 - Duas famílias no máximo: uma para título, uma para texto. A letra de título é a maior alavanca de personalidade do site: escolha com intenção, não a mais comum.
-- Só fontes de licença livre (SIL Open Font License), com o arquivo `.woff2` guardado em `minha-marca/fontes/` junto com o texto da licença. Nada carregado da internet quando o site abre.
-- Se a pessoa já usa uma fonte livre (Google Fonts), baixe os arquivos dela do repositório oficial (`github.com/google/fonts`) para `minha-marca/fontes/`, avisando antes ("Vou baixar a letra da sua marca. O {{agente}} vai pedir licença. Pode aprovar."). Se só houver `.ttf`, use-o e diga que o site fica um pouco mais pesado. Fonte paga ou sem licença clara: use uma livre parecida e diga isso em uma frase.
-- Sem fonte definida: comece pelas fontes de `kit/marca-exemplo/fontes/` e copie-as com as licenças.
+- Só fontes de licença livre (SIL Open Font License), guardadas em `minha-marca/fontes/` com a licença ao lado, **com o nome da família** (`OFL-<Família>.txt`): duas licenças chamadas `OFL.txt` na mesma pasta se sobrescrevem, e o `checar` reprova letra sem a sua licença (`fonte-sem-licenca`). Nada carregado da internet quando o site abre.
+- **Letras leves.** Baixe com o estúdio, avisando antes ("Vou baixar a letra da sua marca. O {{agente}} vai pedir licença. Pode aprovar."):
+  `./estudio fonte "<Família>"` (o nome exato do catálogo do Google Fonts, como "Big Shoulders Display"). Opções: `--pesos 400..800` (só os pesos que o site usa), `--italico` (só se o site usa itálico), `--larguras` (só se a assinatura do topo usa larguras diferentes; pesa mais). Ele baixa o `.woff2` já recortado no alfabeto latino (cobre o português) e a licença com o nome da família, tudo ou nada. Em `FONTE_BAIXADA`, cole `dados.css` no topo do `tokens.css`, no lugar das linhas `@font-face` antigas daquela família. `dados.letras_kb_na_pasta` é o peso total das letras: acima de 100 KB o `checar` avisa `fonte-pesada`.
+- Nunca baixe `.ttf` do repositório do Google à mão: é a mesma letra três vezes mais pesada, inteira, e a licença vem com nome genérico.
+- Fonte livre que não está no Google (a pessoa mandou o arquivo e a licença): use-a, guarde a licença como `OFL-<Família>.txt` e diga em uma frase que o site fica um pouco mais pesado se não for `.woff2`. Fonte paga ou sem licença clara: use uma livre parecida e diga isso em uma frase.
+- Sem fonte definida: comece pelas de `kit/marca-exemplo/fontes/` e copie-as com as licenças.
 
 ### 3. Escrever `minha-marca/tokens.css`
 Abra `kit/marca-exemplo/tokens.css`, copie a estrutura e troque os valores. Mantenha **todos** os nomes de variável que estão lá, porque o molde e as partes das páginas usam esses nomes. Escreva um comentário curto no topo dizendo de onde veio cada cor.

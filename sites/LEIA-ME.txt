@@ -3,7 +3,7 @@ SITES
 Esta pasta e sua. Cada site ganha uma pasta aqui dentro:
 
   brief.md          o objetivo do site, para quem e e o mapa das paginas
-  fatos.md          cada numero, endereco, telefone e @ do site, com a fonte
+  fatos.md          cada fato do site (frase, numero, endereco, telefone, @), com a fonte
   referencias.md    os sites de que voce gosta e o que aprendemos com eles
   direcao.md        a ideia visual, as letras, as cores, as fotos e o movimento
   andamento.md      em que etapa o site esta

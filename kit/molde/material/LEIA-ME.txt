@@ -1,3 +1,6 @@
-Ponha aqui o material do negócio: fotos, logo, cardápio, prints do site atual e das redes.
+Ponha aqui o material do negócio: fotos, logo, catálogo ou tabela de preços, prints do site atual e das redes.
+Antes da direção visual, junte aqui:
+  - fotos/        até 20 fotos reais do lugar, da equipe e do trabalho, cada uma com a legenda e a data
+  - referencias/  prints de 3 a 5 sites do mesmo ramo, para estudar (nunca para copiar)
 Este material NÃO vai para o ar. O que for usado no site é tratado e copiado para site/assets/.
 Anote em fatos.md a fonte de cada informação tirada daqui.

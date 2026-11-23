@@ -85,7 +85,7 @@ test('navegador: ESTUDIO_CHROME, depois o de versão fixa de navegador.txt, ante
 
 test('nome de site: só minúsculas, números e hífen; sugestão tira acento e espaço', () => {
   assert.equal(nomeValido('clinica-horizonte'), true);
-  for (const ruim of ['', 'Café', 'a b', '../x', '-a', 'a-', 'a/b', 'a.b']) assert.equal(nomeValido(ruim), false, ruim);
+  for (const ruim of ['', 'Clínica', 'a b', '../x', '-a', 'a-', 'a/b', 'a.b']) assert.equal(nomeValido(ruim), false, ruim);
   assert.equal(sugerirNome('Clínica Horizonte 2027!'), 'clinica-horizonte-2027');
 });
 
@@ -161,11 +161,11 @@ test('novo: nome inválido vira NOME_INVALIDO; cria, monta as duas páginas e n�
     const ok = rodarEstudio(['novo', 'teste', '--titulo', 'Clínica <Horizonte>'], { ESTUDIO_SITES: base, ESTUDIO_MARCA: path.join(base, 'sem') });
     assert.equal(ok.codigo, 0, ok.stdout);
     assert.equal(ok.json.avisos[0].codigo, 'MARCA_DE_EXEMPLO');
-    assert.deepEqual(ok.json.dados.paginas, ['index.html', 'a-casa/index.html']);
+    assert.deepEqual(ok.json.dados.paginas, ['index.html', 'a-oficina/index.html']);
     const index = fs.readFileSync(path.join(base, 'teste', 'site', 'index.html'), 'utf8');
     assert.ok(index.includes('<title>Clínica &lt;Horizonte&gt; · '));
     assert.ok(index.includes('href="assets/css/site.css"'));
-    const interna = fs.readFileSync(path.join(base, 'teste', 'site', 'a-casa', 'index.html'), 'utf8');
+    const interna = fs.readFileSync(path.join(base, 'teste', 'site', 'a-oficina', 'index.html'), 'utf8');
     assert.ok(interna.includes('href="../assets/css/site.css"'));
     assert.ok(fs.existsSync(path.join(base, 'teste', 'site', 'assets', 'marca', 'tokens.css')));
     for (const f of ['brief.md', 'fatos.md', 'referencias.md', 'direcao.md', 'material/LEIA-ME.txt']) assert.ok(fs.existsSync(path.join(base, 'teste', ...f.split('/'))), f);
@@ -266,7 +266,7 @@ test('marca: só tokens, fontes com licença e logo entram no site; marca.md nun
     const marca = path.join(base, 'marca');
     fs.mkdirSync(path.join(marca, 'fontes'), { recursive: true });
     fs.copyFileSync(path.join(RAIZ, 'kit', 'marca-exemplo', 'tokens.css'), path.join(marca, 'tokens.css'));
-    for (const f of ['Fraunces-Variable.woff2', 'DMSans-Variable.woff2', 'OFL-Fraunces.txt', 'OFL-DMSans.txt']) {
+    for (const f of ['BigShouldersDisplay-latin.woff2', 'FamiljenGrotesk-latin.woff2', 'OFL-BigShouldersDisplay.txt', 'OFL-FamiljenGrotesk.txt']) {
       fs.copyFileSync(path.join(RAIZ, 'kit', 'marca-exemplo', 'fontes', f), path.join(marca, 'fontes', f));
     }
     fs.writeFileSync(path.join(marca, 'fontes', 'rascunho.txt'), 'anotação');
@@ -290,7 +290,7 @@ test('marca: só tokens, fontes com licença e logo entram no site; marca.md nun
       }
     };
     andar(destino, '');
-    assert.deepEqual(dentro.sort(), ['fontes/DMSans-Variable.woff2', 'fontes/Fraunces-Variable.woff2', 'fontes/OFL-DMSans.txt', 'fontes/OFL-Fraunces.txt', 'logo.svg', 'tokens.css']);
+    assert.deepEqual(dentro.sort(), ['fontes/BigShouldersDisplay-latin.woff2', 'fontes/FamiljenGrotesk-latin.woff2', 'fontes/OFL-BigShouldersDisplay.txt', 'fontes/OFL-FamiljenGrotesk.txt', 'logo.svg', 'tokens.css']);
     // um .md largado em site/ por engano também fica fora do zip
     fs.writeFileSync(path.join(base, 'sites', 'comarca', 'site', 'assets', 'anotacao.md'), 'interno');
     fs.writeFileSync(path.join(base, 'sites', 'comarca', 'site', 'assets', 'img', 'sobrou.jpg'), 'x');
@@ -299,7 +299,7 @@ test('marca: só tokens, fontes com licença e logo entram no site; marca.md nun
     const nomes = lerZip(fs.readFileSync(path.join(base, 'sites', 'comarca', 'comarca-site.zip'))).map((e) => e.nome);
     assert.equal(nomes.some((n) => n.endsWith('.md')), false, nomes.join(', '));
     assert.equal(nomes.some((n) => n.includes('notas') || n.includes('.ai') || n.includes('rascunho')), false, nomes.join(', '));
-    assert.ok(nomes.includes('assets/marca/fontes/OFL-Fraunces.txt'));
+    assert.ok(nomes.includes('assets/marca/fontes/OFL-BigShouldersDisplay.txt'));
     assert.deepEqual(pc.json.dados.fora_do_pacote, ['site/assets/anotacao.md']);
     const solto = pc.json.avisos.find((a) => a.codigo === 'ARQUIVO_NAO_USADO');
     assert.ok(solto, JSON.stringify(pc.json.avisos));
@@ -316,13 +316,13 @@ test('montar: tira da pasta site/ a página que saiu da ordem e acusa seção qu
     assert.equal(rodarEstudio(['novo', 'm'], { ESTUDIO_SITES: base }).codigo, 0);
     const ordem = path.join(base, 'm', '_gerador', 'ordem.mjs');
     const original = fs.readFileSync(ordem, 'utf8');
-    const corte = original.indexOf("  {\n    rota: 'a-casa'");
+    const corte = original.indexOf("  {\n    rota: 'a-oficina'");
     fs.writeFileSync(ordem, `${original.slice(0, corte)}];\n`);
     const r = rodarEstudio(['montar', 'm'], { ESTUDIO_SITES: base });
     assert.equal(r.codigo, 0, r.stdout);
-    assert.deepEqual(r.json.dados.removidas, ['a-casa/index.html']);
-    assert.equal(fs.existsSync(path.join(base, 'm', 'site', 'a-casa')), false);
-    fs.writeFileSync(ordem, original.replace("'manifesto',", "'nao-existe',"));
+    assert.deepEqual(r.json.dados.removidas, ['a-oficina/index.html']);
+    assert.equal(fs.existsSync(path.join(base, 'm', 'site', 'a-oficina')), false);
+    fs.writeFileSync(ordem, original.replace("'jeito',", "'nao-existe',"));
     const falhou = rodarEstudio(['montar', 'm'], { ESTUDIO_SITES: base });
     assert.equal(falhou.codigo, 1);
     assert.equal(falhou.json.codigo, 'MONTAR_FALHOU');
@@ -344,14 +344,15 @@ test('gerador: link relativo entre páginas, escape de HTML e palavras em <span>
   assert.equal(palavras('um  dois\ntrês'), '<span>um</span> <span>dois</span> <span>três</span>');
 });
 
-test('molde: a anatomia de foto traz picture com srcset, sizes, width, height, alt e lazy', async () => {
-  const { default: foto } = await import('../molde/_gerador/secoes/foto.mjs');
-  const html = foto({ esc, assets: '../assets/' });
-  for (const pedaco of ['<picture>', 'type="image/webp"', 'srcset="../assets/img/foto-800.webp 800w, ../assets/img/foto-1600.webp 1600w"', 'sizes="', 'width="1600"', 'height="1067"', 'alt="', 'loading="lazy"', '<figcaption']) {
+test('molde: a anatomia de fotos traz um grupo de fotos pequenas com width, height, alt, legenda e lazy', async () => {
+  const { default: fotos } = await import('../molde/_gerador/secoes/fotos.mjs');
+  const html = fotos({ esc, assets: '../assets/' });
+  for (const pedaco of ['<ul class="fotos__grupo">', 'src="../assets/img/foto-1.webp"', 'width="640"', 'height="800"', 'alt="', 'loading="lazy"', '<figcaption']) {
     assert.ok(html.includes(pedaco), pedaco);
   }
+  assert.ok(html.split('<figure>').length - 1 >= 3, 'fotos agrupadas, não uma só');
   const ordem = fs.readFileSync(path.join(RAIZ, 'kit', 'molde', '_gerador', 'ordem.mjs'), 'utf8');
-  assert.equal(ordem.includes("'foto'"), false, 'a anatomia não entra na ordem do molde: não há foto no estúdio');
+  assert.equal(ordem.includes("'fotos'"), false, 'a anatomia não entra na ordem do molde: não há foto no estúdio');
 });
 
 test('nome da página, tamanhos de tela e rodada de revisão', () => {
@@ -377,10 +378,10 @@ test('nome da página, tamanhos de tela e rodada de revisão', () => {
 });
 
 test('fatos: acha números com 3+ dígitos, telefone, preço, ano e @, sem expressão regular', () => {
-  const t = 'Desde 2019. Ligue (11) 0000-0000 ou 0800 123 4567. Pão R$ 18,00, café R$ 9. Abre 7h às 19h. Rua X, 120, casa 2. Siga @cafe.aurora, ou escreva para ola@cafe.example.';
+  const t = 'Desde 2019. Ligue (11) 0000-0000 ou 0800 123 4567. Câmara R$ 18,00, ajuste R$ 9. Abre 7h às 19h. Rua X, 120, casa 2. Siga @oficina.raio, ou escreva para ola@oficina.example.';
   const achados = sequenciasNumericas(t).map((s) => s.trecho);
   assert.deepEqual(achados, ['2019', '(11) 0000-0000', '0800 123 4567', '18,00', '120']);
-  assert.deepEqual(palavrasComArroba(t), ['@cafe.aurora', 'ola@cafe.example']);
+  assert.deepEqual(palavrasComArroba(t), ['@oficina.raio', 'ola@oficina.example']);
 });
 
 test('fatos: só vale linha com fonte; número de uma linha não empresta dígitos de outra', () => {

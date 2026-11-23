@@ -59,7 +59,7 @@ Rode tudo de dentro da pasta do estúdio.
 | Windows, Git Bash | `./estudio <comando>` | o mesmo instalador do Windows, com barra normal |
 
 - As skills escrevem `./estudio`. No PowerShell, troque por `.\estudio.cmd`.
-- Comandos de cada site: `novo`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`, `pacote`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`.
+- Comandos de cada site: `novo`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`, `pacote`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`. Da marca: `fonte` (baixa uma letra livre já leve, com a licença).
 - **Leia só a última linha** de cada comando. Ela é um JSON numa linha só: `{"ok","comando","codigo","resumo","arquivos","avisos","dados"}`.
 - **Saída 0** é ok, **1** é erro de execução, **2** é reprovado na conferência (corrija pela causa e rode de novo).
 - **Traduza o código.** Os do instalador estão em `instalar/mensagens.json`; os dos comandos, em `kit/mensagens.json`. Diga à pessoa o `texto` (trocando os `{{ }}` pelos `dados`) e faça a `acao`. Cada aviso em `avisos` também tem `codigo`.
@@ -67,13 +67,13 @@ Rode tudo de dentro da pasta do estúdio.
 - **O site é montado, não editado.** O HTML de `site/` sai do `./estudio montar <nome>`, a partir de `_gerador/`. Mude a parte em `_gerador/secoes/` e monte de novo; edição feita direto num `index.html` de `site/` some na próxima montagem. A pasta `site/assets/` (CSS, JavaScript, fotos, fontes, marca) o `montar` não toca: o estilo e o movimento você escreve direto em `site/assets/css/site.css` e `site/assets/js/site.js`.
 - Comando que falha duas vezes: skill `consertar`.
 
-**Caixinhas de permissão.** O Claude Code e o Codex pedem licença antes de mexer no computador. Antes de cada ação que gera caixinha, avise em uma frase o que é e diga que pode aprovar. No Codex, peça para sair da área protegida (com `sandbox_permissions: "require_escalated"` no próprio comando) no instalador inteiro (ele baixa da internet) e nos comandos que abrem o navegador escondido: `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`. Os textos prontos estão em `instalar/mensagens.json` (`CODEX-INTERNET`, `CODEX-FORA-DA-AREA`).
+**Caixinhas de permissão.** O Claude Code e o Codex pedem licença antes de mexer no computador. Antes de cada ação que gera caixinha, avise em uma frase o que é e diga que pode aprovar. No Codex, peça para sair da área protegida (com `sandbox_permissions: "require_escalated"` no próprio comando) no instalador inteiro (ele baixa da internet) e nos comandos que abrem o navegador escondido: `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`; e no `fonte`, que baixa a letra da internet. Os textos prontos estão em `instalar/mensagens.json` (`CODEX-INTERNET`, `CODEX-FORA-DA-AREA`).
 
 ## 5. Regras
 
 - **Brief antes do pixel.** Nenhuma página é desenhada antes de a pessoa aprovar o brief (objetivo, ação principal e mapa do site).
 - **Piloto antes da leva.** O topo da página inicial, uma parte comum e o momento mais forte, no computador e no celular, aprovados pela pessoa antes de fazer o resto.
-- **Fato com fonte.** Todo número, preço, endereço, telefone, horário, @, nome e depoimento que vai para o site está em `fatos.md`, com a fonte. Sem fonte, não entra. Nunca invente dado, cliente, depoimento, prêmio ou resultado. O comando `fatos` reprova número e contato sem fonte.
+- **Fato com fonte.** Todo texto do site nasce de uma linha de `fatos.md`, com a fonte: número, preço, endereço, telefone, horário, @, nome, depoimento e cada frase sobre o negócio. Sem fonte, não entra. Nunca invente dado, cliente, depoimento, prêmio ou resultado. O comando `fatos` reprova número e contato sem fonte; a frase sem linha, quem pega é o revisor de fatos da skill `revisar`.
 - **Referência é princípio, não cópia.** Os sites de referência ensinam por que funcionam; nunca copie layout, texto, foto ou marca deles.
 - **Autor nunca é o revisor.** Quem fez o site não dá a nota. A skill `revisar` chama 4 revisores independentes; meta 8,5 em até 3 rodadas.
 - **Use as skills de design.** Antes de desenhar qualquer página, se estiverem instaladas, carregue `frontend-design` e `ui-ux-pro-max`. A skill `instalar-estudio` sugere instalá-las.
@@ -82,7 +82,7 @@ Rode tudo de dentro da pasta do estúdio.
 - **Movimento com propósito.** Anima o que conduz o olhar ou conta a história; nada se mexe por enfeite. Sempre com `prefers-reduced-motion` respeitado e conteúdo visível sem animação.
 - **Sem regex no código.** Nunca use expressão regular, nem para interpretar o que a pessoa escreveu (quem entende é você), nem em código que você escrever no `_gerador/`. Use métodos de texto (dividir, começa com, contém), `URL` e leitura de JSON.
 - **Nada pago, nada sobe.** Sem API paga, sem conta, sem publicar em lugar nenhum. Tudo fica no computador da pessoa. Pôr no ar é a pessoa quem faz, com o passo a passo da skill `hospedar`. Se ela pedir algo pago (imagem gerada por serviço, formulário com servidor), diga que o estúdio não faz isso e ofereça o caminho local.
-- **Tudo local no site.** Fontes, GSAP, Lenis e imagens ficam dentro de `site/assets/`. Nenhum endereço externo carregado pela página (o `checar` reprova).
+- **Tudo local no site.** Fontes (baixadas com `./estudio fonte`, já leves, cada uma com a licença com o nome dela), GSAP, Lenis e imagens ficam dentro de `site/assets/`. Nenhum endereço externo carregado pela página (o `checar` reprova).
 - **Nunca peça senha, chave ou cartão.** Nunca instale nada fora do instalador do estúdio.
 
 ## 6. Mapa de pastas

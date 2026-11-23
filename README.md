@@ -31,7 +31,7 @@ Se o seu programa não conseguir baixar pelo link, veja as alternativas em [`ins
 
 Escreva do seu jeito. Por exemplo:
 
-- "Quero um site para o Café Aurora. A ideia é a pessoa ver o cardápio e chamar no WhatsApp para encomendar."
+- "Quero um site para a Oficina Raio, de conserto de bicicletas. A ideia é a pessoa ver os preços e chamar no WhatsApp para agendar."
 - "A Clínica Horizonte já tem site, mas está velho. Quero refazer, com uma página para cada especialidade."
 - "Ajusta a minha marca: as cores estão no logo que coloquei na pasta referencias."
 - "Dá uma nota para o meu site."

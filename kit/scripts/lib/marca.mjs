@@ -7,7 +7,7 @@ import path from 'node:path';
 export const ARQUIVOS_DA_MARCA = Object.freeze(['tokens.css', 'logo.svg', 'logo.png', 'logo.webp']);
 export const EXTENSOES_DE_FONTE = Object.freeze(['.woff2', '.woff', '.ttf']);
 
-// Licença de fonte: OFL-Fraunces.txt, OFL.txt, LICENSE.txt, LICENCA.txt.
+// Licença de fonte: OFL-<Família>.txt (o nome que o comando "fonte" usa), OFL.txt, LICENSE.txt, LICENCA.txt.
 export function ehLicencaDeFonte(nome) {
   const baixo = nome.toLowerCase();
   if (!baixo.endsWith('.txt')) return false;

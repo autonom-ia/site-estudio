@@ -3,8 +3,8 @@
    Nada começa escondido pelo CSS; quem esconde para animar é este arquivo, e só quando vai animar.
    Atributos que as seções usam:
      data-revela          entra subindo quando chega na tela (uma vez)
-     data-sol             o sol do horizonte sobe ao abrir a página
-     data-conta="36"      o número conta de 0 até o valor com a rolagem
+     data-assina          as linhas da assinatura do topo ganham peso uma a uma ao abrir a página
+     data-conta="12"      o número conta de 0 até o valor com a rolagem
      data-acende          as palavras (<span>) acendem uma a uma com a rolagem */
 (function () {
   'use strict';
@@ -23,8 +23,10 @@
     if (ScrollTrigger) lenis.on('scroll', ScrollTrigger.update);
   }
 
-  var sol = document.querySelector('[data-sol]');
-  if (sol) gsap.from(sol, { yPercent: 38, opacity: 0.4, duration: 2.6, ease: 'power2.out' });
+  document.querySelectorAll('[data-assina]').forEach(function (assinatura) {
+    var linhas = assinatura.children;
+    gsap.from(linhas, { fontWeight: 100, y: 24, duration: 1.4, ease: 'power3.out', stagger: 0.14 });
+  });
 
   if (!ScrollTrigger) return;
 

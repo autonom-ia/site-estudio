@@ -4,6 +4,7 @@
 // sem exatamente um <h1>, <select> nativo, travessão no texto visível, erro de JavaScript e
 // resto-do-molde (elemento com data-molde: texto do negócio fictício que ainda não foi trocado).
 // WARN: og:image relativa, JSON-LD que não abre, fonte usada que não foi declarada.
+// Letras (lib/letras.mjs): RED fonte-sem-licenca; WARN fonte-pesada (não .woff2, ou soma alta).
 import fs from 'node:fs';
 import path from 'node:path';
 import { nomeDoSite } from '../lib/args.mjs';
@@ -12,6 +13,7 @@ import { abrirSessao, visitar } from '../lib/sessao.mjs';
 import { estatico } from '../lib/pagina.mjs';
 import { progresso } from '../lib/executar.mjs';
 import { esperar } from '../lib/cdp.mjs';
+import { anotarLetras } from '../lib/letras.mjs';
 
 export const VENDOR_OBRIGATORIO = Object.freeze([
   ['assets', 'vendor', 'gsap', 'gsap.min.js'],
@@ -64,6 +66,7 @@ export default async function checar(args) {
   for (const partes of VENDOR_OBRIGATORIO) {
     if (!fs.existsSync(path.join(c.site, ...partes))) red.push({ pagina: '-', tipo: 'vendor-ausente', detalhe: `site/${partes.join('/')}` });
   }
+  anotarLetras(c.site, red, warn);
   const paginas = paginasDoSite(c);
   const notebook = TAMANHOS.find((t) => t.nome === 'notebook');
   const sessao = await abrirSessao(c.site);

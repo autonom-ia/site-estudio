@@ -265,7 +265,7 @@ test('molde traz o vendor local, a marca de exemplo e o axe-core com versão fix
   for (const v of ['gsap/gsap.min.js', 'gsap/ScrollTrigger.min.js', 'lenis/lenis.min.js', 'lenis/lenis.css']) {
     assert.ok(fs.existsSync(path.join(KIT, 'molde', 'site', 'assets', 'vendor', ...v.split('/'))), v);
   }
-  for (const f of ['tokens.css', 'fontes/Fraunces-Variable.woff2', 'fontes/DMSans-Variable.woff2', 'fontes/OFL-Fraunces.txt', 'fontes/OFL-DMSans.txt']) {
+  for (const f of ['tokens.css', 'fontes/BigShouldersDisplay-latin.woff2', 'fontes/FamiljenGrotesk-latin.woff2', 'fontes/OFL-BigShouldersDisplay.txt', 'fontes/OFL-FamiljenGrotesk.txt']) {
     assert.ok(fs.existsSync(path.join(KIT, 'marca-exemplo', ...f.split('/'))), f);
   }
   const versao = fs.readFileSync(path.join(KIT, 'vendor', 'axe', 'VERSAO'), 'utf8').trim();
@@ -288,7 +288,7 @@ test('todo número, contato e @ das seções do molde está em fatos.md do molde
   }
   const lastro = montarLastro(linhas);
   assert.ok(lastro.doExemplo.size > 10);
-  const r = conferirTexto({ texto: 'desde 2019 · R$ 18,00 · (11) 0000-0000 · ola@cafeaurora.example · 120', enderecos: ['tel:+551100000000', 'mailto:ola@cafeaurora.example'] }, lastro);
+  const r = conferirTexto({ texto: 'desde 2016 · R$ 180,00 · (11) 0000-0000 · ola@oficinaraio.example · 2023', enderecos: ['tel:+551100000000', 'mailto:ola@oficinaraio.example'] }, lastro);
   // tudo o que o molde mostra está em fatos.md, mas só com a fonte do exemplo: reprova até trocar
   assert.ok(r.faltam.length >= 6);
   assert.deepEqual(r.faltam.filter((f) => f.motivo !== 'fonte-de-exemplo'), []);

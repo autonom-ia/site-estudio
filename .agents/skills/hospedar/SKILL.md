@@ -61,7 +61,7 @@ Os três têm plano grátis que serve para um site como este. As telas desses se
 
 ## 6. Endereço próprio (opcional)
 
-Quando a pessoa quiser um endereço como `cafeaurora.com.br`:
+Quando a pessoa quiser um endereço como `oficinaraio.com.br`:
 1. Ela registra o domínio num registrador (no Brasil, `.br` é no registro.br). Isso é pago e é com ela; você não faz compra nenhuma.
 2. No serviço onde o site está, há uma opção de domínio próprio (Custom domain, em Domain management, Custom domains ou Settings > Pages). Ela digita o domínio ali, e o serviço mostra quais registros de DNS criar.
 3. Ela cria esses registros no painel do registrador, exatamente como o serviço mostrou. Você ajuda a ler a tela, se ela mandar uma foto, mas não inventa valores: os valores certos são os que o serviço mostrou para ela.

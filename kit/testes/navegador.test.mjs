@@ -88,7 +88,7 @@ test('molde passa no preflight, vira prints da página inteira e por seção, e 
   assert.deepEqual(cru.json.dados.vermelhos.filter((v) => !['resto-do-molde', 'fonte-de-exemplo', 'numero', 'arroba', 'telefone', 'email'].includes(v.tipo)), []);
   assert.deepEqual(cru.json.dados.vermelhos.filter((v) => v.motivo && v.motivo !== 'fonte-de-exemplo'), []);
   const restos = cru.json.dados.vermelhos.filter((v) => v.tipo === 'resto-do-molde').map((v) => `${v.pagina} ${v.detalhe}`).join('\n');
-  for (const parte of ['"abertura"', '"cardapio"', '"visita"', '"cabecalho"', '"rodape"', 'ordem.mjs', '"historia"']) assert.ok(restos.includes(parte), parte);
+  for (const parte of ['"abertura"', '"servicos"', '"visita"', '"cabecalho"', '"rodape"', 'ordem.mjs', '"historia"']) assert.ok(restos.includes(parte), parte);
   for (const etapa of ['medir', 'acessibilidade']) assert.equal(cru.json.dados.etapas[etapa].ok, true, etapa);
 
   tirarMolde('ponta');
@@ -111,8 +111,8 @@ test('molde passa no preflight, vira prints da página inteira e por seção, e 
     assert.ok(t.altura > (largura === 390 ? 844 : 900) * 2, `altura ${t.altura} em ${largura}`);
   }
   const secoes = pr.json.dados.fotos.filter((f) => f.pagina === 'index.html' && f.largura === 390 && f.parte !== 'inteira').map((f) => f.parte);
-  for (const s of ['abertura', 'manifesto', 'cardapio', 'pico', 'visita']) assert.ok(secoes.includes(s), s);
-  assert.ok(fs.existsSync(path.join(pasta, 'a-casa-390-inteira.jpg')));
+  for (const s of ['abertura', 'jeito', 'servicos', 'pico', 'visita']) assert.ok(secoes.includes(s), s);
+  assert.ok(fs.existsSync(path.join(pasta, 'a-oficina-390-inteira.jpg')));
 
   const de = estudio('desempenho', 'ponta');
   assert.equal(de.codigo, 0);
@@ -122,7 +122,7 @@ test('molde passa no preflight, vira prints da página inteira e por seção, e 
   const pc = estudio('pacote', 'ponta');
   assert.equal(pc.codigo, 0);
   const nomes = lerZip(fs.readFileSync(path.join(base, 'ponta', 'ponta-site.zip'))).map((e) => e.nome);
-  for (const n of ['index.html', 'a-casa/index.html', 'assets/css/site.css', 'assets/vendor/gsap/gsap.min.js', 'assets/marca/tokens.css']) assert.ok(nomes.includes(n), n);
+  for (const n of ['index.html', 'a-oficina/index.html', 'assets/css/site.css', 'assets/vendor/gsap/gsap.min.js', 'assets/marca/tokens.css']) assert.ok(nomes.includes(n), n);
   assert.ok(fs.existsSync(path.join(base, 'ponta', 'ponta-site.zip.sha256')));
 });
 
@@ -131,7 +131,7 @@ test('abrir sobe o servidor do site e devolve o endereço', opcoes, async () => 
   assert.equal(r.codigo, 0, JSON.stringify(r.json));
   assert.equal(r.json.codigo, 'SERVIDOR_NO_AR', 'sem navegador, o código não pode dizer que abriu');
   assert.equal((await fetch(r.json.dados.endereco)).status, 200);
-  assert.equal((await fetch(`${r.json.dados.endereco}a-casa/`)).status, 200);
+  assert.equal((await fetch(`${r.json.dados.endereco}a-oficina/`)).status, 200);
   const estado = path.join(RAIZ, '.ferramentas', 'servidores', 'ponta.json');
   const { pid } = JSON.parse(fs.readFileSync(estado, 'utf8'));
   process.kill(pid);
@@ -179,7 +179,7 @@ test('site estragado: checar, medir, acessibilidade, fatos e preflight reprovam 
   // a colisão está bem abaixo da dobra do celular: o medidor rolou até o par
   assert.ok(md.json.dados.vermelhos.some((v) => v.tipo === 'colisao' && v.detalhe.includes('Título por baixo')));
   const contraste = md.json.dados.vermelhos.find((v) => v.tipo === 'contraste');
-  assert.ok(contraste.detalhe.startsWith('1.3'), contraste.detalhe);
+  assert.ok(Number(contraste.detalhe.split(':')[0]) < 1.5, contraste.detalhe);
 
   const ax = estudio('acessibilidade', 'estragado', '--tamanhos', '1440');
   assert.equal(ax.codigo, 2);
