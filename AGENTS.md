@@ -59,7 +59,7 @@ Rode tudo de dentro da pasta do estúdio.
 | Windows, Git Bash | `./estudio <comando>` | o mesmo instalador do Windows, com barra normal |
 
 - As skills escrevem `./estudio`. No PowerShell, troque por `.\estudio.cmd`.
-- Comandos de cada site: `novo`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir` (a prévia com celular e computador lado a lado), `antes` e `comparar` (o antes e depois de um pedido vago), `pacote`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`.
+- Comandos de cada site: `novo`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir` (a prévia com celular e computador lado a lado), `antes`, `comparar` e `escolher` (o antes e depois de um pedido vago), `pacote`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`.
 - **Leia só a última linha** de cada comando. Ela é um JSON numa linha só: `{"ok","comando","codigo","resumo","arquivos","avisos","dados"}`.
 - **Saída 0** é ok, **1** é erro de execução, **2** é reprovado na conferência (corrija pela causa e rode de novo).
 - **Traduza o código.** Os do instalador estão em `instalar/mensagens.json`; os dos comandos, em `kit/mensagens.json`. Diga à pessoa o `texto` (trocando os `{{ }}` pelos `dados`) e faça a `acao`. Cada aviso em `avisos` também tem `codigo`.

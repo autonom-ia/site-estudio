@@ -1,9 +1,11 @@
 // Onde mora o "antes e depois" de um site: sites/<nome>/revisao/antes-depois/, com antes/ (o site
-// guardado pelo "antes"), depois/ (o site no "comparar"), mudancas.json (escrito pelo assistente) e
-// index.html (a página lado a lado). Tudo fora de site/: nada disso vai para o ar.
+// guardado pelo "antes"), depois/ (o site no "comparar"), mudancas.json (escrito pelo assistente),
+// estado.json (em aberto até a pessoa escolher) e index.html (a página lado a lado). As fontes do
+// gerador guardadas ficam em revisao/antes-gerador/, fora do que a comparação mostra. Tudo fora de
+// site/: nada disso vai para o ar.
 import fs from 'node:fs';
 import path from 'node:path';
-import { listarArquivos } from './caminhos.mjs';
+import { listarArquivos, copiarPasta, ehPasta } from './caminhos.mjs';
 
 export const MINIMO_DE_MUDANCAS = 2;
 export const MAXIMO_DE_MUDANCAS = 3;
@@ -16,7 +18,29 @@ export function caminhosDoAntesDepois(c) {
     depois: path.join(pasta, 'depois'),
     mudancas: path.join(pasta, 'mudancas.json'),
     pagina: path.join(pasta, 'index.html'),
+    estado: path.join(pasta, 'estado.json'),
+    gerador: path.join(c.revisao, 'antes-gerador'),
   };
+}
+
+// As três respostas do "Qual fica?". "antes" e "outro" devolvem o site e o gerador ao que foi guardado;
+// "outro" deixa o antes em aberto, para a próxima tentativa ainda comparar com o original.
+export const ESCOLHAS = Object.freeze(['depois', 'antes', 'outro']);
+
+// Troca o conteúdo de destino pelo de origem: copia ao lado primeiro e só depois tira o antigo,
+// para uma cópia que falhe no meio nunca deixar o site pela metade.
+export function trocarPasta(origem, destino) {
+  const nova = `${destino}.trocando`;
+  fs.rmSync(nova, { recursive: true, force: true });
+  copiarPasta(origem, nova, { links: 'recriar' });
+  fs.rmSync(destino, { recursive: true, force: true });
+  fs.renameSync(nova, destino);
+}
+
+// Guarda uma cópia de origem em destino, trocando a anterior. Origem ausente: tira a cópia velha.
+export function guardarCopia(origem, destino) {
+  fs.rmSync(destino, { recursive: true, force: true });
+  if (ehPasta(origem)) copiarPasta(origem, destino, { links: 'recriar' });
 }
 
 // Só as mudanças com título de verdade contam. Devolve { pedido, mudancas, ignoradas }.

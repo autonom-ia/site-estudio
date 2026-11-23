@@ -67,10 +67,10 @@ Cada rodada usa revisores novos. Nunca reaproveite o da rodada anterior.
 
 - **Passou:** volte para a skill que chamou (normalmente `novo-site`, etapa de entrega).
 - **Não passou e N < 3:** corrija os problemas aceitos, do mais grave ao menos grave, no `_gerador/`. Rode `montar`, `preflight`, `prints --rodada N+1` (leia as páginas mexidas, nos quatro tamanhos) e uma nova rodada com revisores novos, que também conferem se a correção anterior pegou.
-- **Não passou na rodada 3:** pare. Diga à pessoa, em até 4 frases, a nota, o que melhorou e os 2 ou 3 problemas que faltam, com a página de cada um. Pergunte: "Como você prefere seguir?" com "Corrigir esses pontos e revisar de novo ★", "Entregar assim" e "Eu mesmo vou ajustar".
+- **Não passou na rodada 3:** pare. Diga à pessoa, em até 4 frases, o que melhorou e o que falta para ficar pronto: os 2 ou 3 problemas, com a página de cada um, em palavras do dia a dia. Sem número, sem contar vezes. Pergunte: "Como você prefere seguir?" com "Corrigir esses pontos e revisar de novo ★", "Entregar assim" e "Eu mesmo vou ajustar".
 
 Diferença de até 0,1 entre rodadas é ruído, não progresso.
 
 ## Quando a pessoa pede só uma nota
 
-Rode uma rodada, conte em até 3 frases a nota, o que está melhor e o maior problema (com a página), e pergunte se ela quer que você corrija.
+Rode uma rodada. Conte à pessoa, em até 3 frases, como o site está em palavras do dia a dia ("está quase pronto", "falta pouco", "ainda precisa de ajustes"), o que está melhor e o maior problema (com a página), sem dizer o número. Pergunte se ela quer que você corrija.

@@ -46,7 +46,7 @@ Os três têm plano grátis que serve para um site como este. As telas desses se
 1. "Abra github.com e crie uma conta grátis, se ainda não tiver."
 2. "Crie um repositório novo (o botão New). Dê um nome curto, por exemplo o nome do negócio, e deixe como público. No plano grátis, o site só sai de repositório público."
 3. "Na página do repositório, clique em enviar arquivos (uploading an existing file)."
-4. "No `site` que eu abri para você na tela, selecione **tudo o que está dentro** (o `index.html`, o `assets` e o resto) e arraste, sem levar o `site` em si. O `index.html` precisa ficar na primeira tela do repositório." Se forem mais de 100 arquivos, arraste em mais de uma vez.
+4. "No `site` que eu abri para você na tela, selecione **tudo o que está dentro** (o arquivo `index`, o `assets` e o resto) e arraste, sem levar o `site` em si. O arquivo `index` precisa ficar na primeira tela do repositório." Se forem mais de 100 arquivos, arraste em mais de uma vez.
 5. "Clique em confirmar (Commit changes)."
 6. "Vá em Settings, depois em Pages. Em Source, escolha publicar a partir de um ramo (Deploy from a branch), escolha `main` e depois `/ (root)`, e salve."
 7. "Em um ou dois minutos aparece o endereço, no formato `seu-usuario.github.io/nome-do-repositorio`. Abra e confira."

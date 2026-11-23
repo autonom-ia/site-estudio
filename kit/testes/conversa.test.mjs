@@ -74,7 +74,7 @@ function falasDoInstalador() {
   return falas;
 }
 
-// Linhas de um Markdown sem o cabeçalho YAML, sem bloco de código e sem trecho entre crases.
+// Linhas de um Markdown sem o cabeçalho YAML e sem bloco de código.
 function linhasDeTexto(markdown) {
   const linhas = markdown.split('\n');
   let i = 0;
@@ -88,10 +88,38 @@ function linhasDeTexto(markdown) {
       emCodigo = !emCodigo;
       continue;
     }
-    if (emCodigo) continue;
-    saida.push(linhas[i].split('`').filter((_, k) => k % 2 === 0).join(''));
+    if (!emCodigo) saida.push(linhas[i]);
   }
   return saida;
+}
+
+// Separa uma linha em falas (trechos entre aspas retas) e no resto (a instrução ao assistente).
+// Fora das aspas, o que está entre crases é nome de código ou de arquivo, não é lido pela pessoa, e
+// aspas ali dentro não abrem fala. Dentro de uma fala, a crase é só enfeite: o nome entre crases é
+// dito à pessoa e é conferido como o resto.
+export function separarLinha(linha) {
+  const falas = [];
+  let resto = '';
+  let fala = '';
+  let emFala = false;
+  let emCrase = false;
+  for (const ch of linha) {
+    if (emFala) {
+      if (ch === '"') {
+        falas.push(fala);
+        fala = '';
+        emFala = false;
+      } else if (ch !== '`') fala += ch;
+    } else if (ch === '`') {
+      emCrase = !emCrase;
+      resto += ' ';
+    } else if (emCrase) continue;
+    else if (ch === '"') {
+      emFala = true;
+      resto += ' ';
+    } else resto += ch;
+  }
+  return { falas, resto };
 }
 
 // Fala de skill: o trecho entre aspas retas. Trecho com <marcador> é molde de arquivo ou pedido a
@@ -99,9 +127,7 @@ function linhasDeTexto(markdown) {
 export function falasDoMarkdown(markdown) {
   const falas = [];
   for (const linha of linhasDeTexto(markdown)) {
-    const partes = linha.split('"');
-    for (let k = 1; k < partes.length; k += 2) {
-      const t = partes[k];
+    for (const t of separarLinha(linha).falas) {
       const ini = t.indexOf('<');
       if (ini !== -1 && t.indexOf('>', ini) !== -1) continue;
       if (t.trim()) falas.push(t);
@@ -110,15 +136,35 @@ export function falasDoMarkdown(markdown) {
   return falas;
 }
 
+// Fala sem aspas: a frase que manda dizer algo à pessoa ("Diga à pessoa a nota", "explique que o
+// site está na pasta"). Vale da palavra que manda falar até o fim da frase; "nunca diga" e
+// "não mostre" são proibição, não fala.
+const VERBOS_DE_FALA = Object.freeze(['diga', 'explique', 'conte', 'avise', 'mostre', 'pergunte', 'fale', 'responda']);
+const NEGACOES = Object.freeze(['nunca', 'nao', 'nem', 'sem']);
+export function instrucoesDeFala(markdown) {
+  const trechos = [];
+  for (const linha of linhasDeTexto(markdown)) {
+    for (const frase of separarLinha(linha).resto.split('. ')) {
+      const lista = palavras(frase);
+      const k = lista.findIndex((p) => VERBOS_DE_FALA.includes(p));
+      if (k === -1 || (k > 0 && NEGACOES.includes(lista[k - 1]))) continue;
+      trechos.push(lista.slice(k).join(' '));
+    }
+  }
+  return trechos;
+}
+
 const SKILLS = path.join(RAIZ, '.claude', 'skills');
 function falasDasSkills() {
   const falas = [];
   for (const skill of fs.readdirSync(SKILLS).sort()) {
     const arquivo = path.join(SKILLS, skill, 'SKILL.md');
     if (!fs.existsSync(arquivo)) continue;
-    for (const texto of falasDoMarkdown(fs.readFileSync(arquivo, 'utf8'))) falas.push({ onde: `.claude/skills/${skill}/SKILL.md`, texto });
+    const markdown = fs.readFileSync(arquivo, 'utf8');
+    for (const texto of [...falasDoMarkdown(markdown), ...instrucoesDeFala(markdown)]) falas.push({ onde: `.claude/skills/${skill}/SKILL.md`, texto });
   }
-  for (const texto of falasDoMarkdown(ler('AGENTS.md'))) falas.push({ onde: 'AGENTS.md', texto });
+  const agents = ler('AGENTS.md');
+  for (const texto of [...falasDoMarkdown(agents), ...instrucoesDeFala(agents)]) falas.push({ onde: 'AGENTS.md', texto });
   return falas;
 }
 
@@ -150,6 +196,20 @@ test('o filtro de jargão acha a palavra inteira, sem acento nem maiúscula, e i
   assert.deepEqual(palavrasProibidas('Os seus sites continuam em {{pasta_do_estudio}}.'), []);
   assert.deepEqual(palavrasProibidas('anotação, pastel, logo e login não são jargão'), []);
   assert.deepEqual(falasDoMarkdown('---\ndescription: "pasta"\n---\nDiga: "Pronto." e `"zip"`\n```\n"json"\n```\n"Leia <x.json>"'), ['Pronto.']);
+});
+
+test('o filtro lê o nome entre crases dentro da fala e a fala sem aspas', () => {
+  // crase dentro de aspas não esconde a palavra: a pessoa lê o nome
+  assert.deepEqual(falasDoMarkdown('Diga: "Abra o `index.html`"'), ['Abra o index.html']);
+  assert.deepEqual(palavrasProibidas(falasDoMarkdown('"Abra o `index.html`"').join(' ')), ['html']);
+  // fala sem aspas: da palavra que manda falar até o fim da frase; "nunca diga" é proibição
+  const md = [
+    '- **Não passou:** pare. Diga à pessoa, em até 4 frases, a nota e o que falta.',
+    'Nunca diga nota. Rode `./estudio pacote` e diga o texto de `COMANDO_RECUSADO`.',
+    '4. Explique em poucas linhas: o site inteiro está na pasta `site`; nada foi publicado.',
+    'Se sim, mostre o caminho. Para você: é pela pasta de skills.',
+  ].join('\n');
+  assert.deepEqual(instrucoesDeFala(md).map(palavrasProibidas), [['nota'], [], ['pasta'], []]);
 });
 
 test('nenhuma mensagem mostrada à pessoa tem palavra técnica', () => {
@@ -187,11 +247,27 @@ test('pedido vago: a skill manda guardar o antes, mudar 2 ou 3 coisas concretas 
   const ini = skill.indexOf('## Pedido vago: antes e depois');
   assert.ok(ini !== -1);
   const secao = skill.slice(ini, skill.indexOf('\n## ', ini + 5));
-  for (const passo of ['./estudio antes <nome>', '2 ou 3 mudanças concretas', 'mudancas.json', './estudio comparar <nome>', '"O depois ★"']) {
+  for (const passo of ['./estudio antes <nome>', '2 ou 3 mudanças concretas', 'mudancas.json', './estudio comparar <nome>', '"O depois ★"', '`./estudio escolher <nome> depois`', 'Nunca desfaça de memória', 'Pule o passo 1']) {
     assert.ok(secao.includes(passo), passo);
   }
   const kit = lerJson('kit/mensagens.json');
   for (const c of ['ANDAMENTO_ABRI', 'ANDAMENTO_CONFERENCIA', 'ANDAMENTO_FOTOS', 'ANDAMENTO_OLHARES', 'ANDAMENTO_AJUSTES', 'ANDAMENTO_PRONTO']) {
     assert.ok(kit[c] && skill.includes(c), c);
   }
+});
+
+test('instalação: o "tudo" roda com o tempo máximo da ferramenta, nunca com os 2 minutos padrão', () => {
+  for (const arquivo of ['.claude/skills/instalar-estudio/SKILL.md', 'instalar/comandos-unicos.md', 'README.md']) {
+    assert.ok(ler(arquivo).includes('`timeout: 600000`'), arquivo);
+  }
+  assert.ok(ler('.claude/skills/instalar-estudio/SKILL.md').includes('`run_in_background: true`'));
+});
+
+test('porta de entrada: diz onde começar, e o registro das caixinhas não finge medição', () => {
+  const porta = portaDeEntrada()[0].texto;
+  assert.ok(porta.includes('escolha o que tem o seu nome') && porta.includes('casinha'));
+  assert.ok(!porta.includes('no máximo três'));
+  const registro = ler('instalar/comandos-unicos.md');
+  assert.ok(registro.includes('**Situação da medição:'));
+  assert.ok(registro.includes('PASTA_NA_NUVEM') && registro.includes('mudar-pasta'));
 });

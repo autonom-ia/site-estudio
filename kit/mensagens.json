@@ -257,7 +257,7 @@
   },
   "ANTES_GUARDADO": {
     "texto": "Guardei como o site está agora, para mostrar o antes e o depois.",
-    "acao": "Faça as 2 ou 3 mudanças concretas, rode montar e escreva arquivos.mudancas com {\"pedido\": \"as palavras da pessoa\", \"mudancas\": [{\"titulo\": \"o que mudou, em palavras do dia a dia\", \"porque\": \"como isso atende o pedido\"}]}. Depois rode ./estudio comparar <nome>."
+    "acao": "Faça as 2 ou 3 mudanças concretas, rode montar e escreva arquivos.mudancas com {\"pedido\": \"as palavras da pessoa\", \"mudancas\": [{\"titulo\": \"o que mudou, em palavras do dia a dia\", \"porque\": \"como isso atende o pedido\"}]}. Depois rode ./estudio comparar <nome>. O antes fica em aberto até ./estudio escolher <nome> depois|antes|outro."
   },
   "ANTES_NAO_GUARDADO": {
     "texto": "Esqueci de guardar como o site estava antes. Vou refazer do jeito certo.",
@@ -279,9 +279,29 @@
     "texto": "Uma das mudanças ficou sem nome. Vou completar.",
     "acao": "Cada item de mudancas precisa de titulo. dados.ignoradas diz quantos ficaram de fora."
   },
+  "ANTES_EM_ABERTO": {
+    "texto": "Ainda falta você escolher entre o antes e o depois da última mudança.",
+    "acao": "A pessoa ainda não respondeu o \"Qual fica?\". Não guarde um antes novo por cima: rode ./estudio escolher <nome> com depois, antes ou outro, conforme a resposta. Só use --de-novo se a pessoa pediu para partir do site como está agora."
+  },
+  "ANTES_JA_RESOLVIDO": {
+    "texto": "Essa comparação já foi resolvida. Vou guardar o site de agora antes de mudar de novo.",
+    "acao": "A pessoa já escolheu (dados.escolha). Para outra mudança, rode ./estudio antes <nome> primeiro. Para desfazer algo depois da escolha, mude as fontes à mão e monte."
+  },
+  "FICOU_O_DEPOIS": {
+    "texto": "Combinado, fica o depois.",
+    "acao": "Grave no andamento.md o pedido e as mudanças que ficaram. O próximo pedido vago começa com ./estudio antes <nome>."
+  },
+  "VOLTOU_COMO_ESTAVA": {
+    "texto": "Voltei o site para como estava antes.",
+    "acao": "O site e o _gerador/ voltaram ao que o antes guardou (dados.gerador_restaurado diz se o _gerador/ tinha cópia). Rode ./estudio abrir <nome> para a pessoa ver."
+  },
+  "PRONTO_PARA_OUTRO_CAMINHO": {
+    "texto": "Voltei para o ponto de partida. Vou tentar outro caminho.",
+    "acao": "O site e o _gerador/ voltaram ao original e o antes continua guardado. Não rode ./estudio antes: faça 2 ou 3 mudanças diferentes, monte, preencha arquivos.mudancas e rode ./estudio comparar <nome>."
+  },
   "COMPARACAO_PRONTA": {
     "texto": "Abri o antes e o depois lado a lado, com cada mudança numerada.",
-    "acao": "Diga em uma frase cada mudança de dados.mudancas, na ordem, e pergunte qual fica: \"O depois ★\", \"Voltar como estava\", \"Outro caminho\". Endereço em dados.endereco (só neste computador)."
+    "acao": "Diga em uma frase cada mudança de dados.mudancas, na ordem, e pergunte qual fica: \"O depois ★\", \"Voltar como estava\", \"Outro caminho\". Com a resposta, rode ./estudio escolher <nome> depois, antes ou outro. Endereço em dados.endereco (só neste computador)."
   },
   "ANDAMENTO_ABRI": {
     "texto": "Abri o site para você olhar, no celular e no computador lado a lado. Enquanto você olha, eu confiro cada detalhe e vou te contando.",

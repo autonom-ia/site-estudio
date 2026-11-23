@@ -76,7 +76,7 @@ Igual à V1 longa, trocando o passo 3 por este:
 ## O que acontece depois do comando
 
 1. O assistente baixa e descompacta o estúdio na pasta pessoal, num comando só.
-2. Lê o `AGENTS.md`, diz o I-01 (o que vai fazer, sem pergunta) e roda a entrada única: `bash instalar/instalar.sh tudo --agente <claude|codex>` (no Windows, `instalar.ps1 tudo`). Ela olha o computador (`checar`), instala Node, peças do estúdio e navegador escondido (`passo` de cada um, com uma segunda chance automática quando a falha é passageira) e confere (`verificar`). Se o estúdio caiu dentro do OneDrive ou do iCloud, ou se o nome do usuário do Windows tem acento, o `tudo` para em `checar` e o assistente muda a pasta de lugar (`mudar-pasta`) antes de rodar de novo.
+2. Lê o `AGENTS.md`, diz o I-01 (o que vai fazer, sem pergunta) e roda a entrada única: `bash instalar/instalar.sh tudo --agente <claude|codex>` (no Windows, `instalar.ps1 tudo`). Ela olha o computador (`checar`), instala Node, peças do estúdio e navegador escondido (`passo` de cada um, com uma segunda chance automática quando a falha é passageira) e confere (`verificar`). O assistente roda essa chamada com o tempo máximo da ferramenta (no Claude Code, `timeout: 600000`) ou em segundo plano, porque com internet lenta ela passa dos 2 minutos que a ferramenta dá por padrão. Se o estúdio caiu dentro do OneDrive ou do iCloud, ou se o nome do usuário do Windows tem acento, o `tudo` para em `checar` e o assistente muda a pasta de lugar (`mudar-pasta`) antes de rodar de novo.
 3. Diz "Tudo pronto" (I-14) e mostra como abrir o programa direto no estúdio. A marca não é perguntada agora: ela nasce junto com o primeiro site.
 
 Os textos de cada momento estão em `instalar/mensagens.json`. Um por um (`checar`, `plano`, `passo <id>`, `verificar`) continua existindo, para quem pedir para aprovar cada programa.
@@ -91,8 +91,14 @@ Do link colado até "Tudo pronto", e depois no primeiro site:
 | 2 | Depois do I-01 | A entrada única `instalar.sh tudo` (ou `instalar.ps1 tudo`) |
 | 3 | Ao abrir o programa direto no estúdio (I-14) | Confiar no estúdio (o Terminal pergunta; o app pode não perguntar) |
 
+**Situação da medição: ainda não medido numa conta nova.** As 3 acima são a contagem esperada, não a medida. Antes da primeira sessão aberta no estúdio, o `.claude/settings.json` dele ainda não vale (o programa está aberto noutro lugar), por isso a caixinha 2 existe. Caixinhas a mais já conhecidas, fora do caminho comum:
+
+- Lugar errado na parte Code: se a pessoa escolhe a Mesa ou Documentos (no Mac, muitas vezes dentro do iCloud), o estúdio cai lá. O `tudo` para em `checar` com `PASTA_NA_NUVEM`, o assistente pede o OK da pessoa (uma pergunta) e roda `mudar-pasta` (uma caixinha) e o `tudo` de novo (outra caixinha). Total: 5 caixinhas e uma pergunta. Por isso a "Comece aqui" do `README.md` manda escolher o lugar com o nome da pessoa.
+- Zip descompactado em Downloads: `mudar-pasta` sem perguntar, mais uma caixinha (4 no total).
+- Codex: cada comando do instalador pede para sair da área protegida.
+
 Dentro do estúdio, `.claude/settings.json` já libera, sem caixinha: `./estudio` (e `estudio.cmd`), as ações `tudo`, `checar`, `plano`, `passo` e `verificar` do instalador, a busca e a leitura de páginas da internet (`WebSearch`, `WebFetch`, para ler o Instagram e as referências) e a escrita em `sites/`, `minha-marca/` e `referencias/`. Ficam de fora de propósito, e pedem caixinha: `mudar-pasta`, `desinstalar` e qualquer comando que não seja do estúdio.
 
 Medido em 23/11/2026 num Mac com chip Apple, numa cópia limpa: `tudo` levou 19,5 s do começo ao "Tudo pronto: 6 de 6" e 2 s ao rodar de novo (tudo já pronto). No Codex não há lista de liberação por projeto: cada comando do instalador pede para sair da área protegida (textos `CODEX-INTERNET` e `CODEX-FORA-DA-AREA`).
 
-Como medir de novo, numa conta nova e numa máquina sem o estúdio: abra o app, cole o texto da V1, conte cada caixinha até "Tudo pronto" e anote aqui. Toda caixinha a mais vira Issue.
+Como medir, numa conta nova e numa máquina sem o estúdio: siga a "Comece aqui" do `README.md` ao pé da letra (lugar com o seu nome na parte Code), cole o texto da V1, conte cada caixinha até "Tudo pronto" e depois até o primeiro "É esse o visual?", e troque a linha "Situação da medição" acima pelo número medido, a data, o sistema e o programa. Toda caixinha a mais vira Issue.

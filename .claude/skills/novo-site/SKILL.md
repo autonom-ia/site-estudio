@@ -154,8 +154,8 @@ Skill `revisar`. Ela chama 4 revisores independentes e devolve nota e problemas.
 
 1. `./estudio preflight <nome>` com `ok:true` mais uma vez, depois da última correção.
 2. `./estudio pacote <nome>` (`PACOTE_PRONTO`): empacota a pasta `site/` num arquivo `.zip` pronto para hospedar, em `arquivos.zip` (`sites/<nome>/<nome>-site.zip`).
-3. `./estudio abrir <nome>` e diga: "Está pronto. Abri o site para você ver." Abra também a pasta do site para a pessoa ver onde está o arquivo.
-4. Explique em poucas linhas: o site inteiro está na pasta `site`; o arquivo `.zip` é o que vai para a hospedagem; nada foi publicado.
+3. `./estudio abrir <nome>` e diga: "Está pronto. Abri o site para você ver." Abra também, no seu computador, o lugar onde o arquivo do site ficou, para a pessoa ver onde ele está.
+4. Diga, em poucas linhas: "O seu site está guardado no seu computador. Deixei pronto o arquivo para pôr no ar, e nada foi publicado."
 5. Pergunte: "Quer pôr o site no ar agora? Eu mostro o passo a passo." com "Quero ★" e "Depois". Se sim, skill `hospedar`.
 6. Atualize `andamento.md` com `etapa: entregue`, a data e onde está o pacote.
 
@@ -164,11 +164,14 @@ Pergunte uma vez: "Quer guardar algo deste site como regra para os próximos? (u
 ## Pedido vago: antes e depois
 
 "Mais caseiro", "mais elegante", "mais moderno", "não sei, não gostei": você traduz em 2 ou 3 mudanças concretas, que se veem (a letra, a cor, a foto, o espaço, o movimento, o texto), e mostra o antes e o depois. Nunca pergunte "o que você quer dizer com isso?": proponha e mostre.
-1. `./estudio antes <nome>` (`ANTES_GUARDADO`): guarda o site como está, antes de mexer.
+1. `./estudio antes <nome>` (`ANTES_GUARDADO`): guarda o site e o `_gerador/` como estão, antes de mexer. `ANTES_EM_ABERTO` (saída 2): a pessoa ainda não escolheu na comparação anterior; rode o `escolher` do passo 5 com a resposta dela, nunca um antes novo por cima.
 2. Faça as 2 ou 3 mudanças no `_gerador/` e em `site/assets/`, cada uma ligada ao pedido, e rode `montar`.
 3. Escreva `arquivos.mudancas` (`revisao/antes-depois/mudancas.json`) com as palavras da pessoa em `pedido` e cada mudança com `titulo` (o que mudou, em palavras do dia a dia) e `porque` (como atende o pedido).
 4. `./estudio comparar <nome>` (`COMPARACAO_PRONTA`): abre o antes e o depois lado a lado, com as mudanças numeradas. Saída 2: `POUCAS_MUDANCAS` (menos de 2) ou `NADA_MUDOU` (faltou montar); corrija e rode de novo.
-5. Diga em uma frase cada mudança e pergunte: "Qual fica?" com "O depois ★", "Voltar como estava" e "Outro caminho". "Voltar": desfaça as mudanças nas fontes e monte de novo. "Outro caminho": volte ao passo 1 com outra leitura do pedido.
+5. Diga em uma frase cada mudança e pergunte: "Qual fica?" com "O depois ★", "Voltar como estava" e "Outro caminho". Com a resposta, rode `./estudio escolher <nome> depois`, `antes` ou `outro`. Nunca desfaça de memória:
+   - "O depois": `FICOU_O_DEPOIS`. Grave no `andamento.md` o que ficou.
+   - "Voltar como estava": `VOLTOU_COMO_ESTAVA`. O site e o `_gerador/` voltaram ao que o passo 1 guardou; abra o site de novo.
+   - "Outro caminho": `PRONTO_PARA_OUTRO_CAMINHO`. O site voltou ao original e o antes continua guardado. Pule o passo 1: faça outra leitura do pedido a partir do passo 2, e a nova comparação mostra o original contra a tentativa nova.
 
 ## Mudar um site que já existe
 
