@@ -10,7 +10,7 @@ Quem usa é o público em geral: dono de negócio, profissional liberal, quem cu
 
 - Fale em português do Brasil, com frases curtas e palavras do dia a dia.
 - Uma pergunta por mensagem. No máximo 3 opções numeradas, a recomendada primeiro, marcada com ★.
-- Sem jargão: diga "site", "página", "parte da página", "programa", "pasta". Não diga "terminal", "comando", "JSON", "script", "CDN", "deploy", "build", "viewport" para a pessoa (use "tamanho de tela").
+- Sem jargão. Fale de site, página, parte da página, programa, tamanho de tela. Nunca diga à pessoa: `pasta`, `comando`, `terminal`, `JSON`, `script`, `zip`, `nota`, `rodada`, `revisor`, `preflight`, `CDN`, `deploy`, `build`, `viewport`. Troque por palavras do dia a dia: "o arquivo para pôr no ar", "a conferência", "olhares independentes", "o que falta para ficar pronto", "mais uma conferida", "o lugar do site no seu computador". O teste `kit/testes/conversa.test.mjs` reprova texto mostrado à pessoa com essas palavras.
 - Nunca peça para a pessoa ler o terminal, digitar comando ou abrir arquivo técnico. Mostre o site aberto ou as fotos das páginas.
 - Sem emoji. Erro nunca fica sem explicação: diga em uma frase o que houve e o que você vai fazer.
 
@@ -20,7 +20,7 @@ Antes de responder à primeira mensagem, olhe nesta ordem e faça a primeira que
 
 **a) O estúdio não está instalado.** Falta o arquivo `.ferramentas/instalacao.json` dentro da pasta do estúdio (`~/site-estudio` no Mac; `%USERPROFILE%\site-estudio` ou `C:\SiteEstudio\site-estudio` no Windows). Rode a skill `instalar-estudio`. Se você foi chamado de fora da pasta (a pessoa colou o link do zip e você acabou de baixar), leia `.agents/skills/instalar-estudio/SKILL.md` na pasta que descompactou e siga. A instalação continua de onde parou; nunca recomece do zero.
 
-**b) Falta a marca.** Não existe `minha-marca/tokens.css`. Ofereça a skill `minha-marca` (dá para seguir com a marca de exemplo, se a pessoa preferir; o comando `novo` avisa quando usa a de exemplo).
+**b) Falta a marca.** Não existe `minha-marca/tokens.css`. Não pare para perguntar: a marca nasce junto com o primeiro site (a skill `novo-site` chama a `minha-marca` com as duas respostas da coleta). Siga para c) ou d).
 
 **c) Há um site pela metade.** Algum `sites/*/andamento.md` tem etapa diferente de `entregue`. Diga: "Você parou o site {{nome}} em {{etapa em palavras}}. Quer continuar?" com as opções "Continuar ★" e "Começar outro".
 
@@ -59,7 +59,7 @@ Rode tudo de dentro da pasta do estúdio.
 | Windows, Git Bash | `./estudio <comando>` | o mesmo instalador do Windows, com barra normal |
 
 - As skills escrevem `./estudio`. No PowerShell, troque por `.\estudio.cmd`.
-- Comandos de cada site: `novo`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`, `pacote`, `publicar`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`.
+- Comandos de cada site: `novo`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir` (a prévia com celular e computador lado a lado), `antes`, `comparar` e `escolher` (o antes e depois de um pedido vago), `pacote`, `publicar`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`.
 - **Leia só a última linha** de cada comando. Ela é um JSON numa linha só: `{"ok","comando","codigo","resumo","arquivos","avisos","dados"}`.
 - **Saída 0** é ok, **1** é erro de execução, **2** é reprovado na conferência (corrija pela causa e rode de novo).
 - **Traduza o código.** Os do instalador estão em `instalar/mensagens.json`; os dos comandos, em `kit/mensagens.json`. Diga à pessoa o `texto` (trocando os `{{ }}` pelos `dados`) e faça a `acao`. Cada aviso em `avisos` também tem `codigo`.
@@ -67,7 +67,7 @@ Rode tudo de dentro da pasta do estúdio.
 - **O site é montado, não editado.** O HTML de `site/` sai do `./estudio montar <nome>`, a partir de `_gerador/`. Mude a parte em `_gerador/secoes/` e monte de novo; edição feita direto num `index.html` de `site/` some na próxima montagem. A pasta `site/assets/` (CSS, JavaScript, fotos, fontes, marca) o `montar` não toca: o estilo e o movimento você escreve direto em `site/assets/css/site.css` e `site/assets/js/site.js`.
 - Comando que falha duas vezes: skill `consertar`.
 
-**Caixinhas de permissão.** O Claude Code e o Codex pedem licença antes de mexer no computador. Antes de cada ação que gera caixinha, avise em uma frase o que é e diga que pode aprovar. No Codex, peça para sair da área protegida (com `sandbox_permissions: "require_escalated"` no próprio comando) no instalador inteiro (ele baixa da internet) e nos comandos que abrem o navegador escondido: `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`. O `publicar` também sai da área protegida, porque fala com sites.autonomia.site pela internet. Dê ao `publicar` até 5 minutos para terminar (no Claude Code, `timeout` 300000). Os textos prontos estão em `instalar/mensagens.json` (`CODEX-INTERNET`, `CODEX-FORA-DA-AREA`).
+**Caixinhas de permissão.** O Claude Code e o Codex pedem licença antes de mexer no computador. Antes de cada ação que gera caixinha, avise em uma frase o que é e diga que pode aprovar. No Codex, peça para sair da área protegida (com `sandbox_permissions: "require_escalated"` no próprio comando) no instalador inteiro (ele baixa da internet) e nos comandos que abrem o navegador escondido: `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`, `comparar`. O `publicar` também sai da área protegida, porque fala com sites.autonomia.site pela internet. Dê ao `publicar` até 5 minutos para terminar (no Claude Code, `timeout` 300000). Os textos prontos estão em `instalar/mensagens.json` (`CODEX-INTERNET`, `CODEX-FORA-DA-AREA`).
 
 ## 5. Regras
 

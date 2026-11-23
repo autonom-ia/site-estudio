@@ -32,7 +32,7 @@ const SAIDA_DE_ANTES = Object.freeze({
   ok: true,
   comando: 'pacote',
   codigo: 'PACOTE_PRONTO',
-  resumo: 'O site está empacotado num .zip pronto para hospedar.',
+  resumo: 'O site está pronto para pôr no ar, guardado num arquivo só.',
   arquivos: { zip: '<base>/sites/igual/igual-site.zip', sha256: '<base>/sites/igual/igual-site.zip.sha256' },
   avisos: [{ codigo: 'ARQUIVO_NAO_USADO', dados: { arquivos: ['site/assets/img/solto.png'] } }],
   dados: { arquivos: 8, paginas: 2, fora_do_pacote: ['site/assets/anotacao.md'], tamanho_kb: 1.2, conteudo_kb: 0.4 },

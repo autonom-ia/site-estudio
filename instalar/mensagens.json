@@ -13,6 +13,7 @@
     "Leia só a última linha da saída: é um JSON. Se ok=false, procure o \"codigo\" em \"erros\" deste arquivo. Se o item tiver \"origem\":\"kit\", procure o código em kit/mensagens.json.",
     "Quando o erro tiver \"acao_automatica\":\"tentar_de_novo\", rode o mesmo comando mais uma vez sem falar nada. Só mostre o texto se falhar de novo.",
     "Nunca mostre o caminho do log nem o nome técnico do código, a não ser que a pessoa peça.",
+    "Entrada única (o caminho padrão): \"tudo\" roda checar, os quatro passos e verificar de uma vez, numa caixinha de licença só. A última linha traz \"etapa\" (onde parou) e \"resultado\" (o JSON daquela etapa, lido como se a etapa tivesse rodado sozinha). Use \"checar\", \"plano\" e \"passo\" um por um só quando a pessoa pedir para aprovar um por um ou para retomar o que o \"tudo\" não resolveu.",
     "Ordem dos passos: pasta, node, pacotes, navegador.",
     "Numeração \"{{i}} de {{n}}\": {{i}} é o campo \"numero\" do passo no \"plano\" e {{n}} é \"total_programas\". A pasta tem numero 0: mostre o \"pronto\" do item, sem contador.",
     "Depois de \"checar\": se aparecer PASTA_NA_NUVEM ou NOME_COM_ACENTO, pergunte com o texto do erro e rode a ação \"mudar-pasta\". A partir daí use a pasta do campo \"para\" em todos os comandos.",
@@ -23,13 +24,10 @@
   "textos": {
     "I-01": {
       "quando": "logo depois de ler o AGENTS.md, antes de qualquer comando",
-      "texto": "Oi! Vou montar o seu Site Estúdio, o lugar onde a gente cria sites juntos. Vai ser assim:\n1. Eu olho se o seu computador tem espaço.\n2. Instalo 3 programas grátis. Você aprova.\n3. Pergunto sobre a sua marca (cores, letras, logo).\n\nLeva uns 10 minutos. Você não precisa digitar nada difícil.\n\nUm aviso: toda vez que eu for mexer no computador, o {{agente}} mostra uma caixinha pedindo licença. É normal. É para a sua segurança. Eu aviso antes, e você pode aprovar.\n{{linha_caixinha}}\n\nSe a janela fechar sem querer, abra o {{agente}} do mesmo jeito e cole o mesmo texto de novo: eu continuo de onde parou.\n\nPrimeiro vou só olhar o computador, sem instalar nada. Posso olhar?",
+      "texto": "Oi! Vou deixar o seu Site Estúdio pronto, o lugar onde a gente cria sites juntos. É uma tacada só: eu confiro se cabe no computador e instalo 3 programas grátis, que ficam só no estúdio e não pedem a sua senha. Leva uns 3 minutos. Você não precisa digitar nada.\n\nAgora o {{agente}} vai mostrar uma caixinha pedindo licença. É normal, é para a sua segurança.\n{{linha_caixinha}}\n\nSe a janela fechar sem querer, abra o {{agente}} do mesmo jeito e cole o mesmo texto de novo: eu continuo de onde parou.",
+      "depois": "Sem esperar resposta, rode a ação \"tudo\" na mesma mensagem. O I-01 não é pergunta: a caixinha é o sim da pessoa.",
       "linha_caixinha_claude": "No app do Claude, a caixinha tem um botão para aprovar: clique nele. Se você abriu pelo Terminal, ela vem em inglês: aperte Enter na opção **1. Yes**. Quando eu for gravar um arquivo, escolha uma vez a opção que libera as edições durante a sessão (no Terminal: **Yes, allow all edits during this session**).",
-      "linha_caixinha_codex": "No app do Codex, a caixinha vem em português: clique no botão de aprovar. Se você abriu pelo Terminal, ela vem em inglês: aperte Enter na primeira opção, a que começa com **Yes**.",
-      "opcoes": [
-        "Pode olhar ★",
-        "Agora não"
-      ]
+      "linha_caixinha_codex": "No app do Codex, a caixinha vem em português: clique no botão de aprovar. Se você abriu pelo Terminal, ela vem em inglês: aperte Enter na primeira opção, a que começa com **Yes**."
     },
     "I-02": {
       "quando": "depois de \"checar\" sem problema que bloqueia",
@@ -38,7 +36,7 @@
     },
     "I-03": {
       "quando": "depois do I-02",
-      "texto": "Vou instalar {{n}} programas. Todos são grátis e ficam numa pasta só do estúdio. Nenhum pede a sua senha.\n1. **Node**: o motor dos comandos do estúdio. (uns 190 MB)\n2. **Peças do estúdio**: os ajustes finais do motor. (quase nada)\n3. **Navegador escondido**: abre o site sem aparecer, mede cada página e tira as fotos em 4 tamanhos de tela. Não mexe no seu Chrome. (uns 250 MB)\n\nTotal: menos de 500 MB. Com internet boa, uns 3 minutos.\n\nComo você prefere?",
+      "texto": "Vou instalar {{n}} programas. Todos são grátis e ficam num lugar só do estúdio. Nenhum pede a sua senha.\n1. **Node**: o motor do estúdio. (uns 190 MB)\n2. **Peças do estúdio**: os ajustes finais do motor. (quase nada)\n3. **Navegador escondido**: abre o site sem aparecer, mede cada página e tira as fotos em 4 tamanhos de tela. Não mexe no seu Chrome. (uns 250 MB)\n\nTotal: menos de 500 MB. Com internet boa, uns 3 minutos.\n\nComo você prefere?",
       "variaveis": "n vem de \"total_programas\" do plano.",
       "opcoes": [
         "Pode instalar tudo. Me avise antes de cada um. ★",
@@ -80,13 +78,13 @@
     },
     "I-14": {
       "quando": "\"verificar\" com ok=true",
-      "texto": "Tudo pronto: {{ok}} de {{total}}.\n\nFalta um passo, só desta vez: abrir o {{agente}} direto na pasta do estúdio. É nela que eu sei fazer os seus sites.\n{{linha_voltar}}\n\nDepois, é só escrever: **quero fazer um site**. Eu pergunto o que você precisa, mostro o começo do site para você aprovar e faço o resto.",
-      "linha_voltar_codex": "No app do Codex: clique em **Escolher projeto** e depois em **Novo projeto**. Escolha a pasta **site-estudio**, que fica dentro da casinha com o seu nome, e clique em **Confiar na pasta**.",
-      "linha_voltar_claude": "No app do Claude, na aba Code: comece uma sessão nova e escolha a pasta **site-estudio**, que fica dentro da casinha com o seu nome. Se ele perguntar se você confia na pasta, aprove."
+      "texto": "Tudo pronto.\n\nFalta um passo, só desta vez: abrir o {{agente}} direto no estúdio. É lá que eu sei fazer os seus sites.\n{{linha_voltar}}\n\nDepois, é só escrever: **quero fazer um site**. Eu faço duas perguntas sobre o seu negócio, mostro o começo do site no celular e no computador para você aprovar, e faço o resto.",
+      "linha_voltar_codex": "No app do Codex: clique em **Escolher projeto** e depois em **Novo projeto**. Escolha **site-estudio**, que fica dentro da casinha com o seu nome, e clique no botão de confiar.",
+      "linha_voltar_claude": "No app do Claude, na aba Code: comece uma sessão nova e escolha **site-estudio**, que fica dentro da casinha com o seu nome. Se ele perguntar se você confia, aprove."
     },
     "I-15": {
       "quando": "\"verificar\" com ok=false",
-      "texto": "Ficou quase tudo pronto: {{ok}} de {{total}}. Faltou: {{lista em palavras simples}}. {{texto do código}}. Quer que eu tente de novo?",
+      "texto": "Ficou quase tudo pronto. Faltou: {{lista em palavras simples}}. {{texto do código}}. Quer que eu tente de novo?",
       "opcoes": [
         "Tentar de novo ★",
         "Seguir assim"
@@ -110,7 +108,7 @@
     },
     "CODEX-FORA-DA-AREA-MUDAR-PASTA": {
       "quando": "no Codex, antes de mudar-pasta",
-      "texto": "O Codex vai pedir para eu rodar fora da área protegida. É para pôr a pasta do estúdio na sua pasta pessoal, que é o lugar dela. Nada é apagado. Pode aprovar."
+      "texto": "O Codex vai pedir para eu rodar fora da área protegida. É para pôr o estúdio dentro da casinha com o seu nome, que é o lugar dele. Nada é apagado. Pode aprovar."
     },
     "CAIXINHA": {
       "quando": "antes de qualquer comando que vai gerar a caixinha de aprovação, quando não houver texto mais específico",
@@ -126,24 +124,24 @@
     },
     "DESINSTALAR-PRONTO": {
       "quando": "\"desinstalar --confirmar\" com ok=true",
-      "texto": "Pronto. Apaguei os programas do estúdio. Os seus sites continuam na pasta {{pasta_do_estudio}}. Para instalar de novo, é só escrever: instalar o estúdio."
+      "texto": "Pronto. Apaguei os programas do estúdio. Os seus sites continuam em {{pasta_do_estudio}}. Para instalar de novo, é só escrever: instalar o estúdio."
     }
   },
   "itens": {
     "pasta": {
-      "nome": "Pasta do estúdio",
+      "nome": "Lugar do estúdio",
       "artigo": "a",
       "frase": "Guarda todos os programas do estúdio num lugar só",
       "tamanho": "quase nada",
       "tamanho_mb": 0,
       "consequencia": "o estúdio não tem onde guardar os programas. Esse é obrigatório",
       "obrigatorio": true,
-      "pronto": "Pronto: pasta do estúdio criada."
+      "pronto": "Pronto: separei um lugar só para o estúdio."
     },
     "node": {
       "nome": "Node",
       "artigo": "o",
-      "frase": "É o motor dos comandos do estúdio",
+      "frase": "É o motor do estúdio",
       "tamanho": "190 MB",
       "tamanho_mb": 190,
       "consequencia": "o estúdio não funciona. Esse é obrigatório",
@@ -256,7 +254,7 @@
       "depois": "Pare a instalação aqui."
     },
     "PASTA_NA_NUVEM": {
-      "texto": "A pasta do estúdio ficou dentro do {{nuvem}}. Isso deixa tudo lento e pode quebrar. Posso mudar para {{caminho}}?",
+      "texto": "O estúdio ficou dentro do {{nuvem}}. Isso deixa tudo lento e pode quebrar. Posso mudar para {{caminho}}?",
       "opcoes": [
         "Pode mudar ★"
       ],
@@ -284,7 +282,7 @@
       "acao_automatica": "nenhuma"
     },
     "PERMISSAO_NEGADA": {
-      "texto": "O computador não deixou eu gravar em {{pasta}}. Feche os programas que possam estar usando essa pasta e me diga \"pronto\".",
+      "texto": "O computador não deixou eu gravar em {{pasta}}. Feche os programas que possam estar usando esse lugar e me diga \"pronto\".",
       "opcoes": [
         "Pronto ★"
       ],
@@ -322,7 +320,7 @@
       "depois": "Rode \"passo <passo do item>\" com o aviso ou a pergunta do item."
     },
     "PASTA_DESTINO_EXISTE": {
-      "texto": "Já existe uma pasta do estúdio em {{pasta}}. Para não misturar nada, não mexi em nenhuma das duas. Quer que eu use a que já está lá?",
+      "texto": "Já existe um estúdio em {{pasta}}. Para não misturar nada, não mexi em nenhuma das duas. Quer que eu use a que já está lá?",
       "opcoes": [
         "Usar a que já está lá ★",
         "Deixar como está"
