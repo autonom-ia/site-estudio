@@ -266,5 +266,101 @@
   "ARQUIVO_NAO_USADO": {
     "texto": "Há arquivos no site que nenhuma página usa.",
     "acao": "Veja dados.arquivos. Foram para o zip, mas pesam e podem expor o que não devia. Se não são do site, tire-os de site/ e rode o pacote de novo."
+  },
+  "PUBLICADO": {
+    "texto": "Seu site está no ar, com cadeado de site seguro, em {{endereco}}.",
+    "acao": "Diga dados.endereco e peça para a pessoa abrir no celular e no computador. Registre em andamento.md do site o endereço, a versão (dados.versao) e a data. Para pôr no ar uma mudança depois, rode a publicação de novo, sempre com a confirmação dela."
+  },
+  "PUBLICADO_CERTIFICADO_PENDENTE": {
+    "texto": "Seu site já subiu. O cadeado de site seguro ainda está sendo preparado e costuma ficar pronto em poucos minutos: {{endereco}}.",
+    "acao": "Diga dados.endereco e explique que, se abrir agora, o navegador pode reclamar do cadeado por alguns minutos. Peça para tentar de novo daqui a pouco. Não publique de novo só por isso. Registre em andamento.md do site o endereço, a versão (dados.versao) e a data."
+  },
+  "PUBLICAR_AGUARDANDO_LOGIN": {
+    "texto": "Para publicar, preciso que você autorize este computador. Abra {{endereco}}, entre com o Google e digite o código {{codigo_curto}}.",
+    "acao": "Mostre dados.codigo_curto bem visível e dados.endereco. O código vale 10 minutos. Quando a pessoa disser que autorizou, rode a mesma publicação de novo: ela continua o mesmo pedido. Se a pessoa ainda não tem acesso, diga que ela pede em sites.autonomia.site. Se dados.chave_recusada for true, o acesso antigo deste computador deixou de valer e por isso é preciso autorizar de novo."
+  },
+  "PUBLICAR_VERSAO_VOLTOU": {
+    "texto": "Pronto: voltei o site para a versão {{versao}}.",
+    "acao": "Peça para a pessoa abrir o endereço do site e conferir. As outras versões continuam guardadas por um tempo."
+  },
+  "PUBLICAR_SAIU": {
+    "texto": "Pronto: este computador não publica mais em seu nome até você autorizar de novo.",
+    "acao": "Os sites que já estão no ar continuam no ar. Para publicar de novo, rode a publicação: ela pede uma nova autorização."
+  },
+  "PUBLICAR_SEM_CONEXAO": {
+    "texto": "Não consegui falar com o serviço de publicação agora. Pode ser a internet daqui.",
+    "acao": "Confira se há internet. No Codex, a publicação precisa sair da área protegida (sandbox_permissions: \"require_escalated\"). Tente de novo em alguns minutos; se continuar, diga à pessoa que o serviço parece fora do ar e que nada foi perdido."
+  },
+  "PUBLICAR_LOGIN_RECUSADO": {
+    "texto": "A autorização deste computador foi recusada no navegador.",
+    "acao": "Pergunte se foi de propósito. Se a pessoa quiser publicar, rode a publicação de novo: ela mostra um código novo."
+  },
+  "PUBLICAR_MUITAS_TENTATIVAS": {
+    "texto": "Foram muitas tentativas seguidas. Preciso esperar uns minutos antes de tentar de novo.",
+    "acao": "Espere 10 minutos e rode a publicação de novo. Não insista antes disso."
+  },
+  "PUBLICAR_ENDERECO_DE_TESTE_INVALIDO": {
+    "texto": "O endereço de teste da publicação está errado.",
+    "acao": "A variável ESTUDIO_PUBLICAR_URL só aceita http://127.0.0.1:<porta>, usada em teste. Tire a variável para publicar de verdade."
+  },
+  "PUBLICAR_RESPOSTA_ESTRANHA": {
+    "texto": "O serviço de publicação respondeu de um jeito que eu não esperava. Não publiquei nada pela metade.",
+    "acao": "Veja dados.etapa e dados.status. Tente de novo em alguns minutos; se repetir, diga à pessoa que achou um erro na publicação e mostre dados.etapa."
+  },
+  "PUBLICAR_NOME_RECUSADO": {
+    "texto": "Esse nome não pode virar endereço de site. Ele precisa ter de 2 a 40 letras, números ou hífen, e não pode ser um nome reservado.",
+    "acao": "Veja dados.detalhe. Proponha à pessoa outro nome curto para o site, crie o site com esse nome (ou copie site/ para ele) e publique de novo."
+  },
+  "PUBLICAR_CHAVE_RECUSADA": {
+    "texto": "O acesso deste computador deixou de valer. Preciso que você autorize de novo.",
+    "acao": "Rode a publicação de novo: ela pede uma nova autorização e mostra o código."
+  },
+  "PUBLICAR_SITE_DE_OUTRA_PESSOA": {
+    "texto": "Esse endereço já é de outra pessoa. Vamos escolher outro nome para o seu site.",
+    "acao": "Proponha à pessoa um nome parecido e livre, crie o site com esse nome e publique de novo. Nunca tente publicar por cima do site de outra pessoa."
+  },
+  "PUBLICAR_LIMITE_DE_SITES": {
+    "texto": "Você chegou ao número máximo de sites no ar.",
+    "acao": "Diga que dá para publicar uma versão nova de um site que já está no ar, ou pedir para tirar um do ar em sites.autonomia.site."
+  },
+  "PUBLICAR_SITE_GRANDE_DEMAIS": {
+    "texto": "O site ficou grande demais para publicar aqui.",
+    "acao": "Veja dados.detalhe. Reduza fotos e vídeos (o desempenho mostra os arquivos mais pesados), tire de site/ o que nenhuma página usa e publique de novo."
+  },
+  "PUBLICAR_LIMITE_DO_DIA": {
+    "texto": "Você já publicou muitas vezes hoje. Amanhã dá para publicar de novo.",
+    "acao": "Junte as próximas mudanças e publique uma vez só, amanhã."
+  },
+  "PUBLICAR_LIMITE_DA_SEMANA": {
+    "texto": "Nesta semana já saíram muitos sites novos. Seu site pode ir ao ar nos próximos dias.",
+    "acao": "Explique que é um limite de todos, não só dela, e que versões novas de sites que já estão no ar continuam liberadas. Tente de novo em um ou dois dias."
+  },
+  "PUBLICAR_DESLIGADA": {
+    "texto": "A publicação está pausada por enquanto. Os sites que já estão no ar continuam no ar.",
+    "acao": "Diga que é uma pausa do serviço, não um problema do site. Tente de novo mais tarde."
+  },
+  "PUBLICAR_SEM_ESPACO": {
+    "texto": "O serviço de publicação está sem espaço agora. Seu site não foi alterado.",
+    "acao": "Tente de novo mais tarde. Se repetir, diga à pessoa para avisar em sites.autonomia.site."
+  },
+  "PUBLICAR_ENVIO_PERDIDO": {
+    "texto": "O envio demorou demais e foi descartado. Vou mandar de novo.",
+    "acao": "Rode a publicação de novo: ela começa um envio novo do começo."
+  },
+  "PUBLICAR_ENVIO_FALHOU": {
+    "texto": "O site não chegou inteiro ao serviço. Nada foi publicado pela metade.",
+    "acao": "Rode a publicação de novo. Se falhar duas vezes, veja a internet e use a skill consertar."
+  },
+  "PUBLICAR_VERSAO_INEXISTENTE": {
+    "texto": "Essa versão do site não está mais guardada.",
+    "acao": "Veja dados.detalhe. Pergunte qual versão a pessoa quer, ou volte sem número, para a anterior."
+  },
+  "PUBLICAR_PACOTE_RECUSADO": {
+    "texto": "O serviço recusou o site por causa de um arquivo que não pode ir para a internet.",
+    "acao": "Veja dados.detalhe e dados.codigo_do_servico, mostre à pessoa o arquivo citado, tire-o de site/ (guarde em material/, se for dela), confira de novo e publique."
+  },
+  "PUBLICAR_RECUSADO": {
+    "texto": "O serviço de publicação não aceitou agora. Seu site não foi alterado.",
+    "acao": "Veja dados.detalhe (a frase do serviço) e dados.status, diga à pessoa em palavras simples e tente de novo mais tarde."
   }
 }

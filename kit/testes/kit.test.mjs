@@ -140,7 +140,7 @@ test('despachante: comando desconhecido sai 1 com JSON na última linha e lista 
   const r = rodarEstudio(['nao-existe']);
   assert.equal(r.codigo, 1);
   assert.equal(r.json.codigo, 'COMANDO_DESCONHECIDO');
-  for (const c of ['novo', 'montar', 'checar', 'prints', 'medir', 'acessibilidade', 'desempenho', 'fatos', 'preflight', 'abrir', 'pacote', 'verificar', 'espelhar', 'versao', 'atualizar']) {
+  for (const c of ['novo', 'montar', 'checar', 'prints', 'medir', 'acessibilidade', 'desempenho', 'fatos', 'preflight', 'abrir', 'pacote', 'publicar', 'verificar', 'espelhar', 'versao', 'atualizar']) {
     assert.ok(r.json.dados.disponiveis.includes(c), c);
   }
 });
