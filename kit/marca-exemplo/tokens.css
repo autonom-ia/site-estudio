@@ -1,0 +1,29 @@
+/* Marca de exemplo do Site Estúdio: "Café Aurora", um negócio fictício.
+   A sua marca mora em minha-marca/tokens.css (mesmas variáveis). O comando "novo" copia
+   minha-marca/ para site/assets/marca/; sem ela, copia este exemplo.
+   Fontes: Fraunces e DM Sans, licença SIL OFL 1.1 (textos em fontes/).
+   Contraste conferido pelo comando "medir": tinta, apoio e destaque sobre fundo; os tons
+   "sobre-noite" sobre noite. */
+@font-face{font-family:"Fraunces";src:url("fontes/Fraunces-Variable.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:"DM Sans";src:url("fontes/DMSans-Variable.woff2") format("woff2");font-weight:100 1000;font-style:normal;font-display:swap}
+
+:root{
+  /* papel e tinta: o miolo do pão e o anil da madrugada */
+  --cor-fundo:#F4EFE4;
+  --cor-fundo-2:#EAE2D2;
+  --cor-tinta:#1D1A2E;
+  --cor-apoio:#575270;
+  --cor-destaque:#8F4A0E;     /* crema: um número, um fio, uma palavra */
+
+  /* a noite antes do sol */
+  --cor-noite:#16122A;
+  --cor-noite-2:#221C3E;
+  --cor-sobre-noite:#F4EFE4;
+  --cor-apoio-noite:#BAB4D0;
+  --cor-luz:#FFB86E;           /* a primeira luz no horizonte */
+  --cor-luz-alta:#FFE2B8;
+
+  /* tipografia */
+  --fonte-titulo:"Fraunces", Georgia, serif;
+  --fonte-texto:"DM Sans", system-ui, sans-serif;
+}

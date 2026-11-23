@@ -1,0 +1,270 @@
+{
+  "_leia": {
+    "texto": "Cada código que um comando devolve tem aqui o texto para a pessoa e a ação para o assistente.",
+    "acao": "Diga o texto com as suas palavras. Siga a ação. Nunca mostre o JSON cru para a pessoa."
+  },
+  "OK": {
+    "texto": "Pronto.",
+    "acao": "Siga para o próximo passo."
+  },
+  "DESCONHECIDO": {
+    "texto": "Algo deu errado aqui dentro. Vou olhar o detalhe.",
+    "acao": "Leia dados.detalhe. Se for defeito do kit, diga à pessoa que achou um erro do estúdio e mostre o comando que falhou. Não tente contornar editando o kit."
+  },
+  "COMANDO_DESCONHECIDO": {
+    "texto": "Esse comando não existe no estúdio.",
+    "acao": "Veja dados.disponiveis e use um deles."
+  },
+  "NODE_ANTIGO": {
+    "texto": "O Node deste computador é antigo demais para o estúdio.",
+    "acao": "Rode a skill instalar-estudio: o instalador põe o Node certo dentro de .ferramentas/."
+  },
+  "ESTUDIO_NAO_INSTALADO": {
+    "texto": "O estúdio ainda não terminou de instalar.",
+    "acao": "Rode a skill instalar-estudio."
+  },
+  "ARGUMENTO_FALTANDO": {
+    "texto": "Faltou uma informação no comando. Vou completar.",
+    "acao": "Veja dados.argumento e rode o comando de novo com ele."
+  },
+  "ARGUMENTO_INVALIDO": {
+    "texto": "Passei uma informação errada no comando. Vou corrigir.",
+    "acao": "Veja dados.argumento, dados.valor e dados.opcoes e rode de novo."
+  },
+  "NOME_INVALIDO": {
+    "texto": "O nome precisa ser só letras minúsculas, números e hífen.",
+    "acao": "Use dados.sugestao (ou outro nome no mesmo formato) e rode de novo. Não pergunte à pessoa só por isso."
+  },
+  "ARQUIVO_NAO_ACHADO": {
+    "texto": "Falta um arquivo para seguir.",
+    "acao": "Veja dados.arquivo. Se é um arquivo de trabalho (brief, fatos, seção), escreva-o; se é do kit, rode o passo anterior."
+  },
+  "ARQUIVO_INVALIDO": {
+    "texto": "Um arquivo de trabalho ficou com defeito. Vou consertar.",
+    "acao": "Veja dados.arquivo e dados.detalhe e reescreva o arquivo no formato certo."
+  },
+  "CHROME_NAO_ACHADO": {
+    "texto": "Não achei um navegador para medir e fotografar as páginas.",
+    "acao": "Peça para a pessoa instalar o Google Chrome ou o Microsoft Edge, ou rode a skill instalar-estudio (ela baixa um navegador só para o estúdio). Para forçar um caminho, use a variável ESTUDIO_CHROME."
+  },
+  "CHROME_NAO_ABRIU": {
+    "texto": "O navegador não abriu aqui dentro.",
+    "acao": "Rode o mesmo comando fora da área protegida do assistente (no Claude Code, sem sandbox só neste comando; no Codex, com aprovação de acesso completo). Se continuar, rode ./estudio verificar."
+  },
+  "MARCA_DE_EXEMPLO": {
+    "texto": "Usei a marca de exemplo, porque a sua ainda não está em minha-marca/.",
+    "acao": "Ofereça a skill minha-marca. Depois de criar minha-marca/tokens.css, copie para site/assets/marca/ do site só tokens.css, a pasta fontes/ (arquivos .woff2, .woff ou .ttf e as licenças OFL) e o logo.svg ou logo.png. Nunca copie marca.md nem outro arquivo de minha-marca/: tudo em site/ vai para o ar."
+  },
+  "SERVIDOR_NAO_SUBIU": {
+    "texto": "Não consegui abrir o site no navegador.",
+    "acao": "Rode de novo fora da área protegida do assistente. Se continuar, rode ./estudio verificar."
+  },
+  "ESPELHO_OK": {
+    "texto": "As instruções do Claude Code e do Codex estão iguais.",
+    "acao": "Nada a fazer."
+  },
+  "ESPELHO_GERADO": {
+    "texto": "Atualizei as cópias das instruções para o Codex e o Claude Code.",
+    "acao": "Nada a fazer."
+  },
+  "ESPELHO_DIFERENTE": {
+    "texto": "As instruções do Claude Code e do Codex estão diferentes.",
+    "acao": "Edite só as fontes (AGENTS.md e .claude/skills/) e rode ./estudio espelhar."
+  },
+  "VERSAO": {
+    "texto": "Esta é a versão do estúdio.",
+    "acao": "Diga dados.versao."
+  },
+  "ESTUDIO_PRONTO": {
+    "texto": "O estúdio está pronto para usar.",
+    "acao": "Siga para o que a pessoa pediu."
+  },
+  "NAVEGADOR_DO_SISTEMA": {
+    "texto": "O estúdio vai usar o navegador deste computador, não o de versão fixa.",
+    "acao": "Medidas, contraste e fotos podem sair um pouco diferentes de outra máquina. Para ficar igual em todo lugar, rode a skill instalar-estudio (passo navegador)."
+  },
+  "VERIFICACAO_FALHOU": {
+    "texto": "Falta uma peça para o estúdio funcionar.",
+    "acao": "Veja dados.faltando. Rode a skill instalar-estudio. Não é defeito do site: é peça do estúdio que falta."
+  },
+  "JA_ATUALIZADO": {
+    "texto": "O estúdio já está na versão mais nova.",
+    "acao": "Diga dados.de."
+  },
+  "ESTUDIO_ATUALIZADO": {
+    "texto": "Atualizei o estúdio. O seu trabalho e a sua marca ficaram como estavam.",
+    "acao": "Diga de dados.de para dados.para. A versão anterior fica em dados.copia_anterior. As skills que a pessoa tinha posto e a versão nova não traz continuam (dados.skills_mantidas). Arquivo de topo que a versão nova não tem mais foi guardado na cópia anterior (dados.guardados_na_copia): se for da pessoa, diga onde ficou."
+  },
+  "DEPENDENCIAS_MUDARAM": {
+    "texto": "A versão nova trocou peças ou programas do estúdio (pacotes, Node ou navegador). Vou rodar o instalador de novo.",
+    "acao": "Rode o instalador de novo pela skill instalar-estudio: ela pula o que já está pronto e refaz só o que mudou. Só depois use o estúdio."
+  },
+  "ATUALIZACAO_DOWNLOAD_FALHOU": {
+    "texto": "Não consegui baixar a versão nova.",
+    "acao": "Confira a internet e tente de novo mais tarde."
+  },
+  "ATUALIZACAO_ARQUIVO_DIFERENTE": {
+    "texto": "O arquivo da versão nova não confere com o publicado. Por segurança, não instalei.",
+    "acao": "Não contorne. Tente de novo mais tarde; se repetir, avise quem mantém o estúdio."
+  },
+  "ATUALIZACAO_ENDERECO_ESTRANHO": {
+    "texto": "Esse endereço não é o do estúdio oficial. Não vou baixar dele.",
+    "acao": "Use o endereço padrão (sem --de) ou um zip local com o .sha256 ao lado."
+  },
+  "ATUALIZACAO_ZIP_NAO_ABRIU": {
+    "texto": "Não consegui abrir o arquivo da versão nova.",
+    "acao": "Tente de novo. Se repetir, rode a atualização pelo instalador."
+  },
+  "ATUALIZACAO_FALHOU": {
+    "texto": "Não consegui trocar os arquivos do estúdio. Voltei tudo como estava.",
+    "acao": "Feche programas que estejam usando arquivos do estúdio e tente de novo."
+  },
+  "ATUALIZACAO_INCOMPLETA": {
+    "texto": "A troca parou no meio e alguns arquivos não voltaram sozinhos.",
+    "acao": "Diga à pessoa que a versão anterior está guardada em dados.copia_anterior e não apague nada. Peça ajuda a quem mantém o estúdio."
+  },
+  "ATUALIZACAO_EM_ANDAMENTO": {
+    "texto": "Já tem uma atualização do estúdio rodando agora. Não comecei outra por cima.",
+    "acao": "Espere a outra atualização terminar e rode ./estudio versao para ver a versão. Não apague o arquivo .ferramentas/atualizando.trava: ele sai sozinho quando a outra termina ou quando o processo dela não existe mais."
+  },
+  "_tipos_dos_achados": {
+    "texto": "Tipos de achado em dados.vermelhos (RED, reprova) e dados.amarelos (WARN, avisa) de checar, medir, acessibilidade e fatos.",
+    "acao": "checar RED: endereco-externo (CDN ou arquivo de fora carregado pela página), vendor-ausente, arquivo-ausente, link-morto (inclusive âncora que não existe), fonte-quebrada, sem-titulo, sem-descricao, sem-idioma, h1 (precisa de exatamente um), select-nativo, travessao (troque por ponto, vírgula, dois-pontos ou parênteses), erro-de-script, resto-do-molde (seção, cabeçalho ou nota do rodapé com data-molde, ou molde: true em _gerador/ordem.mjs: o texto do negócio fictício ainda está na página; reescreva com o conteúdo do brief e só então tire o data-molde). checar WARN: og-image-relativa, json-ld-quebrado, fonte-nao-declarada. medir RED: rola-para-o-lado, colisao, texto-cortado, contraste, alvo-pequeno (celular). medir WARN: texto-pequeno-celular, contraste-nao-medido (texto sobre foto ou degradê: confira no print), texto-invisivel. acessibilidade: cada item traz regra, impacto, ajuda e nos (alvo). fatos RED: numero, arroba, telefone, email sem linha com fonte em fatos.md (motivo fora-de-fatos, linha-sem-fonte ou fonte-de-exemplo); fonte-de-exemplo (pagina fatos.md: linha que ainda tem a fonte do molde, \"Exemplo fictício do Site Estúdio\"; apague a linha ou troque pelo fato de verdade com a fonte real). Corrija pela causa (seção, CSS, conteúdo ou fatos.md com fonte de verdade) e rode de novo."
+  },
+  "SITE_NAO_ACHADO": {
+    "texto": "Não achei esse site.",
+    "acao": "Veja dados.pasta. Liste sites/ e use o nome certo, ou crie com ./estudio novo <nome>."
+  },
+  "SITE_JA_EXISTE": {
+    "texto": "Já existe um site com esse nome.",
+    "acao": "Pergunte se a pessoa quer continuar o existente ou começar outro com nome diferente. Nunca apague o existente."
+  },
+  "SITE_CRIADO": {
+    "texto": "Criei a pasta do site com o molde (home e uma página) e montei as páginas.",
+    "acao": "Escreva o brief.md e o fatos.md com a pessoa e peça aprovação do brief antes de desenhar. O molde é de um negócio fictício: todo texto dele será trocado. O checar reprova (resto-do-molde) enquanto sobrar data-molde em alguma seção ou molde: true em _gerador/ordem.mjs, e o fatos reprova (fonte-de-exemplo) enquanto sobrar linha do exemplo em fatos.md."
+  },
+  "SITE_SEM_INDEX": {
+    "texto": "O site ainda não tem a página inicial montada.",
+    "acao": "Rode ./estudio montar <nome>. Se continuar, confira se _gerador/ordem.mjs tem uma página com rota vazia (a home)."
+  },
+  "SITE_SEM_PAGINAS": {
+    "texto": "A pasta site/ está sem nenhuma página.",
+    "acao": "Rode ./estudio montar <nome>."
+  },
+  "GERADOR_AUSENTE": {
+    "texto": "O site está sem o gerador de páginas.",
+    "acao": "Veja dados.arquivo. Recrie _gerador/ a partir de kit/molde/_gerador/ e rode montar de novo."
+  },
+  "MONTAR_FALHOU": {
+    "texto": "O gerador do site parou com erro. Vou corrigir.",
+    "acao": "Leia dados.detalhe: o erro está em _gerador/ordem.mjs ou numa seção de _gerador/secoes/. Corrija e rode montar de novo."
+  },
+  "SITE_MONTADO": {
+    "texto": "Montei as páginas do site.",
+    "acao": "Rode ./estudio preflight <nome> e depois os prints."
+  },
+  "CHECAGEM_OK": {
+    "texto": "Conferi todas as páginas: a estrutura está certa.",
+    "acao": "Siga para medir ou preflight."
+  },
+  "CHECAGEM_COM_AVISOS": {
+    "texto": "Conferi as páginas: nada reprova, mas há avisos.",
+    "acao": "Leia dados.amarelos. Corrija o que for de verdade e explique à pessoa o que ficou."
+  },
+  "CHECAGEM_REPROVADA": {
+    "texto": "A conferência achou problemas nas páginas. Vou corrigir antes de mostrar.",
+    "acao": "Leia dados.vermelhos (pagina, tipo, detalhe). Corrija pela causa, rode montar e checar de novo. Não mostre o site antes de passar."
+  },
+  "MEDIDAS_OK": {
+    "texto": "Medi todas as páginas em todos os tamanhos de tela: nada fora do lugar.",
+    "acao": "Siga para acessibilidade ou prints."
+  },
+  "MEDIDAS_COM_AVISOS": {
+    "texto": "Medi as páginas: nada reprova, mas há avisos.",
+    "acao": "Leia dados.amarelos. Contraste não medido pede olhar o print daquele trecho. Texto pequeno no celular: aumente se for texto de leitura."
+  },
+  "MEDIDAS_REPROVADAS": {
+    "texto": "A medição achou problemas de leitura ou de layout. Vou corrigir antes de mostrar.",
+    "acao": "Leia dados.vermelhos (pagina, largura, tipo, detalhe). Corrija no CSS ou na seção, rode montar e medir de novo."
+  },
+  "ACESSIBILIDADE_OK": {
+    "texto": "A conferência de acessibilidade não achou nada.",
+    "acao": "Siga em frente. Ela não substitui navegar pelo teclado: o revisor de QA faz isso."
+  },
+  "ACESSIBILIDADE_COM_AVISOS": {
+    "texto": "A conferência de acessibilidade achou pontos menores.",
+    "acao": "Leia dados.amarelos e corrija os que forem simples."
+  },
+  "ACESSIBILIDADE_REPROVADA": {
+    "texto": "A conferência de acessibilidade achou problemas sérios. Vou corrigir.",
+    "acao": "Leia dados.vermelhos (regra, ajuda, nos.alvo). Corrija na seção e rode de novo."
+  },
+  "AXE_AUSENTE": {
+    "texto": "Falta a peça que confere acessibilidade.",
+    "acao": "Veja dados.arquivo. Rode ./estudio atualizar ou baixe o estúdio de novo: kit/vendor/axe/ vem com ele."
+  },
+  "DESEMPENHO_MEDIDO": {
+    "texto": "Medi o peso e a velocidade de cada página.",
+    "acao": "Resuma dados.medidas para a pessoa (peso, LCP, CLS no celular com 4G). Não é reprovação: são números para decidir."
+  },
+  "ARQUIVO_PESADO": {
+    "texto": "Um arquivo do site está pesado.",
+    "acao": "Veja dados.url. Se for foto, exporte menor (WebP ou AVIF, largura de até 2000 px). Se for vídeo, encurte ou comprima."
+  },
+  "FATOS_OK": {
+    "texto": "Todo número, contato e @ das páginas está em fatos.md, com fonte.",
+    "acao": "Siga em frente. O revisor de fatos ainda confere nomes e logradouros."
+  },
+  "FATOS_SEM_FONTE": {
+    "texto": "Há números, contatos ou @ nas páginas que não estão em fatos.md com fonte.",
+    "acao": "Leia dados.vermelhos (pagina, tipo, trecho, motivo). Para cada um: confirme com a pessoa e registre em fatos.md com a fonte, ou tire da página. Nunca invente fonte."
+  },
+  "FATOS_SEM_ARQUIVO": {
+    "texto": "O site ainda não tem fatos.md.",
+    "acao": "Crie fatos.md com a tabela Fato | Fonte | Data, a partir do que a pessoa informou."
+  },
+  "PREFLIGHT_OK": {
+    "texto": "O site passou em todas as conferências.",
+    "acao": "Siga para os prints e leia cada um."
+  },
+  "PREFLIGHT_COM_AVISOS": {
+    "texto": "O site passou nas conferências, com avisos.",
+    "acao": "Leia dados.etapas e os avisos de cada uma. Corrija o que for de verdade e siga para os prints."
+  },
+  "PREFLIGHT_REPROVADO": {
+    "texto": "O site ainda não passou nas conferências. Vou corrigir.",
+    "acao": "Leia dados.vermelhos (etapa, pagina, tipo, detalhe). Corrija e rode preflight de novo. Não mostre nem empacote o site antes de passar."
+  },
+  "PRINTS_PRONTOS": {
+    "texto": "Fotografei todas as páginas, inteiras e por seção, nos tamanhos de tela pedidos.",
+    "acao": "Abra e olhe cada arquivo de dados.fotos, um por um (comece pelo celular, 390), antes de mostrar à pessoa."
+  },
+  "FOTO_LISA": {
+    "texto": "Uma foto saiu quase toda de uma cor só.",
+    "acao": "Abra dados.arquivo. Se não foi de propósito, algo não carregou ou ficou invisível."
+  },
+  "PAGINA_MUITO_ALTA": {
+    "texto": "Uma página é alta demais para uma foto só; a foto parou no limite.",
+    "acao": "Veja dados.altura. As fotos por seção cobrem o resto; considere se a página precisa ser tão longa."
+  },
+  "SITE_ABERTO": {
+    "texto": "Abri o site no seu navegador.",
+    "acao": "Diga dados.endereco. Explique que o endereço só funciona neste computador."
+  },
+  "SERVIDOR_NO_AR": {
+    "texto": "O site está no ar neste computador, sem abrir o navegador.",
+    "acao": "Use dados.endereco (só funciona neste computador). O navegador não foi aberto: abra você, se precisar."
+  },
+  "PACOTE_PRONTO": {
+    "texto": "O site está empacotado num .zip pronto para hospedar.",
+    "acao": "Diga arquivos.zip e ofereça a skill hospedar (GitHub Pages, Netlify ou Cloudflare Pages). Anotações (.md) e arquivos-fonte de desenho ficam fora do zip (dados.fora_do_pacote). O arquivo .nojekyll e a pasta .well-known/, se existirem, vão no zip de propósito."
+  },
+  "PACOTE_ARQUIVO_PRIVADO": {
+    "texto": "Não empacotei: há na pasta site/ arquivos que não podem ir para a internet (senha, chave, configuração, cópia de segurança ou rascunho, arquivo oculto ou link).",
+    "acao": "Mostre dados.arquivos à pessoa. Tire cada um de site/ (guarde em material/ do site, se for dela) e rode o pacote de novo. Cópia de segurança é nome terminado em .old, .backup, .bak, .orig, .tmp, .swp ou ~, ou pasta backup, backups, old, _old ou tmp. Só dois ocultos passam, de propósito: o arquivo .nojekyll e a pasta .well-known/. Nunca apague sem perguntar e nunca contorne a conferência."
+  },
+  "ARQUIVO_NAO_USADO": {
+    "texto": "Há arquivos no site que nenhuma página usa.",
+    "acao": "Veja dados.arquivos. Foram para o zip, mas pesam e podem expor o que não devia. Se não são do site, tire-os de site/ e rode o pacote de novo."
+  }
+}

@@ -1,0 +1,78 @@
+# Site Estúdio
+
+> **Assistente (Claude Code ou Codex): se você chegou aqui porque alguém pediu para instalar,** leia o `AGENTS.md` inteiro e siga a skill `instalar-estudio` (em `.agents/skills/instalar-estudio/SKILL.md`). Antes do primeiro comando, diga à pessoa em uma frase como aprovar as caixinhas de licença. Fale simples, um passo por vez.
+
+Sites de primeira linha, feitos por conversa, no seu computador.
+
+Você conta para o assistente (Claude Code ou Codex) o que é o seu negócio e o que a pessoa precisa fazer quando abre o site. Ele junta os fatos com a fonte, estuda sites de referência, define a ideia visual, mostra o começo do site para você aprovar, faz o resto, confere tudo e entrega a pasta do site e um arquivo pronto para hospedar.
+
+- **Grátis e local.** Nada sobe para a internet, nada é pago, não precisa de conta. O site fica numa pasta do seu computador. Pôr no ar é com você, e o assistente mostra o passo a passo.
+- **Feito para ser lembrado.** Tipografia com personalidade, foto de verdade, luz e movimento que conduz o olhar. Nada de site de molde com cartõezinhos.
+- **Celular e computador.** Cada página é medida e fotografada em quatro tamanhos de tela: celular, tablet, notebook e tela grande.
+- **Conferência de verdade.** Antes de entregar, o estúdio mede cada página no navegador (texto vazando, contraste fraco, botão pequeno no celular, link quebrado, número sem fonte), roda as regras de acessibilidade e quatro revisores independentes dão nota: direção de arte, direção geral, fatos e qualidade.
+- **Com a sua marca.** Cores, letras e logo ficam guardados uma vez e valem para todos os sites.
+- **Mac; Windows em teste.** No Mac o estúdio roda de ponta a ponta. No Windows o instalador e os comandos existem, mas ainda não passaram na conferência numa máquina limpa: até lá, trate como versão de teste.
+
+## Como instalar
+
+1. Instale o **Claude Code** ou o **Codex** (no app ou no Terminal) e entre com a sua conta.
+2. Abra o programa e cole este texto:
+
+```
+instale: https://github.com/autonom-ia/site-estudio/releases/latest/download/site-estudio.zip
+```
+
+3. Responda ao assistente. Ele olha o computador, pede licença antes de cada coisa e instala tudo numa pasta só, `site-estudio`, dentro da sua pasta pessoal. Leva uns 5 minutos e ocupa menos de 500 MB.
+4. No fim, abra o programa direto na pasta `site-estudio` (o assistente mostra como). É lá que ele sabe fazer os seus sites.
+
+Se o seu programa não conseguir baixar pelo link, veja as alternativas em [`instalar/comandos-unicos.md`](instalar/comandos-unicos.md).
+
+## Como usar
+
+Escreva do seu jeito. Por exemplo:
+
+- "Quero um site para o Café Aurora. A ideia é a pessoa ver o cardápio e chamar no WhatsApp para encomendar."
+- "A Clínica Horizonte já tem site, mas está velho. Quero refazer, com uma página para cada especialidade."
+- "Ajusta a minha marca: as cores estão no logo que coloquei na pasta referencias."
+- "Dá uma nota para o meu site."
+- "Como eu ponho o site no ar?"
+
+O caminho é sempre o mesmo:
+
+1. **Conversa rápida**: o que é o negócio, para quem, o que a pessoa deve fazer no site, de onde vêm os dados.
+2. **Brief**: o objetivo, a ação principal e o mapa das páginas. Você aprova.
+3. **Referências**: sites reais do mesmo tipo, estudados pelo que fazem bem (para aprender, nunca para copiar).
+4. **Direção**: a ideia visual em uma frase, as letras, as fotos, as cores e o movimento.
+5. **Piloto**: o topo da página inicial, uma parte comum e o momento mais forte, no computador e no celular. Você aprova o visual.
+6. **O resto do site**, no mesmo visual.
+7. **Conferência** automática e fotos de cada página em quatro tamanhos, lidas uma a uma.
+8. **Revisão** por quatro revisores independentes, até nota 8,5.
+9. **Entrega**: a pasta do site, o arquivo para hospedar e o passo a passo para pôr no ar (GitHub Pages, Netlify ou Cloudflare Pages).
+
+## As suas pastas
+
+| Pasta | O que vai nela |
+|---|---|
+| `minha-marca/` | Cores, letras, logo e o jeito de falar da sua marca |
+| `sites/` | Uma pasta por site, com o site pronto e o arquivo para hospedar |
+| `referencias/` | Fotos, documentos, números e endereços de sites de que você gosta |
+
+Essas pastas são suas: a atualização do estúdio nunca mexe nelas.
+
+## Atualizar e desinstalar
+
+- Para atualizar, peça: "atualizar o estúdio". Ele baixa a versão nova só deste repositório, confere o arquivo e guarda a anterior.
+- Para desinstalar, peça: "desinstalar o estúdio". Ele apaga só os programas; as suas pastas ficam.
+
+## Para quem quer mexer no estúdio
+
+- Comandos: `./estudio <comando>` (no Windows, `.\estudio.cmd`). Por site: `novo`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`, `pacote`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`. A última linha de cada comando é um JSON numa linha só: `{"ok","comando","codigo","resumo","arquivos","avisos","dados"}`. Saída 0 é ok, 1 é erro, 2 é reprovado na conferência.
+- Testes: `npm test` (Node 22 ou mais novo). Os testes que precisam de navegador são pulados quando não há Chrome.
+- Instruções do assistente: a fonte é o `AGENTS.md` e `.claude/skills/`. O `CLAUDE.md` e `.agents/skills/` são gerados por `./estudio espelhar`; `./estudio espelhar --conferir` reprova se estiverem diferentes.
+- Regras do código: Node sem dependência em tempo de execução, versões fixas em `instalar/versoes.env`, sem expressão regular, página lida pelo próprio navegador (DOM via protocolo de depuração do Chrome), nunca como texto.
+
+## Licença
+
+MIT, © 2026 Autonom.ia. Veja [`LICENSE`](LICENSE) e as peças de terceiros em [`CREDITOS.md`](CREDITOS.md).
+
+A casca deste estúdio (instalador, despachante de comandos, contrato de saída, mensagens e testes de máquina limpa) veio do [Estúdio de Reels](https://github.com/autonom-ia/video-edit-autonomia), também MIT, da Autonom.ia.

@@ -1,0 +1,25 @@
+# Programas e pecas instalados (o instalador recria)
+node_modules/
+.ferramentas/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Segredos e configuracao local (o estudio nao usa nenhum)
+.env*
+.claude/settings.local.json
+
+# Pastas da pessoa: o conteudo e dela, so o LEIA-ME vem no estudio
+minha-marca/*
+!minha-marca/LEIA-ME.txt
+sites/*
+!sites/LEIA-ME.txt
+referencias/*
+!referencias/LEIA-ME.txt
+
+# Saidas geradas
+prints/
+prints-r*/
+*.zip
+*.zip.sha256

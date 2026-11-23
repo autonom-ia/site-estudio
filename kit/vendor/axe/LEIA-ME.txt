@@ -1,0 +1,6 @@
+axe-core 4.14.0 (Deque Systems), sem alteração.
+Licença: Mozilla Public License 2.0 (texto completo em LICENSE, nesta pasta).
+Origem: pacote npm axe-core@4.14.0, arquivo axe.min.js.
+O comando "acessibilidade" injeta este arquivo em cada página pelo navegador sem janela.
+Para trocar de versão: troque axe.min.js e LICENSE pelos da versão nova, atualize VERSAO
+e rode npm test (há um teste que confere a versão escrita no cabeçalho do arquivo).

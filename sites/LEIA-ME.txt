@@ -1,0 +1,18 @@
+SITES
+
+Esta pasta e sua. Cada site ganha uma pasta aqui dentro:
+
+  brief.md          o objetivo do site, para quem e e o mapa das paginas
+  fatos.md          cada numero, endereco, telefone e @ do site, com a fonte
+  referencias.md    os sites de que voce gosta e o que aprendemos com eles
+  direcao.md        a ideia visual, as letras, as cores, as fotos e o movimento
+  andamento.md      em que etapa o site esta
+  material/         fotos, logos e textos que voce mandou
+  _gerador/         as pecas que montam o site (o assistente cuida)
+  site/             o site pronto: abra o index.html
+  revisao/          as notas dos revisores e as fotos das paginas
+  <nome>-site.zip   o site empacotado, pronto para hospedar
+
+Para comecar, peca ao assistente: "quero fazer um site".
+
+A atualizacao do estudio nunca mexe nesta pasta.

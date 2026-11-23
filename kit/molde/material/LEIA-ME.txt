@@ -1,0 +1,3 @@
+Ponha aqui o material do negócio: fotos, logo, cardápio, prints do site atual e das redes.
+Este material NÃO vai para o ar. O que for usado no site é tratado e copiado para site/assets/.
+Anote em fatos.md a fonte de cada informação tirada daqui.
