@@ -253,13 +253,14 @@ export async function launch({ largura = 1920, altura = 1080, perfil = '', comJa
     } catch {}
   };
   // Se o processo do estúdio acabar, o Chrome não fica para trás (aberto e escondido; com perfil
-  // guardado, segurando o login). Perfil temporário: apaga a pasta, se o sistema já deixar.
+  // guardado, segurando o login). Perfil temporário: apaga a pasta, repetindo por alguns segundos (o
+  // Windows solta os arquivos de um processo encerrado com atraso).
   // Interrompido (Ctrl+C), só o perfil guardado: ele é o que segura o login.
   const aoSair = () => {
     matar();
     if (guardado) return;
     try {
-      fs.rmSync(pastaPerfil, { recursive: true, force: true });
+      fs.rmSync(pastaPerfil, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     } catch {}
   };
   const aoInterromper = () => {

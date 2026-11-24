@@ -26,6 +26,7 @@ import { lerFontes } from '../scripts/lib/ler.mjs';
 import { lerInstagramComLogin } from '../scripts/lib/ler-instagram-login.mjs';
 import { esperarEntrar, temLoginSalvo, abrirLeitorComLogin, sairDaConta } from '../scripts/lib/instagram-conta.mjs';
 import { lugarPadrao } from '../scripts/lib/instagram-lugar.mjs';
+import { EH_WINDOWS } from '../scripts/lib/caminhos.mjs';
 import { servirInstagramLogado, USUARIO_LOGADO, USUARIO_DESAFIO, USUARIO_SAIU, LARGURA_MAIOR, codigoDesafio } from './fixtures/instagram-logado.mjs';
 
 const SEM_NAVEGADOR = !acharNavegador();
@@ -41,6 +42,26 @@ const opcoesDoSistema = { skip: CHROME ? false : 'sem Chrome, Edge ou Chromium i
 const QUER_JANELA = process.env.ESTUDIO_TESTAR_JANELA === '1' && !process.env.CI;
 const opcoesDaJanela = { skip: CHROME && QUER_JANELA ? false : 'janela visível só com ESTUDIO_TESTAR_JANELA=1, fora do CI', timeout: 120000 };
 const DATA = '2026-11-24';
+// O Windows solta os arquivos de um processo encerrado com atraso: apagar repete por alguns segundos
+// (como o sairDaConta).
+const APAGAR_COM_ESPERA = Object.freeze({ recursive: true, force: true, maxRetries: 10, retryDelay: 500 });
+
+// Linhas "<número> <linha de comando>" dos processos do Chrome (têm --user-data-dir) cuja linha de
+// comando passa pela pasta, escrita como foi dada ou como o sistema a escreve por inteiro.
+function processosDoChromeNaPasta(pasta) {
+  const jeitos = [pasta, fs.realpathSync.native(pasta)].map((p) => (EH_WINDOWS ? p.toLowerCase() : p));
+  const opcoesDoComando = { encoding: 'utf8', windowsHide: true, timeout: 30000 };
+  const r = EH_WINDOWS
+    ? spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', "[Console]::OutputEncoding=[Text.Encoding]::UTF8; Get-CimInstance Win32_Process | ForEach-Object { [string]$_.ProcessId + ' ' + $_.CommandLine }"], opcoesDoComando)
+    : spawnSync('ps', ['-ww', '-A', '-o', 'pid=,args='], opcoesDoComando);
+  return String(r.stdout || '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => {
+      const texto = EH_WINDOWS ? l.toLowerCase() : l;
+      return texto.includes('--user-data-dir') && jeitos.some((j) => texto.includes(j));
+    });
+}
 
 describe('Instagram com login, no navegador', { timeout: TETO_DO_ARQUIVO_MS }, () => {
   let srv;
@@ -138,7 +159,7 @@ describe('Instagram com login, no navegador', { timeout: TETO_DO_ARQUIVO_MS }, (
   // Lugar do login numa pasta temporária: nunca o login de verdade.
   function lugarTemporario(t, nome) {
     const base = fs.mkdtempSync(path.join(os.tmpdir(), `estudio-ig-${nome}-`));
-    t.after(() => fs.rmSync(base, { recursive: true, force: true }));
+    t.after(() => fs.rmSync(base, APAGAR_COM_ESPERA));
     return lugarPadrao({ ESTUDIO_DADOS: path.join(base, 'dados'), ESTUDIO_FERRAMENTAS: path.join(base, 'ferr') });
   }
 
@@ -227,12 +248,19 @@ describe('Instagram com login, no navegador', { timeout: TETO_DO_ARQUIVO_MS }, (
 
   // Um caminho que esquece o navegador aberto (um erro no meio, um prazo vencido) não pode deixar o
   // estúdio vivo para sempre: o processo termina sozinho e o Chrome sai junto, com perfil temporário
-  // e com perfil guardado.
+  // e com perfil guardado. Nenhum processo do Chrome (nem os filhos: páginas, GPU, rede) fica na
+  // máquina, e o perfil temporário é apagado.
   test('Chrome esquecido aberto: o processo termina sozinho e leva o Chrome junto', opcoesDoSistema, async (t) => {
-    const lugar = lugarTemporario(t, 'esquecido');
-    fs.mkdirSync(lugar.perfil, { recursive: true });
+    const base = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-ig-esquecido-'));
+    t.after(() => fs.rmSync(base, APAGAR_COM_ESPERA));
+    const temporaria = path.join(base, 'tmp');
+    const guardado = path.join(base, 'perfil');
+    fs.mkdirSync(temporaria);
+    fs.mkdirSync(guardado);
+    // a pasta temporária do processo filho fica aqui dentro: o perfil temporário nasce nela
+    const env = { ...process.env, TMPDIR: temporaria, TEMP: temporaria, TMP: temporaria };
     const cdp = pathToFileURL(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'lib', 'cdp.mjs')).href;
-    for (const perfil of ['', lugar.perfil]) {
+    for (const perfil of ['', guardado]) {
       const script = [
         `import { launch, conectarNavegador } from ${JSON.stringify(cdp)};`,
         `const nav = await launch({ perfil: ${JSON.stringify(perfil)}, navegador: { caminho: ${JSON.stringify(CHROME.caminho)} } });`,
@@ -242,7 +270,7 @@ describe('Instagram com login, no navegador', { timeout: TETO_DO_ARQUIVO_MS }, (
         "console.log(JSON.stringify(processInfo.filter((p) => p.type === 'browser').map((p) => p.id)));",
       ].join('\n');
       const inicio = Date.now();
-      const r = spawnSync(process.execPath, ['--input-type=module', '-e', script], { encoding: 'utf8', timeout: 60000 });
+      const r = spawnSync(process.execPath, ['--input-type=module', '-e', script], { encoding: 'utf8', timeout: 60000, env });
       assert.equal(r.error, undefined, `o processo terminou sozinho (${perfil ? 'perfil guardado' : 'perfil temporário'}): ${r.stderr}`);
       assert.equal(r.status, 0, r.stderr);
       assert.ok(Date.now() - inicio < 60000);
@@ -251,6 +279,15 @@ describe('Instagram com login, no navegador', { timeout: TETO_DO_ARQUIVO_MS }, (
       const fim = Date.now() + 10000;
       while (processosVivos(principal).length && Date.now() < fim) await new Promise((res) => setTimeout(res, 100));
       assert.deepEqual(processosVivos(principal), [], 'o Chrome saiu junto com o processo');
+      // os filhos também: um filho vivo seguraria o perfil (no Windows, sem deixar apagar a pasta)
+      const pasta = perfil || temporaria;
+      let sobraram = processosDoChromeNaPasta(pasta);
+      while (sobraram.length && Date.now() < fim + 10000) {
+        await new Promise((res) => setTimeout(res, 500));
+        sobraram = processosDoChromeNaPasta(pasta);
+      }
+      assert.deepEqual(sobraram.map((l) => l.slice(0, 160)), [], 'nenhum processo do Chrome sobrou com o perfil');
+      if (!perfil) assert.deepEqual(fs.readdirSync(temporaria), [], 'o perfil temporário foi apagado');
     }
   });
 
