@@ -57,6 +57,11 @@ test('medir: texto com o centro a 0,2 px da borda da tela não vira "outro eleme
     assert.deepEqual(m.red, []);
     assert.equal(m.contraste_medido, 1, 'o rótulo foi medido noutra posição da rolagem');
     assert.equal(m.contraste_sem_medir, 0);
+    // quem chama sem o limite (borda_da_tela) mede com 1 px, e o resultado é o mesmo
+    const { borda_da_tela: _borda, ...semBorda } = LIMITES;
+    const padrao = await sessao.avaliar(medir, { ...semBorda, movel: true });
+    assert.deepEqual(padrao.warn.filter((w) => w.tipo === 'contraste-nao-medido'), []);
+    assert.equal(padrao.contraste_medido, 1);
   } finally {
     await sessao.fechar();
     fs.rmSync(pasta, { recursive: true, force: true });

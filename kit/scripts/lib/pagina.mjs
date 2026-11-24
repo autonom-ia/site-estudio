@@ -504,15 +504,16 @@ export async function medir(L) {
   const debaixoDePreso = new Set();
   // centro do texto na borda da tela: o navegador não devolve elemento nenhum ali (nem por cima)
   const naBorda = new Set();
+  const BORDA = L.borda_da_tela ?? 1; // px; quem chama sem o limite mede com 1 px
   const MIDIA = ['IMG', 'VIDEO', 'CANVAS', 'PICTURE', 'IFRAME', 'svg', 'SVG', 'OBJECT', 'EMBED'];
   const medirContraste = (it) => {
     const cx = caixasDe(it);
     if (!cx.length) return false;
     const q = cx[0];
-    const x = Math.min(vw - L.borda_da_tela, Math.max(L.borda_da_tela, (q.left + q.right) / 2));
+    const x = Math.min(vw - BORDA, Math.max(BORDA, (q.left + q.right) / 2));
     const y = (q.top + q.bottom) / 2;
-    // fora da tela, ou a menos de L.borda_da_tela px da borda: não dá para medir aqui, mede noutra posição
-    if (y < L.borda_da_tela || y > vh - L.borda_da_tela) {
+    // fora da tela, ou a menos de BORDA px da borda: não dá para medir aqui, mede noutra posição
+    if (y < BORDA || y > vh - BORDA) {
       if (y >= 0 && y < vh) naBorda.add(it);
       return false;
     }
