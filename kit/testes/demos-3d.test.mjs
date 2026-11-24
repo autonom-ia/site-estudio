@@ -137,9 +137,17 @@ test('demo 3D: conferências passam e as fotos mostram as duas cenas abertas, no
   assert.deepEqual(reduzido.json.avisos, []);
   assert.ok(reduzido.json.dados.cenas3d.every((c) => c.estado === 'reserva'));
 
+  // as conferências precisam aprovar de fato (nenhum vermelho), não só terminar sem erro;
+  // o medir reprova página que rola para o lado, então isto também cobre o celular de 390 px
   const acess = estudio('acessibilidade', 'demo');
   assert.equal(acess.codigo, 0, JSON.stringify(acess.json && acess.json.dados));
-  assert.equal(estudio('medir', 'demo').codigo, 0);
+  assert.equal(acess.json.ok, true);
+  assert.deepEqual(acess.json.dados.vermelhos, []);
+  const med = estudio('medir', 'demo');
+  assert.equal(med.codigo, 0, JSON.stringify(med.json && med.json.dados && med.json.dados.vermelhos));
+  assert.equal(med.json.ok, true);
+  assert.deepEqual(med.json.dados.vermelhos, []);
+  assert.ok(med.json.dados.tamanhos.includes(390), JSON.stringify(med.json.dados.tamanhos));
   // o checar só reprova porque a demo é do negócio fictício (molde: true), e nunca por erro ou peso
   const ch = estudio('checar', 'demo');
   assert.deepEqual([...new Set(ch.json.dados.vermelhos.map((v) => v.tipo))], ['resto-do-molde']);
@@ -236,7 +244,9 @@ test('o configurador funciona só com o teclado, e a escolha é dita e levada ao
     const resumo = 'Caramanhola azul quadro, brilhante, com faixa refletiva.';
     assert.equal(await ler(`document.querySelector('[data-3d-resumo]').textContent`), resumo);
     assert.equal(await ler(`document.querySelector('[data-3d-resumo]').getAttribute('aria-live')`), 'polite');
-    assert.equal(await ler(`document.getElementById('caramanhola').getAttribute('aria-label')`), resumo);
+    // o leitor de tela ouve a escolha uma vez só: pelo resumo; o palco tem um nome fixo
+    assert.equal(await ler(`document.getElementById('caramanhola').getAttribute('aria-label')`), 'A caramanhola com a escolha feita');
+    assert.equal(await ler(`document.querySelectorAll('.configurador [aria-live]').length`), 1);
     const href = await ler(`document.querySelector('[data-3d-pedido]').getAttribute('href')`);
     assert.ok(href.endsWith(encodeURIComponent(`Olá! Quero esta: ${resumo}`)), href);
     // a imagem de reserva acompanha a escolha só com CSS
@@ -244,5 +254,95 @@ test('o configurador funciona só com o teclado, e a escolha é dita e levada ao
     assert.deepEqual(s.errosJs(), []);
   } finally {
     await s.fechar();
+  }
+});
+
+// Conta os desenhos WebGL (o molde tem outros laços de quadro, de rolagem e de animação, que não
+// interessam aqui): com a cena parada, a conta não sobe.
+const CONTAR_QUADROS = "(() => { window.__quadros = 0; for (const C of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) { if (!C) continue; for (const m of ['drawArrays', 'drawElements']) { const o = C.prototype[m]; C.prototype[m] = function (...a) { window.__quadros += 1; return o.apply(this, a); }; } } })();";
+const quadros = (s) => s.tab.evaluate('window.__quadros');
+const semRolarDeLado = (s) => s.tab.evaluate('document.documentElement.scrollWidth <= innerWidth');
+
+test('a caramanhola gira sozinha só nos primeiros segundos; o mouse só pega a cena pronta; parar solta tudo', opcoes, async () => {
+  if (!fs.existsSync(path.join(base, 'demo'))) assert.equal(estudio('novo', 'demo', '--demo', '3d').codigo, 0);
+  const s = await abrirSessao(path.join(base, 'demo', 'site'), { tamanho: CELULAR });
+  try {
+    await s.tab.send('Page.addScriptToEvaluateOnNewDocument', { source: CONTAR_QUADROS });
+    await s.ir(s.url('index.html'));
+    assert.equal(await semRolarDeLado(s), true, 'a página de abertura rola para o lado em 390 px');
+    await s.ir(s.url('monte/'));
+    assert.equal(await semRolarDeLado(s), true, 'a página do configurador rola para o lado em 390 px');
+    const canvas = `document.querySelector('#caramanhola > canvas')`;
+    await irAoPalco(s);
+    assert.ok(await esperarEstado(s, 'pronta'), `ficou em ${await estado(s)}`);
+    assert.equal(await s.tab.evaluate(`getComputedStyle(${canvas}).pointerEvents`), 'auto');
+    // girando: os quadros sobem
+    const a = await quadros(s);
+    await esperar(600);
+    assert.ok((await quadros(s)) > a + 5, 'a peça não está girando logo depois de abrir');
+    // depois de ~5 s (WCAG 2.2.2), para sozinha: nenhum quadro novo
+    await esperar(5200);
+    const b = await quadros(s);
+    await esperar(800);
+    assert.equal(await quadros(s), b, 'a peça continua girando sozinha depois de 5 s');
+    // uma escolha acorda a cena para a troca de cor, que acaba e dorme de novo
+    await s.tab.evaluate(`(() => { const i = document.querySelector('input[name="cor"][value="azul"]'); i.checked = true; i.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+    await esperar(150);
+    assert.ok((await quadros(s)) > b, 'a escolha não acordou a cena');
+    await esperar(800);
+    const c = await quadros(s);
+    await esperar(500);
+    assert.equal(await quadros(s), c, 'depois da troca, a cena não voltou a dormir');
+
+    // parar: tira o canvas, volta a reserva e solta os ouvintes (escolher não pede mais quadro)
+    await s.tab.evaluate(`window.Cena3D.cenaDo(document.getElementById('caramanhola')).parar()`);
+    assert.equal(await s.tab.evaluate(`${canvas} === null`), true);
+    assert.equal(await estado(s), 'reserva');
+    assert.equal(await s.tab.evaluate(`document.getElementById('caramanhola').getAttribute('data-3d-motivo')`), 'parada');
+    assert.equal(await s.tab.evaluate(`window.Cena3D.cenaDo(document.getElementById('caramanhola'))`), null);
+    const d = await quadros(s);
+    await s.tab.evaluate(`(() => { const i = document.querySelector('input[name="cor"][value="concreto"]'); i.checked = true; i.dispatchEvent(new Event('change', { bubbles: true })); window.dispatchEvent(new Event('resize')); })()`);
+    await esperar(800); // e a reserva termina de aparecer (transição de 0,5 s)
+    assert.equal(await quadros(s), d, 'a cena parada ainda responde a escolhas');
+    assert.equal(await s.tab.evaluate(`getComputedStyle(document.querySelector('#caramanhola .palco-3d__reserva')).opacity`), '1');
+    assert.deepEqual(s.errosJs(), []);
+  } finally {
+    await s.fechar();
+  }
+});
+
+test('falha no 3D não some calada: desenho que não compila e montagem que quebra no meio voltam à reserva e avisam', opcoes, async () => {
+  if (!fs.existsSync(path.join(base, 'demo'))) assert.equal(estudio('novo', 'demo', '--demo', '3d').codigo, 0);
+  const site = path.join(base, 'demo', 'site');
+  const casos = [
+    {
+      nome: 'desenho que não compila',
+      injetar: '(() => { for (const C of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) { if (!C) continue; const o = C.prototype.getShaderParameter; C.prototype.getShaderParameter = function (sh, p) { return p === this.COMPILE_STATUS ? false : o.call(this, sh, p); }; } })();',
+      erro: 'Site Estúdio 3D: o desenho não compilou (caramanhola)',
+    },
+    {
+      nome: 'montagem que quebra depois de criar a cena',
+      injetar: "(() => { let guardado; Object.defineProperty(window, 'Cena3D', { configurable: true, get() { return guardado; }, set(v) { if (v && v.formas) v.formas.torno = () => { throw new Error('quebrou de propósito'); }; guardado = v; } }); })();",
+      erro: 'Site Estúdio 3D: a cena "caramanhola" não abriu: quebrou de propósito',
+    },
+  ];
+  for (const caso of casos) {
+    const s = await abrirSessao(site, { tamanho: CELULAR });
+    try {
+      await s.tab.send('Page.addScriptToEvaluateOnNewDocument', { source: caso.injetar });
+      await s.ir(s.url('monte/'));
+      await irAoPalco(s);
+      const fim = Date.now() + 15000;
+      while (Date.now() < fim && (await s.tab.evaluate(`document.getElementById('caramanhola').getAttribute('data-3d-motivo')`)) !== 'falhou') await esperar(100);
+      assert.equal(await estado(s), 'reserva', caso.nome);
+      assert.equal(await s.tab.evaluate(`document.getElementById('caramanhola').getAttribute('data-3d-motivo')`), 'falhou', caso.nome);
+      assert.equal(await s.tab.evaluate(`document.querySelector('#caramanhola > canvas') === null`), true, `${caso.nome}: o canvas ficou`);
+      assert.ok(s.errosJs().some((e) => e.startsWith(`console.error: ${caso.erro}`)), `${caso.nome}: ${JSON.stringify(s.errosJs())}`);
+      // as escolhas seguem funcionando sem o 3D
+      await s.tab.evaluate(`(() => { const i = document.querySelector('input[name="cor"][value="azul"]'); i.checked = true; i.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+      assert.ok((await s.tab.evaluate(`document.querySelector('[data-3d-resumo]').textContent`)).includes('azul'), caso.nome);
+    } finally {
+      await s.fechar();
+    }
   }
 });

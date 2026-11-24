@@ -72,9 +72,9 @@
     var ler = function () { alvo.rola = -window.scrollY * ROLAR; };
     ler();
     atual.rola = alvo.rola;
-    window.addEventListener('scroll', function () { ler(); cena.acordar(); }, { passive: true });
+    cena.ouvir(window, 'scroll', function () { ler(); cena.acordar(); }, { passive: true });
     // ponteiro de mouse ou caneta: a roda olha um pouco para ele (no toque, fica no repouso)
-    window.addEventListener('pointermove', function (e) {
+    cena.ouvir(window, 'pointermove', function (e) {
       if (e.pointerType === 'touch') return;
       var x = e.clientX / window.innerWidth - 0.5;
       var y = e.clientY / window.innerHeight - 0.5;

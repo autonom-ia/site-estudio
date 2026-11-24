@@ -9,9 +9,9 @@
 .palco-3d { position: relative; isolation: isolate; }
 .palco-3d > canvas {
   position: absolute; inset: 0; z-index: 1; display: block; width: 100%; height: 100%;
-  opacity: 0; transition: opacity .5s ease; touch-action: pan-y;
+  opacity: 0; transition: opacity .5s ease; touch-action: pan-y; pointer-events: none;
 }
-.palco-3d[data-3d-estado="pronta"] > canvas { opacity: 1; }
+.palco-3d[data-3d-estado="pronta"] > canvas { opacity: 1; pointer-events: auto; }
 .palco-3d__reserva { display: block; width: 100%; height: 100%; transition: opacity .5s ease; }
 .palco-3d[data-3d-estado="pronta"] > .palco-3d__reserva { opacity: 0; }
 

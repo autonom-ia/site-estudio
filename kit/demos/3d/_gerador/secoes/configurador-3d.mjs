@@ -166,7 +166,7 @@ export default function configurador3d({ esc, assets }) {
       </h1>
       <p class="configurador__lide">${esc('Escolha a cor, o acabamento e a faixa: a peça muda na hora. Arraste a caramanhola para ver o outro lado.')}</p>
     </div>
-    <div class="configurador__palco palco-3d" id="caramanhola" data-3d="caramanhola" data-3d-estado="reserva" role="img" aria-label="${esc(resumoInicial)}"
+    <div class="configurador__palco palco-3d" id="caramanhola" data-3d="caramanhola" data-3d-estado="reserva" role="img" aria-label="A caramanhola com a escolha feita"
       data-3d-perfil="${esc(JSON.stringify(CORPO))}" data-3d-tampa="${esc(JSON.stringify(TAMPA))}" data-3d-faixa="${esc(JSON.stringify(FAIXA))}" data-3d-emblema="${esc(JSON.stringify(EMBLEMA))}">
       ${caramanholaDeReserva()}
     </div>

@@ -330,13 +330,21 @@
     } catch (e) {
       gl = null;
     }
-    if (!gl) return null;
+    if (!gl) {
+      palco.setAttribute('data-3d-motivo', 'sem-webgl');
+      return null;
+    }
     var p3d;
     var pSombra;
     try {
       p3d = programa(gl, VERTICE, FRAGMENTO);
       pSombra = programa(gl, VERTICE_SOMBRA, FRAGMENTO_SOMBRA);
     } catch (e) {
+      // não some calado: o checar mostra como erro-de-script, e a reserva fica no lugar
+      palco.setAttribute('data-3d-motivo', 'falhou');
+      console.error('Site Estúdio 3D: o desenho não compilou (' + palco.getAttribute('data-3d') + '): ' + (e && e.message));
+      var perder = gl.getExtension('WEBGL_lose_context');
+      if (perder) perder.loseContext();
       return null;
     }
     var canto = gl.createBuffer();
@@ -453,6 +461,7 @@
       if (!cena.desenhada) {
         cena.desenhada = true;
         palco.setAttribute('data-3d-estado', 'pronta');
+        palco.removeAttribute('data-3d-motivo');
       }
     };
 
@@ -478,41 +487,66 @@
       if (pedido || !naTela || cena.perdida || document.visibilityState === 'hidden') return;
       pedido = requestAnimationFrame(passo);
     };
-    cena.parar = function () {
+    // Todo ouvinte da cena (rolagem, ponteiro, escolhas) entra por aqui: parar() tira todos.
+    var ouvidos = [];
+    var vigias = [];
+    cena.ouvir = function (alvo, evento, fn, op) {
+      alvo.addEventListener(evento, fn, op);
+      ouvidos.push([alvo, evento, fn, op]);
+    };
+    // Para de vez: solta o desenho, tira o canvas, os vigias e os ouvintes; a reserva volta.
+    cena.parar = function (motivo) {
       if (pedido) cancelAnimationFrame(pedido);
       pedido = 0;
       cena.perdida = true;
+      vigias.forEach(function (v) { v.disconnect(); });
+      vigias = [];
+      ouvidos.forEach(function (o) { o[0].removeEventListener(o[1], o[2], o[3]); });
+      ouvidos = [];
       palco.setAttribute('data-3d-estado', 'reserva');
+      palco.setAttribute('data-3d-motivo', motivo || 'parada');
       var ext = gl.getExtension('WEBGL_lose_context');
       if (ext) ext.loseContext();
       if (tela.parentNode) tela.parentNode.removeChild(tela);
+      criadas.delete(palco);
     };
 
     if ('IntersectionObserver' in window) {
-      new IntersectionObserver(function (entradas) {
+      var naVista = new IntersectionObserver(function (entradas) {
         naTela = entradas[entradas.length - 1].isIntersecting;
         if (naTela) cena.acordar();
-      }).observe(palco);
+      });
+      naVista.observe(palco);
+      vigias.push(naVista);
     }
-    document.addEventListener('visibilitychange', function () { cena.acordar(); });
+    cena.ouvir(document, 'visibilitychange', function () { cena.acordar(); });
     // Tamanho novo: desenha na hora (trocar o tamanho apaga a imagem, e a foto pode vir antes do quadro seguinte).
     if ('ResizeObserver' in window) {
-      new ResizeObserver(function () {
+      var medida = new ResizeObserver(function () {
         if (cena.ajustar()) cena.desenhar();
-      }).observe(tela);
+      });
+      medida.observe(tela);
+      vigias.push(medida);
     }
-    tela.addEventListener('webglcontextlost', function (e) {
+    cena.ouvir(tela, 'webglcontextlost', function (e) {
       e.preventDefault();
-      cena.perdida = true;
-      palco.setAttribute('data-3d-estado', 'reserva');
+      cena.parar('desenho-perdido');
     });
 
     palco.appendChild(tela);
+    criadas.set(palco, cena);
     return cena;
+  }
+
+  // A cena criada em cada palco (o carregador para a cena se a montagem falhar no meio).
+  var criadas = new WeakMap();
+  function cenaDo(palco) {
+    return criadas.get(palco) || null;
   }
 
   window.Cena3D = {
     criar: criar,
+    cenaDo: cenaDo,
     cenas: (window.Cena3D && window.Cena3D.cenas) || {},
     formas: { torno: torno, tubo: tubo, anel: anel, juntar: juntar },
     matriz: { identidade: identidade, compor: compor, girarX: girarX, girarY: girarY, girarZ: girarZ, mover: mover },

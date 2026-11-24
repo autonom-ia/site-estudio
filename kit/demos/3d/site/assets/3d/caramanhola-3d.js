@@ -8,7 +8,9 @@
 (function () {
   'use strict';
   var GIRO_SOZINHO = 0.22; // radianos por segundo: um giro lento, que mostra o volume
-  var VOLTA_A_GIRAR_MS = 2500; // depois de soltar, espera antes de voltar a girar sozinho
+  // Gira sozinha só nos primeiros segundos (mostra que é 3D) e para: movimento que ninguém pediu
+  // não passa de 5 s (WCAG 2.2.2). Depois, só gira quando a pessoa arrasta.
+  var GIRO_SOZINHO_MS = 4500;
   var TROCA_MS = 320; // duração da troca de cor e de acabamento
 
   function lerJson(texto, reserva) {
@@ -59,7 +61,7 @@
     var tampa = lerJson(palco.getAttribute('data-3d-tampa'), null);
     var faixa = lerJson(palco.getAttribute('data-3d-faixa'), null);
     var marca = lerJson(palco.getAttribute('data-3d-emblema'), null);
-    if (!form || !perfil || !tampa || !faixa || !marca) return null;
+    if (!form || !perfil || !tampa || !faixa || !marca) throw new Error('faltam os dados da peça no palco (data-3d-perfil, -tampa, -faixa, -emblema) ou o formulário de escolhas');
     var cena = C.criar(palco, { fov: 0.5 });
     if (!cena) return null;
 
@@ -99,7 +101,7 @@
       tira.visivel = alvo.faixa;
       cena.acordar();
     }
-    form.addEventListener('change', lerEscolha);
+    cena.ouvir(form, 'change', lerEscolha);
     lerEscolha();
     atual.cor = alvo.cor;
     atual.brilho = alvo.brilho;
@@ -110,14 +112,14 @@
     var angulo = -0.5;
     var inclinacao = 0;
     var arrastando = null;
-    var soltouEm = 0;
+    var inicio = performance.now();
     var ultimo = 0;
-    cena.tela.addEventListener('pointerdown', function (e) {
+    cena.ouvir(cena.tela, 'pointerdown', function (e) {
       arrastando = { x: e.clientX, y: e.clientY, angulo: angulo, inclinacao: inclinacao };
       cena.tela.setPointerCapture(e.pointerId);
       cena.acordar();
     });
-    cena.tela.addEventListener('pointermove', function (e) {
+    cena.ouvir(cena.tela, 'pointermove', function (e) {
       if (!arrastando) return;
       angulo = arrastando.angulo + (e.clientX - arrastando.x) * 0.012;
       inclinacao = Math.max(-0.35, Math.min(0.35, arrastando.inclinacao + (e.clientY - arrastando.y) * 0.006));
@@ -125,16 +127,16 @@
     });
     var soltar = function () {
       arrastando = null;
-      soltouEm = performance.now();
       cena.acordar();
     };
-    cena.tela.addEventListener('pointerup', soltar);
-    cena.tela.addEventListener('pointercancel', soltar);
+    cena.ouvir(cena.tela, 'pointerup', soltar);
+    cena.ouvir(cena.tela, 'pointercancel', soltar);
 
     cena.animar(function (t) {
       var dt = ultimo ? Math.min(0.05, (t - ultimo) / 1000) : 0;
       ultimo = t;
-      if (!arrastando && t - soltouEm > VOLTA_A_GIRAR_MS) angulo += GIRO_SOZINHO * dt;
+      var girando = !arrastando && t - inicio < GIRO_SOZINHO_MS;
+      if (girando) angulo += GIRO_SOZINHO * dt;
       if (!arrastando) inclinacao *= 0.92;
       if (troca) {
         var k = Math.min(1, (t - troca.inicio) / TROCA_MS);
@@ -154,7 +156,8 @@
       tira.matriz = m;
       gravada.matriz = m;
       bancada.matriz = C.matriz.mover(0, -meio, 0);
-      return true;
+      // parada (sem giro, sem arrasto, sem troca), a cena dorme até a próxima escolha
+      return girando || Boolean(arrastando) || troca !== null || Math.abs(inclinacao) > 0.001;
     });
     return cena;
   }

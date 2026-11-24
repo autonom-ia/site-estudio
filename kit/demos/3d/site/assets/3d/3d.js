@@ -6,6 +6,8 @@
    Atributos:
      data-3d="<nome>"             o palco; baixa assets/3d/<nome>-3d.js (só letras minúsculas, números e hífen)
      data-3d-estado               reserva (imagem parada) | carregando | pronta (cena desenhada)
+     data-3d-motivo               por que ficou na reserva: reduzir-movimento | sem-webgl | falhou |
+                                  desenho-perdido | parada (sem motivo e na reserva = ainda não começou)
      data-3d-opcoes               o grupo de escolhas (um <form> com botões de rádio)
      data-3d-resumo               onde a escolha aparece escrita (com aria-live)
      data-3d-pedido               o link que leva a escolha (data-texto com {escolha}) */
@@ -43,8 +45,6 @@
       if (corte === -1) return;
       a.setAttribute('href', href.slice(0, corte) + '?text=' + encodeURIComponent(modelo.split('{escolha}').join(texto)));
     });
-    var palco = document.getElementById(alvo);
-    if (palco) palco.setAttribute('aria-label', texto);
   }
 
   document.querySelectorAll('[data-3d-opcoes]').forEach(function (form) {
@@ -62,9 +62,26 @@
     for (var i = 0; i < n.length; i += 1) if (PERMITIDOS.indexOf(n[i]) === -1) return false;
     return true;
   };
-  var marcar = function (p, estado) { p.setAttribute('data-3d-estado', estado); };
+  var marcar = function (p, estado, motivo) {
+    p.setAttribute('data-3d-estado', estado);
+    if (motivo) p.setAttribute('data-3d-motivo', motivo);
+  };
   palcos.forEach(function (p) { if (!p.hasAttribute('data-3d-estado')) marcar(p, 'reserva'); });
-  if ((reduzir && reduzir.matches) || !('IntersectionObserver' in window) || !window.WebGLRenderingContext) return;
+  if (reduzir && reduzir.matches) {
+    palcos.forEach(function (p) { marcar(p, 'reserva', 'reduzir-movimento'); });
+    return;
+  }
+  if (!('IntersectionObserver' in window) || !window.WebGLRenderingContext) {
+    palcos.forEach(function (p) { marcar(p, 'reserva', 'sem-webgl'); });
+    return;
+  }
+  // a montagem falhou no meio: avisa no console (o checar mostra) e devolve a reserva
+  var falhou = function (palco, erro) {
+    console.error('Site Estúdio 3D: a cena "' + palco.getAttribute('data-3d') + '" não abriu: ' + ((erro && erro.message) || erro));
+    var feita = window.Cena3D && window.Cena3D.cenaDo ? window.Cena3D.cenaDo(palco) : null;
+    if (feita) feita.parar('falhou');
+    marcar(palco, 'reserva', 'falhou');
+  };
 
   var baixados = {};
   function baixar(arquivo) {
@@ -90,21 +107,29 @@
       .then(function () { return baixar(nome + '-3d.js'); })
       .then(function () {
         var montar = window.Cena3D && window.Cena3D.cenas[nome];
+        if (!montar) {
+          falhou(palco, 'a cena não se registrou em ' + nome + '-3d.js');
+          return;
+        }
         var cena = null;
         try {
-          cena = montar ? montar(palco, window.Cena3D) : null;
+          cena = montar(palco, window.Cena3D);
         } catch (e) {
-          cena = null;
+          falhou(palco, e);
+          return;
         }
         if (!cena) {
-          marcar(palco, 'reserva');
+          // sem WebGL (ou o desenho não compilou, já avisado pelo motor): a reserva fica
+          var feita = window.Cena3D.cenaDo(palco);
+          if (feita) feita.parar('falhou');
+          marcar(palco, 'reserva', palco.getAttribute('data-3d-motivo') || 'sem-webgl');
           return;
         }
         cenas.push(cena);
         // "pronta" só depois do primeiro quadro desenhado (o motor marca ao desenhar)
         if (palco.getAttribute('data-3d-estado') !== 'pronta') cena.desenhar();
       })
-      .catch(function () { marcar(palco, 'reserva'); });
+      .catch(function (e) { falhou(palco, e || 'não baixou'); });
   }
 
   var vigia = new IntersectionObserver(function (entradas) {
@@ -121,8 +146,8 @@
     reduzir.addEventListener('change', function () {
       if (!reduzir.matches) return;
       vigia.disconnect();
-      cenas.forEach(function (c) { c.parar(); });
-      palcos.forEach(function (p) { marcar(p, 'reserva'); });
+      cenas.forEach(function (c) { c.parar('reduzir-movimento'); });
+      palcos.forEach(function (p) { marcar(p, 'reserva', 'reduzir-movimento'); });
     });
   }
 })();
