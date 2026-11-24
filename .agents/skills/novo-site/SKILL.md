@@ -86,12 +86,13 @@ Mostre o brief à pessoa em texto corrido e curto (objetivo, ação principal, a
 
 ## Etapa 3. Referências reais (princípio, não cópia)
 
-O estúdio traz um repertório de 40 sites reais, separados pelo que quem visita quer fazer. Leia `kit/repertorio/como-usar.md` e siga. Em resumo:
+O estúdio traz um repertório de 42 sites reais, separados pelo que quem visita quer fazer. Leia `kit/repertorio/como-usar.md` e siga. Em resumo:
 
 1. **A escolha parte da ação principal do brief e da dúvida que a página resolve** ("o que quem chega precisa saber, ou ver, para fazer isso?"). O ramo do negócio é só contexto, nunca o critério.
 2. Abra só o arquivo da ação (`kit/repertorio/<ação>.json`), pela tabela "Da ação do brief ao arquivo" do `como-usar.md`. Ligar e chamar no WhatsApp são o canal: a tabela leva à dúvida que vem antes do contato. Compare a dúvida de cada ficha com a do brief, pelo sentido. Escolha 2 ou 3 fichas, com pelo menos **2 de outro ramo**: é delas que vem a ideia que o ramo ainda não usa.
-3. **Confira ao vivo só as escolhidas**: abra o endereço de cada uma, siga o `ondeVer` da ficha até a parte da página onde o princípio aparece e veja se ele ainda está lá. O princípio mudou: troque por outra ficha. Site que recusa leitura automática (acesso negado, tela de verificação) não saiu do ar: use o navegador do seu programa ou troque de ficha, como diz o `como-usar.md`, sem anotar conferência que não aconteceu. Nunca abra as 40.
+3. **Confira ao vivo só as escolhidas**: abra o endereço de cada uma, siga o `ondeVer` da ficha até a parte da página onde o princípio aparece e veja se ele ainda está lá. O princípio mudou: troque por outra ficha. Site que recusa leitura automática (acesso negado, tela de verificação) não saiu do ar: use o navegador do seu programa ou troque de ficha, como diz o `como-usar.md`, sem anotar conferência que não aconteceu. Nunca abra todas.
 4. Some as referências que a pessoa indicou, no mesmo formato.
+5. **3D só com prova e com limite.** Ficha com jeito `configurador-3d` ou `marca-em-3d` só entra quando o brief tem a peça (produto de forma simples com opções) ou a forma da marca, e quando ver de vários lados ajuda a decidir. Siga "3D: só com prova e com limite" do `como-usar.md`, inclusive o "Quando não usar". Para ver e mostrar como fica, `./estudio novo <nome> --demo 3d` cria o exemplo com as duas demos.
 
 Escreva em `referencias.md` (a tabela do molde), para cada uma: o endereço, o ramo, o **motivo** (a dúvida que ela resolve e por que serve a este brief), o princípio em uma frase, **como fazemos aqui** (o jeito do repertório, adaptado a este negócio), **como fica no celular**, a data em que você conferiu ao vivo e, se trocou de ficha, a **observação** (como "trocada: o site recusa leitura automática"). Diga à pessoa, em uma ou duas frases e sem nome técnico, que ideia vai aproveitar e de onde ela veio.
 
@@ -151,6 +152,7 @@ Pergunte: "É esse o visual?" com "É esse ★", "Quero mudar algo". Ajuste até
 Faça as outras partes e páginas seguindo o mapa do brief, no mesmo idioma visual do piloto. Copie a anatomia das partes do piloto, não as do molde.
 - Uma parte por arquivo; página nova é uma entrada nova em `ordem.mjs` (ela vira `site/<pagina>/index.html`).
 - Depois de cada página, rode `montar`, `checar` e `medir`, e corrija os vermelhos antes de seguir.
+- Parte com 3D: parta da demo de `kit/demos/3d/` (seção e `site/assets/3d/`), com a imagem de reserva, o carregamento perto da tela e o limite de peso do `como-usar.md` ("3D: só com prova e com limite"). O `checar` reprova acima do limite (`3d-pesado`).
 - Se uma parte pedir algo que o brief não previu (preço novo, serviço novo, depoimento), pare e pergunte à pessoa; atualize o brief e o `fatos.md`.
 
 ## Etapa 7. Preflight
@@ -164,7 +166,7 @@ Rode também `./estudio desempenho <nome>` (`DESEMPENHO_MEDIDO`, números em `da
 
 ## Etapa 8. Fotos lidas
 
-`./estudio prints <nome>` de novo, depois do preflight. Abra **todas** as fotos, uma a uma: todas as páginas, nos quatro tamanhos, inteiras e por parte. Para cada página e tamanho, escreva no `andamento.md` uma linha: "<página> <largura>: ok" ou o problema e o que você corrigiu. Corrigiu algo: monte, rode o `preflight` e as fotos de novo. Nunca declare pronto pelas fotos que você não abriu.
+`./estudio prints <nome>` de novo, depois do preflight. Abra **todas** as fotos, uma a uma: todas as páginas, nos quatro tamanhos, inteiras e por parte. Para cada página e tamanho, escreva no `andamento.md` uma linha: "<página> <largura>: ok" ou o problema e o que você corrigiu. Corrigiu algo: monte, rode o `preflight` e as fotos de novo. Nunca declare pronto pelas fotos que você não abriu. Parte em 3D: as fotos esperam a cena abrir; `CENA_3D_NAO_ABRIU` ou `CENA_3D_VAZIA` se corrigem antes de seguir, e `./estudio prints <nome> --reduzido` mostra a imagem de reserva.
 
 ## Etapa 9. Revisão
 

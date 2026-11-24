@@ -76,6 +76,21 @@
       },
       "noCelular": "Amostras redondas de 44 px ou mais, numa linha que desliza logo abaixo da foto.",
       "naoTrazer": "Planta do ambiente e o catálogo enorme deles."
+    },
+    {
+      "id": "lamborghini-configurador",
+      "nome": "Lamborghini Car Configurator",
+      "link": "https://configurator.lamborghini.com/",
+      "ondeVer": "Na entrada, escolha um modelo e comece a montar (Start configuration): o carro ocupa a tela e os grupos de escolha (pintura, rodas, teto) abrem ao lado.",
+      "ramo": "carros esportivos",
+      "duvida": "Como fica o carro com a cor e as rodas que eu escolher, visto de verdade?",
+      "principio": "A peça ocupa o palco e cada grupo de escolha abre ao lado dela, então a pessoa vê cada troca na própria peça, sem sair da página.",
+      "comoFazemosAqui": {
+        "padrao": "configurador-3d",
+        "texto": "Uma peça simples em 3D, como a caramanhola da demo kit/demos/3d: cor, acabamento e um opcional em botões, a peça muda na hora e a escolha escrita vai para o WhatsApp."
+      },
+      "noCelular": "A peça no alto, em formato retrato, e as escolhas logo abaixo em botões grandes; arrastar com o dedo gira a peça.",
+      "naoTrazer": "Carro inteiro em 3D, interior e cenário: pesam demais para um site sem servidor. Aqui, uma peça simples, dentro do limite de peso do estúdio."
     }
   ]
 }
