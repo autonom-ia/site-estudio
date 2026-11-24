@@ -143,3 +143,64 @@ export function repeticoes(L) {
   }
   return lista.slice(0, L.maximo);
 }
+
+// Pedido montado na página (kit/pecas/pedido.js): confere o HTML como chegou do gerador, antes de
+// qualquer script rodar (é o que quem abre sem JavaScript recebe). Lê a página de novo pela rede e
+// abre com DOMParser, que não executa nada.
+// RED: pedido-sem-whatsapp (data-whatsapp sem dígito), pedido-link-quebrado (botão que não leva ao
+// WhatsApp do pedido, ou com a mensagem vazia ou sem codificar), pedido-opcao-sem-valor (item sem
+// nome em data-item, ou caixa de marcar/rádio de campo sem data-valor), pedido-fala-a-cada-letra
+// (aria-live no resumo da mensagem). WARN: pedido-opcao-marcada (opção que já vem marcada: só com
+// um fato com fonte que a sustente).
+export async function pedidos() {
+  const red = [];
+  const warn = [];
+  if (!document.querySelector('form[data-pedido]')) return { red, warn };
+  let bruto;
+  try {
+    const resposta = await fetch(location.href, { cache: 'no-store' });
+    bruto = new DOMParser().parseFromString(await resposta.text(), 'text/html');
+  } catch (e) {
+    return { red, warn: [{ tipo: 'pedido-nao-conferido', detalhe: `não deu para reler a página: ${String(e.message || e).slice(0, 120)}` }] };
+  }
+  const digitos = (t) => {
+    let s = '';
+    for (const ch of String(t || '')) if (ch >= '0' && ch <= '9') s += ch;
+    return s;
+  };
+  const bemCodificado = (t) => {
+    try {
+      return encodeURIComponent(decodeURIComponent(t)) === t;
+    } catch (e) {
+      return false;
+    }
+  };
+  bruto.querySelectorAll('form[data-pedido]').forEach((form, i) => {
+    const qual = form.id ? `pedido #${form.id}` : `pedido ${i + 1}`;
+    const numero = digitos(form.getAttribute('data-whatsapp'));
+    if (!numero) red.push({ tipo: 'pedido-sem-whatsapp', detalhe: `${qual}: falta o número do WhatsApp (data-whatsapp, com país e DDD)` });
+    const botao = form.querySelector('a[data-pedido-enviar]');
+    if (!botao) red.push({ tipo: 'pedido-link-quebrado', detalhe: `${qual}: falta o botão de enviar (a com data-pedido-enviar) dentro do formulário` });
+    else if (numero) {
+      const href = botao.getAttribute('href') || '';
+      const inicio = `https://wa.me/${numero}?text=`;
+      const texto = href.startsWith(inicio) ? href.slice(inicio.length) : null;
+      if (texto === null) red.push({ tipo: 'pedido-link-quebrado', detalhe: `${qual}: o botão não leva ao WhatsApp ${numero} com a mensagem pronta (use whatsapp() do gerador)` });
+      else if (!texto) red.push({ tipo: 'pedido-link-quebrado', detalhe: `${qual}: o botão leva a mensagem vazia` });
+      else if (!bemCodificado(texto)) red.push({ tipo: 'pedido-link-quebrado', detalhe: `${qual}: a mensagem do botão não está codificada e se corta sem JavaScript (use whatsapp() do gerador)` });
+    }
+    form.querySelectorAll('[data-item]').forEach((el) => {
+      if (!el.getAttribute('data-item').trim()) red.push({ tipo: 'pedido-opcao-sem-valor', detalhe: `${qual}: item sem nome em data-item` });
+    });
+    form.querySelectorAll('input[type="checkbox"][data-campo], input[type="radio"][data-campo]').forEach((el) => {
+      if (!(el.getAttribute('data-valor') || '').trim()) red.push({ tipo: 'pedido-opcao-sem-valor', detalhe: `${qual}: opção de "${el.getAttribute('data-campo')}" sem data-valor (a mensagem diria "on")` });
+    });
+    const resumo = form.querySelector('[data-pedido-mensagem]');
+    if (resumo && resumo.closest('[aria-live]')) red.push({ tipo: 'pedido-fala-a-cada-letra', detalhe: `${qual}: o resumo da mensagem está numa região viva (aria-live); quem fala é o data-pedido-aviso com role="status"` });
+    form.querySelectorAll('input[checked]').forEach((el) => {
+      const nome = el.getAttribute('data-item') || el.getAttribute('data-valor') || el.getAttribute('data-campo') || el.name || 'opção';
+      warn.push({ tipo: 'pedido-opcao-marcada', detalhe: `${qual}: "${nome}" já vem marcada; só com um fato com fonte que sustente a escolha` });
+    });
+  });
+  return { red, warn };
+}

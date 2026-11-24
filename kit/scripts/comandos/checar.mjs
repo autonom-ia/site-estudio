@@ -1,27 +1,54 @@
 // Confere a estrutura de todas as páginas do site, lendo pelo DOM do Chrome (não por texto):
-// RED (reprova, saída 2): endereço externo carregado (CDN), vendor ausente, fonte que não carrega,
+// RED (reprova, saída 2): endereço externo carregado (CDN), vendor que a ordem carrega e falta, fonte que não carrega,
 // mídia ausente, link interno morto (inclusive âncora), sem <title>, sem description, sem lang,
 // sem exatamente um <h1>, <select> nativo, travessão no texto visível, erro de JavaScript e
 // resto-do-molde (elemento com data-molde: texto do negócio fictício que ainda não foi trocado).
 // WARN: og:image relativa, JSON-LD que não abre, fonte usada que não foi declarada, link com o
 // mesmo texto 4 vezes ou mais (link-repetido) e a mesma frase 3 vezes ou mais (frase-repetida).
+// Pedido montado na página (lib/pagina-leitura.mjs, pedidos): RED pedido-sem-whatsapp,
+// pedido-link-quebrado, pedido-opcao-sem-valor, pedido-fala-a-cada-letra; WARN pedido-opcao-marcada.
 // Letras (lib/letras.mjs): RED fonte-sem-licenca; WARN fonte-pesada (não .woff2, ou soma alta).
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { nomeDoSite } from '../lib/args.mjs';
 import { abrirSite, paginasDoSite, TAMANHOS } from '../lib/site.mjs';
 import { abrirSessao, visitar } from '../lib/sessao.mjs';
 import { estatico } from '../lib/pagina.mjs';
-import { repeticoes } from '../lib/pagina-leitura.mjs';
+import { repeticoes, pedidos } from '../lib/pagina-leitura.mjs';
 import { progresso } from '../lib/executar.mjs';
 import { esperar } from '../lib/cdp.mjs';
 import { anotarLetras } from '../lib/letras.mjs';
+import { falha } from '../lib/saida.mjs';
 
-export const VENDOR_OBRIGATORIO = Object.freeze([
-  ['assets', 'vendor', 'gsap', 'gsap.min.js'],
-  ['assets', 'vendor', 'gsap', 'ScrollTrigger.min.js'],
-  ['assets', 'vendor', 'lenis', 'lenis.min.js'],
-]);
+// As bibliotecas de movimento que o molde carrega. A fonte de verdade é a ordem do site, a mesma
+// que o montar lê: GSAP e ScrollTrigger sempre; o Lenis, a não ser que a ordem diga lenis: false.
+// Menção em texto (um comentário, um nome num CSS) não conta como uso.
+export const VENDOR_SEMPRE = Object.freeze(['assets/vendor/gsap/gsap.min.js', 'assets/vendor/gsap/ScrollTrigger.min.js']);
+export const VENDOR_LENIS = Object.freeze(['assets/vendor/lenis/lenis.min.js', 'assets/vendor/lenis/lenis.css']);
+
+// O que a ordem em pastaGerador/ordem.mjs manda carregar. Sem ordem, vale o padrão do molde (com Lenis).
+// Ordem que não abre para com MONTAR_FALHOU: é o mesmo arquivo que o montar lê.
+export async function vendorExigido(pastaGerador) {
+  const arquivo = path.join(pastaGerador, 'ordem.mjs');
+  let lenis = true;
+  if (fs.existsSync(arquivo)) {
+    let ordem;
+    try {
+      ordem = await import(`${pathToFileURL(arquivo).href}?v=${Date.now()}`);
+    } catch (e) {
+      falha('MONTAR_FALHOU', { detalhe: `_gerador/ordem.mjs não abre: ${String(e.message || e).slice(0, 200)}` });
+    }
+    lenis = !(ordem.site && ordem.site.lenis === false);
+  }
+  return [...VENDOR_SEMPRE, ...(lenis ? VENDOR_LENIS : [])];
+}
+
+// Os arquivos exigidos pela ordem que não estão em pastaSite (caminhos relativos a site/).
+export async function vendorAusente(pastaSite, pastaGerador) {
+  const exigidos = await vendorExigido(pastaGerador);
+  return exigidos.filter((rel) => !fs.existsSync(path.join(pastaSite, ...rel.split('/'))));
+}
 
 export const REPETICAO = Object.freeze({
   link_repetido: 4, // o mesmo texto de link, na mesma página
@@ -72,9 +99,7 @@ export default async function checar(args) {
   const c = abrirSite(nome);
   const red = [];
   const warn = [];
-  for (const partes of VENDOR_OBRIGATORIO) {
-    if (!fs.existsSync(path.join(c.site, ...partes))) red.push({ pagina: '-', tipo: 'vendor-ausente', detalhe: `site/${partes.join('/')}` });
-  }
+  for (const rel of await vendorAusente(c.site, c.gerador)) red.push({ pagina: '-', tipo: 'vendor-ausente', detalhe: `site/${rel}` });
   anotarLetras(c.site, red, warn);
   const paginas = paginasDoSite(c);
   const notebook = TAMANHOS.find((t) => t.nome === 'notebook');
@@ -87,6 +112,9 @@ export default async function checar(args) {
       await esperar(50);
       anotarEstatico(pagina, est, sessao.rede(), sessao.errosJs(), red, warn);
       for (const w of await sessao.avaliar(repeticoes, REPETICAO)) warn.push({ pagina: pagina.rel, ...w });
+      const pedido = await sessao.avaliar(pedidos);
+      for (const r of pedido.red) red.push({ pagina: pagina.rel, ...r });
+      for (const w of pedido.warn) warn.push({ pagina: pagina.rel, ...w });
     }
   } finally {
     await sessao.fechar();

@@ -502,20 +502,32 @@ export async function medir(L) {
   const semMedir = [];
   const medidos = new Set();
   const debaixoDePreso = new Set();
+  // centro do texto na borda da tela: o navegador não devolve elemento nenhum ali (nem por cima)
+  const naBorda = new Set();
+  const BORDA = L.borda_da_tela ?? 1; // px; quem chama sem o limite mede com 1 px
   const MIDIA = ['IMG', 'VIDEO', 'CANVAS', 'PICTURE', 'IFRAME', 'svg', 'SVG', 'OBJECT', 'EMBED'];
   const medirContraste = (it) => {
     const cx = caixasDe(it);
     if (!cx.length) return false;
     const q = cx[0];
-    const x = Math.min(vw - 1, Math.max(0, (q.left + q.right) / 2));
+    const x = Math.min(vw - BORDA, Math.max(BORDA, (q.left + q.right) / 2));
     const y = (q.top + q.bottom) / 2;
-    if (y < 0 || y >= vh) return false;
+    // fora da tela, ou a menos de BORDA px da borda: não dá para medir aqui, mede noutra posição
+    if (y < BORDA || y > vh - BORDA) {
+      if (y >= 0 && y < vh) naBorda.add(it);
+      return false;
+    }
     const preenchimento = cor(it.cs.webkitTextFillColor || it.cs.color);
     if (preenchimento.a < 0.05) {
       semMedir.push(`${nomeDe(it.el, it.texto)}: texto pintado com fundo (transparente)`);
       return true;
     }
     const pilha = document.elementsFromPoint(x, y);
+    // pilha vazia não é sobreposição: o ponto ficou fora do alcance do navegador (borda da tela)
+    if (!pilha.length) {
+      naBorda.add(it);
+      return false;
+    }
     let k = pilha.findIndex((e) => e === it.el || it.el.contains(e));
     if (k < 0) {
       // cabeçalho ou barra presos por cima agora: mede noutra posição da rolagem
@@ -576,6 +588,7 @@ export async function medir(L) {
     if (it.op < 0.05 && !it.el.closest('[aria-hidden="true"]')) warn.push({ tipo: 'texto-invisivel', detalhe: `opacidade ${it.op.toFixed(2)} depois de assentar: ${nomeDe(it.el, it.texto)}` });
   }
   for (const it of debaixoDePreso) if (!medidos.has(it)) semMedir.push(`${nomeDe(it.el, it.texto)}: fica sempre debaixo de uma parte presa`);
+  for (const it of naBorda) if (!medidos.has(it) && !debaixoDePreso.has(it)) semMedir.push(`${nomeDe(it.el, it.texto)}: fica na borda da tela em toda posição da rolagem`);
   for (const s of semMedir.slice(0, L.maximo)) warn.push({ tipo: 'contraste-nao-medido', detalhe: s });
 
   // 5. só no celular: alvo de toque e texto pequeno

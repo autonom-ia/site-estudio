@@ -5,8 +5,9 @@
 //
 // Cada seção é um arquivo secoes/<nome>.mjs que exporta uma função: recebe o contexto (ctx) e
 // devolve o HTML da seção. ctx traz: site, pagina, paginas, esc (escapa texto), link(rota) (link
-// relativo para outra página, aceita '#ancora'), assets (caminho relativo até site/assets/) e
-// palavras(texto) (cada palavra num <span>, para o efeito de acender).
+// relativo para outra página, aceita '#ancora'), assets (caminho relativo até site/assets/),
+// palavras(texto) (cada palavra num <span>, para o efeito de acender) e whatsapp(numero, texto)
+// (o endereço do WhatsApp com a mensagem pronta codificada, já escapado para ir num href).
 //
 // data-molde: marca o que ainda é do negócio fictício do molde (cada seção, o cabeçalho, a nota do
 // rodapé e, com site.molde em ordem.mjs, a página toda). O ./estudio checar reprova (resto-do-molde)
@@ -27,6 +28,17 @@ export function esc(texto) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
+}
+
+// Endereço do WhatsApp com a mensagem pronta: só os dígitos do número e o texto codificado (um &,
+// # ou + cru cortaria a mensagem de quem abre sem JavaScript). Escapado para ir direto num href.
+// Número sem dígito nenhum para o montar com o erro na parte que chamou.
+export function whatsapp(numero, texto) {
+  let digitos = '';
+  for (const ch of String(numero === undefined || numero === null ? '' : numero)) if (ch >= '0' && ch <= '9') digitos += ch;
+  if (!digitos) throw new Error(`o número do WhatsApp "${numero}" não tem dígito nenhum: use o número do fatos.md, com país e DDD`);
+  const mensagem = String(texto === undefined || texto === null ? '' : texto).trim();
+  return esc(`https://wa.me/${digitos}${mensagem ? `?text=${encodeURIComponent(mensagem)}` : ''}`);
 }
 
 // JSON dentro de <script>: sem como fechar a tag por dentro.
@@ -93,6 +105,9 @@ async function carregarSecao(nome) {
   return modulo.default;
 }
 
+// Rolagem suave (Lenis): ligada, a não ser que a ordem diga lenis: false.
+const comLenis = (site) => site.lenis !== false;
+
 function cabeca(ctx) {
   const { site, pagina, assets } = ctx;
   const titulo = pagina.rota ? `${pagina.titulo} · ${site.nome}` : `${site.nome} · ${pagina.titulo}`;
@@ -117,7 +132,7 @@ function cabeca(ctx) {
   linhas.push(
     `<link rel="icon" href="${assets}img/icone.svg" type="image/svg+xml">`,
     `<link rel="stylesheet" href="${assets}marca/tokens.css">`,
-    `<link rel="stylesheet" href="${assets}vendor/lenis/lenis.css">`,
+    ...(comLenis(site) ? [`<link rel="stylesheet" href="${assets}vendor/lenis/lenis.css">`] : []),
     `<link rel="stylesheet" href="${assets}css/site.css">`,
   );
   const n = site.negocio;
@@ -144,6 +159,7 @@ async function montarPagina(pagina, ordem) {
     pagina,
     esc,
     palavras,
+    whatsapp,
     assets: `${prefixo(pagina.rota)}assets/`,
     link: (para) => linkRelativo(pagina.rota, para),
   };
@@ -166,8 +182,7 @@ ${partes.join('\n')}
 ${fim}
 <script src="${a}vendor/gsap/gsap.min.js" defer></script>
 <script src="${a}vendor/gsap/ScrollTrigger.min.js" defer></script>
-<script src="${a}vendor/lenis/lenis.min.js" defer></script>
-<script src="${a}js/site.js" defer></script>
+${comLenis(ordem.site) ? `<script src="${a}vendor/lenis/lenis.min.js" defer></script>\n` : ''}<script src="${a}js/site.js" defer></script>
 </body>
 </html>
 `;
