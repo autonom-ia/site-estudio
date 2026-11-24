@@ -18,7 +18,7 @@ const json = (o) => `<script type="application/json">${JSON.stringify(o)}</scrip
 const esc = (t) => String(t).split('&').join('&amp;').split('"').join('&quot;').split('<').join('&lt;');
 
 // JPEG mínimo: só o cabeçalho com largura e altura (é baixado, nunca desenhado).
-function jpeg(largura, altura) {
+export function jpeg(largura, altura) {
   const sof = Buffer.from([0xff, 0xc0, 0x00, 0x11, 0x08, altura >> 8, altura & 255, largura >> 8, largura & 255, 3, 1, 0x11, 0, 2, 0x11, 1, 3, 0x11, 1]);
   return Buffer.concat([Buffer.from([0xff, 0xd8]), sof, Buffer.from([0xff, 0xd9])]);
 }

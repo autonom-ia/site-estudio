@@ -9,7 +9,7 @@ import { esperar } from './cdp.mjs';
 
 export const BASE_INSTAGRAM = 'https://www.instagram.com';
 export const MINIMO_DE_POSTS = 12;
-const PRAZO_DA_PAGINA_MS = 15000;
+export const PRAZO_DA_PAGINA_MS = 15000;
 const ROLAGENS = 3;
 
 // "@nome", "nome" ou o endereço do perfil viram só "nome".
@@ -39,29 +39,32 @@ export function codigoDoPost(href) {
   return '';
 }
 
-// Roda dentro da página do perfil.
-function lerPerfilNaPagina() {
+// Roda dentro da página do perfil. Com login, a página também traz publicações no JSON embutido.
+export function lerPerfilNaPagina() {
   const links = [...document.querySelectorAll('a[href]')]
     .map((a) => a.href)
     .filter((h) => h.includes('/p/') || h.includes('/reel/'));
   const jsons = [...document.querySelectorAll('script[type="application/json"]')]
     .map((s) => s.textContent || '')
     .filter((t) => t.includes('"biography"'));
+  const jsonsDePosts = [...document.querySelectorAll('script[type="application/json"]')]
+    .map((s) => s.textContent || '')
+    .filter((t) => t.includes('"taken_at"'));
   const meta = (p) => document.querySelector(`meta[property="${p}"]`)?.getAttribute('content') || '';
-  return { links, jsons, descricao: meta('og:description'), foto: meta('og:image'), titulo: document.title };
+  return { links, jsons, jsonsDePosts, descricao: meta('og:description'), foto: meta('og:image'), titulo: document.title };
 }
 
-function contarLinks() {
+export function contarLinks() {
   return [...document.querySelectorAll('a[href]')].filter((a) => a.href.includes('/p/') || a.href.includes('/reel/')).length;
 }
 
-function rolar() {
+export function rolar() {
   window.scrollBy(0, window.innerHeight * 3);
   return true;
 }
 
 // Roda dentro da página de uma publicação.
-function lerPostNaPagina() {
+export function lerPostNaPagina() {
   const meta = (p) =>
     document.querySelector(`meta[property="${p}"]`)?.getAttribute('content') ||
     document.querySelector(`meta[name="${p}"]`)?.getAttribute('content') ||
@@ -113,7 +116,21 @@ export function legendaDaDescricao(descricao) {
   return ini !== -1 && fim > ini + 2 ? t.slice(ini + 3, fim) : '';
 }
 
-const dataDoSegundo = (s) => new Date(Number(s) * 1000).toISOString().slice(0, 10);
+export const dataDoSegundo = (s) => new Date(Number(s) * 1000).toISOString().slice(0, 10);
+
+// Uma publicação a partir do item do JSON do Instagram: legenda, data e a maior foto de cada parte.
+export function postDoItem(item, codigo, url) {
+  const partes = Array.isArray(item.carousel_media) && item.carousel_media.length ? item.carousel_media : [item];
+  return {
+    codigo,
+    url,
+    data: dataDoSegundo(item.taken_at),
+    legenda: (item.caption && item.caption.text) || '',
+    video: item.media_type === 2,
+    fotos: partes.map(melhorFoto).filter(Boolean),
+    de: 'json',
+  };
+}
 
 // Legenda, data e fotos de uma publicação.
 export function dadosDoPost(lido, codigo, url) {
@@ -125,18 +142,7 @@ export function dadosDoPost(lido, codigo, url) {
       break;
     }
   }
-  if (item) {
-    const partes = Array.isArray(item.carousel_media) && item.carousel_media.length ? item.carousel_media : [item];
-    return {
-      codigo,
-      url,
-      data: dataDoSegundo(item.taken_at),
-      legenda: (item.caption && item.caption.text) || '',
-      video: item.media_type === 2,
-      fotos: partes.map(melhorFoto).filter(Boolean),
-      de: 'json',
-    };
-  }
+  if (item) return postDoItem(item, codigo, url);
   const data = (lido.datas || []).find(Boolean) || '';
   return {
     codigo,
@@ -187,7 +193,7 @@ export async function lerInstagram(leitor, entrada, { base = BASE_INSTAGRAM, max
 }
 
 // Cada foto vai para <pasta>/<código>-<n>.jpg; a publicação volta com o arquivo e o tamanho real.
-async function baixarFotos(posts, pasta) {
+export async function baixarFotos(posts, pasta) {
   const fotos = [];
   const novos = [];
   for (const post of posts) {

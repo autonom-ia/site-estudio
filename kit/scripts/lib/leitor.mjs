@@ -1,6 +1,8 @@
 // Leitor de páginas da internet: o mesmo navegador sem janela do estúdio, numa aba de computador,
 // em português, sem o "Headless" na identificação (alguns sites mostram página vazia para ele).
-// Só lê: nada é enviado, publicado nem preenchido. Sem login, sem senha, sem cookie da pessoa.
+// Só lê: nada é enviado, publicado nem preenchido. Sem senha e sem cookie do Chrome da pessoa.
+// Com perfil (opcoes.perfil), abre a pasta de perfil guardada do estúdio: é como a leitura do
+// Instagram usa o login que a pessoa fez na janela do estúdio (lib/instagram-conta.mjs).
 import { launch, openTab, navegar, esperar } from './cdp.mjs';
 import { chamada } from './sessao.mjs';
 
@@ -13,8 +15,9 @@ const TETO_DE_AVALIAR_MS = 60000;
 // deps: as peças de verdade; os testes podem trocar.
 const PECAS = Object.freeze({ launch, openTab });
 
-export async function abrirLeitor(deps = PECAS) {
-  const nav = await deps.launch({ largura: LARGURA, altura: ALTURA });
+// opcoes: { perfil, navegador } repassados ao launch (perfil guardado e navegador escolhido).
+export async function abrirLeitor(deps = PECAS, opcoes = {}) {
+  const nav = await deps.launch({ largura: LARGURA, altura: ALTURA, ...opcoes });
   let tab = null;
   try {
     tab = await deps.openTab(nav.porta);
@@ -51,6 +54,11 @@ export async function abrirLeitor(deps = PECAS) {
       }
       return ultimo;
     },
+    // Cookies que a aba mandaria a estes endereços (só para conferir se há login; nunca vão para a saída).
+    cookies: async (urls) => (await tab.send('Network.getCookies', { urls })).cookies || [],
+    // Guarda o texto das respostas que a própria página pede e que a função aceita (endereço, tipo).
+    // Devolve { textos() (espera as que ainda estão chegando), parar() }.
+    escutarRespostas: (aceita) => escutarRespostas(tab, aceita),
     fechar: () => {
       try {
         tab.close();
@@ -59,6 +67,40 @@ export async function abrirLeitor(deps = PECAS) {
         nav.close();
       } catch {}
     },
+    // Fecha pedindo ao navegador: com perfil guardado, ele grava os cookies antes de sair.
+    fecharComCalma: async () => {
+      try {
+        tab.close();
+      } catch {}
+      if (nav.fecharComCalma) await nav.fecharComCalma();
+      else nav.close();
+    },
+  };
+}
+
+function escutarRespostas(tab, aceita) {
+  const pedidos = new Set();
+  const textos = [];
+  const pendentes = [];
+  const ouvinte = (m) => {
+    const p = m.params || {};
+    if (m.method === 'Network.responseReceived' && p.response && aceita(String(p.response.url || ''), String(p.response.mimeType || ''))) pedidos.add(p.requestId);
+    else if (m.method === 'Network.loadingFinished' && pedidos.has(p.requestId)) {
+      pedidos.delete(p.requestId);
+      const lido = tab
+        .send('Network.getResponseBody', { requestId: p.requestId })
+        .then((r) => textos.push(r.base64Encoded ? Buffer.from(r.body, 'base64').toString('utf8') : r.body))
+        .catch(() => {});
+      pendentes.push(lido);
+    }
+  };
+  tab.on(ouvinte);
+  return {
+    textos: async () => {
+      await Promise.allSettled(pendentes);
+      return [...textos];
+    },
+    parar: () => tab.off(ouvinte),
   };
 }
 

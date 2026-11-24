@@ -512,12 +512,12 @@
     "acao": "Pergunte o @ e o nome com a cidade e rode ./estudio ler <nome> --instagram perfil --negocio \"Nome, cidade\" (o @ sem a arroba)."
   },
   "LER_INSTAGRAM_POUCOS": {
-    "texto": "Do Instagram, sem entrar na conta, consegui ler {{posts}} publicações. Se faltar alguma, dá para ler o resto pela extensão do Claude no Chrome.",
-    "acao": "Diga o texto. Se a pessoa quiser mais publicações: Com a extensão do Claude no Chrome conectada (Claude Code): peça licença à pessoa, abra o perfil numa aba nova do Chrome dela (que já está na conta dela), role a grade e abra cada publicação que falta; anote legenda, data e endereço em coleta/instagram/posts.md (a fonte é o endereço da publicação). Nunca peça senha nem entre na conta por ela. Sem a extensão, ou no Codex: peça à pessoa, em referencias/, as fotos e os textos que faltam. O desenho da leitura com login está em docs/ler-instagram-com-login.md."
+    "texto": "Do Instagram, sem entrar na conta, consegui ler {{posts}} publicações. Se faltar alguma, dá para ler mais com você entrando na sua conta por uma janela minha, ou pela extensão do Claude no Chrome.",
+    "acao": "Diga o texto. Se a pessoa quiser mais publicações, primeiro ofereça entrar na conta pelo estúdio: rode ./estudio instagram entrar e siga o código que ele devolver (ele não abre janela nenhuma antes do aviso INSTAGRAM_ANTES_DE_ENTRAR e do sim da pessoa); depois rode o ler de novo, que lê até 40 publicações com o login. Se ela não quiser, ou não der certo: Com a extensão do Claude no Chrome conectada (Claude Code): peça licença à pessoa, abra o perfil numa aba nova do Chrome dela (que já está na conta dela), role a grade e abra cada publicação que falta; anote legenda, data e endereço em coleta/instagram/posts.md (a fonte é o endereço da publicação). Nunca peça senha nem entre na conta por ela. Sem a extensão, ou no Codex: peça à pessoa, em referencias/, as fotos e os textos que faltam. O desenho da leitura com login está em docs/ler-instagram-com-login.md."
   },
   "LER_INSTAGRAM_FALHOU": {
-    "texto": "Não consegui ler o Instagram sem entrar na conta. Dá para ler pela extensão do Claude no Chrome.",
-    "acao": "Confira o @ com a pessoa (dados.instagram); se estava errado, rode de novo. Se estava certo: Com a extensão do Claude no Chrome conectada (Claude Code): peça licença à pessoa, abra o perfil numa aba nova do Chrome dela (que já está na conta dela), role a grade e abra cada publicação que falta; anote legenda, data e endereço em coleta/instagram/posts.md (a fonte é o endereço da publicação). Nunca peça senha nem entre na conta por ela. Sem a extensão, ou no Codex: peça à pessoa, em referencias/, as fotos e os textos que faltam. O desenho da leitura com login está em docs/ler-instagram-com-login.md."
+    "texto": "Não consegui ler o Instagram agora. Dá para tentar com você entrando na sua conta por uma janela minha, ou pela extensão do Claude no Chrome.",
+    "acao": "Confira o @ com a pessoa (dados.instagram); se estava errado, rode de novo. Se estava certo e dados.com_login for false, ofereça entrar na conta pelo estúdio: rode ./estudio instagram entrar e siga o código que ele devolver (ele não abre janela nenhuma antes do aviso INSTAGRAM_ANTES_DE_ENTRAR e do sim da pessoa); depois rode o ler de novo, que lê até 40 publicações com o login. Se dados.com_login for true, rode o ler de novo uma vez só, com --sem-login. Se ainda faltar: Com a extensão do Claude no Chrome conectada (Claude Code): peça licença à pessoa, abra o perfil numa aba nova do Chrome dela (que já está na conta dela), role a grade e abra cada publicação que falta; anote legenda, data e endereço em coleta/instagram/posts.md (a fonte é o endereço da publicação). Nunca peça senha nem entre na conta por ela. Sem a extensão, ou no Codex: peça à pessoa, em referencias/, as fotos e os textos que faltam. O desenho da leitura com login está em docs/ler-instagram-com-login.md."
   },
   "LER_FOTOS_PEQUENAS": {
     "texto": "As fotos do Instagram chegam pequenas. Para foto grande no site, as originais ficam bem melhores.",
@@ -546,5 +546,45 @@
   "LER_SITE_FALHOU": {
     "texto": "Não consegui abrir o site atual.",
     "acao": "Confira o endereço com a pessoa (dados.endereco) e rode de novo com --site. Se o site não existe mais, siga sem ele."
+  },
+  "LER_INSTAGRAM_PEDIU_VERIFICACAO": {
+    "texto": "O Instagram pediu uma confirmação de segurança enquanto eu lia. Parei na hora, sem insistir. O que eu já tinha lido ficou guardado.",
+    "acao": "Diga o texto. Peça à pessoa para abrir o Instagram no celular e, se ele perguntar, confirmar que foi ela. Não use o login de novo hoje: se precisar ler de novo, rode o ler com --sem-login. Se dados.motivo for \"login\", o login guardado deixou de valer: só depois, e se ela quiser, ofereça entrar de novo (./estudio instagram entrar). Para as publicações que faltam (dados.lidas diz quantas já foram lidas): Com a extensão do Claude no Chrome conectada (Claude Code): peça licença à pessoa, abra o perfil numa aba nova do Chrome dela (que já está na conta dela), role a grade e abra cada publicação que falta; anote legenda, data e endereço em coleta/instagram/posts.md (a fonte é o endereço da publicação). Nunca peça senha nem entre na conta por ela. Sem a extensão, ou no Codex: peça à pessoa, em referencias/, as fotos e os textos que faltam."
+  },
+  "LER_INSTAGRAM_LOGIN_INDISPONIVEL": {
+    "texto": "Não consegui usar o seu login do Instagram desta vez, então li sem entrar na conta.",
+    "acao": "Veja dados.motivo. \"vencido\": o Instagram encerrou o login guardado; ofereça entrar de novo (./estudio instagram entrar, e siga o código). \"janela-aberta\": a janela de entrar ainda está aberta; peça para fechar e rode o ler de novo. \"nao-abriu\": o Chrome não abriu escondido; siga sem login e, se faltar publicação: Com a extensão do Claude no Chrome conectada (Claude Code): peça licença à pessoa, abra o perfil numa aba nova do Chrome dela (que já está na conta dela), role a grade e abra cada publicação que falta; anote legenda, data e endereço em coleta/instagram/posts.md (a fonte é o endereço da publicação). Nunca peça senha nem entre na conta por ela. Sem a extensão, ou no Codex: peça à pessoa, em referencias/, as fotos e os textos que faltam."
+  },
+  "INSTAGRAM_ANTES_DE_ENTRAR": {
+    "texto": "Para ler mais publicações, eu abro uma janela do Instagram e você entra na sua conta, do jeito de sempre. A senha você digita direto no Instagram: ela fica só com ele, eu não vejo. Depois, o Instagram pode mandar um aviso de que alguém entrou na sua conta. Fui eu, o estúdio, pela janela que você abriu aqui. Posso abrir a janela?",
+    "acao": "Diga o texto e pergunte com as opções \"Pode abrir ★\" e \"Agora não\". Não abra a janela sem o sim. Com o sim, diga \"Abri a janela do Instagram. Entre na sua conta e me espere: eu percebo sozinho quando você entrar.\" e rode ./estudio instagram entrar --confirmar com timeout de 10 minutos (no Claude Code, timeout 600000). Com o não, siga sem login, com a reserva de LER_INSTAGRAM_POUCOS."
+  },
+  "INSTAGRAM_JA_ENTROU": {
+    "texto": "O seu Instagram já está aberto aqui no estúdio. Não precisa entrar de novo.",
+    "acao": "Rode o ler de novo com os mesmos dados: ele usa o login guardado e lê até 40 publicações."
+  },
+  "INSTAGRAM_ENTROU": {
+    "texto": "Pronto, vi que você entrou. Fechei a janela e guardei o login só neste computador, para as próximas leituras.",
+    "acao": "Rode o ler de novo com os mesmos dados: agora ele lê até 40 publicações com o login. Se a pessoa pedir para tirar o login, rode ./estudio instagram sair."
+  },
+  "INSTAGRAM_JANELA_FECHADA": {
+    "texto": "A janela do Instagram foi fechada antes de você entrar. Tudo bem: sigo sem a sua conta.",
+    "acao": "Não abra de novo sem a pessoa pedir. Se ela quiser tentar, diga de novo o texto de INSTAGRAM_ANTES_DE_ENTRAR e espere o sim. Se não, siga com o que o ler já trouxe e com a reserva de LER_INSTAGRAM_POUCOS."
+  },
+  "INSTAGRAM_PRAZO_ACABOU": {
+    "texto": "Esperei alguns minutos e não vi você entrar, então fechei a janela. Quando quiser, a gente tenta de novo.",
+    "acao": "Pergunte se ela quer tentar agora, com \"Tentar de novo ★\" e \"Seguir sem\". Com o sim, rode ./estudio instagram entrar --confirmar de novo (timeout 600000). Se não, siga com a reserva de LER_INSTAGRAM_POUCOS."
+  },
+  "INSTAGRAM_SEM_CHROME": {
+    "texto": "Para você entrar no Instagram por aqui, eu preciso do Google Chrome (ou do Microsoft Edge) instalado.",
+    "acao": "Siga sem login, com a reserva de LER_INSTAGRAM_POUCOS. Se a pessoa quiser instalar o Chrome, ela baixa em google.com/chrome; depois, rode ./estudio instagram entrar de novo."
+  },
+  "INSTAGRAM_JANELA_AINDA_ABERTA": {
+    "texto": "A janela do Instagram que eu abri antes ainda está aberta. Feche ela e me avise.",
+    "acao": "Espere a pessoa dizer que fechou e rode de novo o mesmo pedido."
+  },
+  "INSTAGRAM_SAIU": {
+    "texto": "Pronto: apaguei deste computador o login do Instagram que o estúdio guardava.",
+    "acao": "Se dados.tinha_login for false, diga que não havia login guardado. Explique que a conta dela continua normal no celular e no Chrome dela, e que as próximas leituras voltam a ser sem login. Para encerrar também do lado do Instagram, ela abre no Instagram: Configurações, Central de Contas, Senha e segurança, Onde você está conectado."
   }
 }
