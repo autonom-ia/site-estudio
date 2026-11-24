@@ -6,19 +6,34 @@
   'use strict';
   var RAIOS = 32;
   var ROLAR = 0.0032; // radianos por pixel rolado
-  var REPOUSO = { giro: -0.42, inclina: 0.16 }; // de leve de lado: dá para ver a profundidade
+  // pose parada e câmera: vêm da seção (data-3d-pose), as mesmas da imagem de reserva
+  var POSE_PADRAO = { giro: -0.42, inclina: 0.16, distancia: 4.9, fov: 0.5 };
   var ALCANCE = { giro: 0.28, inclina: 0.18 }; // quanto o ponteiro inclina a roda
   var SUAVE = 0.08; // quanto anda até o alvo a cada quadro
 
+  function lerPose(palco) {
+    var pose = {};
+    try {
+      pose = JSON.parse(palco.getAttribute('data-3d-pose') || '{}') || {};
+    } catch (e) {
+      pose = {};
+    }
+    var saida = {};
+    Object.keys(POSE_PADRAO).forEach(function (k) { saida[k] = typeof pose[k] === 'number' ? pose[k] : POSE_PADRAO[k]; });
+    return saida;
+  }
+
   function montar(palco, C) {
-    var cena = C.criar(palco, { fov: 0.5 });
+    var REPOUSO = lerPose(palco); // de leve de lado: dá para ver a profundidade
+    var cena = C.criar(palco, { fov: REPOUSO.fov });
     if (!cena) return null;
     var F = C.formas;
-    var tinta = C.corDaMarca(palco, '--cor-noite-2', '#1B2025');
+    // o pneu: a tinta da noite um pouco mais clara, para não sumir no fundo da abertura
+    var tinta = C.misturar(C.corDaMarca(palco, '--cor-noite-2', '#1B2025'), [1, 1, 1], 0.12);
     var metal = C.misturar(C.corDaMarca(palco, '--cor-apoio-noite', '#A8B0B6'), [1, 1, 1], 0.25);
     var luz = C.corDaMarca(palco, '--cor-luz', '#D4F04F');
 
-    var pneu = cena.objeto(F.anel(1.0, 0.058, 160, 16), { cor: tinta, brilho: 0.35 });
+    var pneu = cena.objeto(F.anel(1.0, 0.058, 160, 16), { cor: tinta, brilho: 0.55 });
     var faixa = cena.objeto(F.juntar([
       F.torno([[0.988, 0.0598], [1.012, 0.0598]], 160),
       F.torno([[0.988, -0.0598], [1.012, -0.0598]], 160),
@@ -45,7 +60,7 @@
     var raios = cena.objeto(F.juntar(lista), { cor: metal, brilho: 0.75, metal: 0.8 });
     var partes = [pneu, faixa, aro, cubo, raios];
 
-    cena.camera.olho = [0, 0, 4.9];
+    cena.camera.olho = [0, 0, REPOUSO.distancia];
     cena.camera.alvo = [0, 0, 0];
     cena.luz.ceu = C.corDaMarca(palco, '--cor-apoio-noite', '#A8B0B6');
     cena.luz.chao = C.corDaMarca(palco, '--cor-noite', '#111417');

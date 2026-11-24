@@ -89,6 +89,31 @@ test('as seções já trazem a imagem de reserva e só o carregador; escolhas em
   assert.ok(conf.includes('role="img"') && conf.includes('aria-live="polite"'));
 });
 
+test('arte: reserva da roda na pose do 3D, contorno alisado que mantém pontos e quinas, rodinha gravada e cara da marca', async () => {
+  const { esc, palavras } = await import('../molde/_gerador/montar.mjs');
+  const { default: abertura } = await import('../demos/3d/_gerador/secoes/abertura-3d.mjs');
+  const { default: configurador, suavizar } = await import('../demos/3d/_gerador/secoes/configurador-3d.mjs');
+  const ctx = { esc, palavras, link: (r) => r, assets: 'assets/' };
+  // a pose parada vai para a cena: o desenho de reserva e o 3D parado são a mesma roda
+  const marca = abertura(ctx);
+  assert.ok(marca.includes('data-3d-pose="'), 'a roda sem a pose para a cena');
+  assert.equal(marca.includes('<circle class="roda-reserva__pneu"'), false, 'a reserva voltou a ser a roda de frente');
+  // o alisado passa pelos pontos originais, mantém a quina e põe 3 pontos entre vizinhos
+  const bruto = [[0, 0], [0.3, 0], [0.3, 0], [0.4, 0.5], [0.4, 1]];
+  const liso = suavizar(bruto);
+  for (const p of bruto) assert.ok(liso.some((q) => q[0] === p[0] && q[1] === p[1]), String(p));
+  assert.equal(liso.length, bruto.length + 3 * 3);
+  const quina = liso.findIndex((q) => q[0] === 0.3 && q[1] === 0);
+  assert.deepEqual(liso[quina + 1], [0.3, 0], 'a quina continua sendo ponto repetido');
+  const conf = configurador(ctx);
+  assert.ok(conf.includes('data-3d-emblema="') && conf.includes('class="caramanhola-reserva__emblema"'), 'a rodinha gravada no 3D e na reserva');
+  assert.equal(conf.split('data-tom="').length - 1, 4, 'cada cor diz se é clara ou escura');
+  assert.ok(conf.includes('class="assinatura configurador__titulo"'));
+  assert.equal(conf.split('assinatura__linha--').length - 1, 4, 'o título com as quatro linhas de pesos');
+  assert.ok(conf.includes('<a class="botao" data-3d-pedido'), 'a ação principal com o botão da marca');
+  assert.ok(conf.includes('class="caramanhola-reserva__bancada"'), 'a peça fica de pé numa linha de bancada');
+});
+
 test('demo 3D: conferências passam e as fotos mostram as duas cenas abertas, no celular e no computador', opcoes, () => {
   const novo = estudio('novo', 'demo', '--demo', '3d');
   assert.equal(novo.codigo, 0, JSON.stringify(novo.json));

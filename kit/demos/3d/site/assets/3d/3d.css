@@ -33,14 +33,16 @@
     align-items: end;
   }
   .abertura--3d .abertura__lado { max-width: 26rem; }
-  .marca-3d { align-self: center; width: 128%; max-width: 44rem; margin: 0 -24% 0 0; }
+  /* a roda sangra na borda direita e assenta na linha de "mesmo dia." */
+  .marca-3d { align-self: end; width: 160%; max-width: none; margin: 0 -55% -12% 0; }
 }
 
-.roda-reserva__pneu { fill: none; stroke: var(--cor-noite-2); stroke-width: 11; }
-.roda-reserva__faixa { fill: none; stroke: var(--cor-luz); stroke-width: 1.4; }
-.roda-reserva__aro { fill: none; stroke: var(--cor-apoio-noite); stroke-width: 4.5; }
-.roda-reserva__raios { fill: none; stroke: var(--cor-apoio-noite); stroke-width: .8; stroke-linecap: round; }
-.roda-reserva__cubo { fill: var(--cor-apoio-noite); }
+/* a reserva é a mesma roda na mesma pose do 3D parado (projetada na montagem da seção) */
+.roda-reserva__pneu { fill: none; stroke: color-mix(in srgb, var(--cor-noite-2) 78%, var(--cor-sobre-noite)); stroke-width: 7; }
+.roda-reserva__faixa { fill: none; stroke: var(--cor-luz); stroke-width: 1.2; }
+.roda-reserva__aro { fill: none; stroke: var(--cor-apoio-noite); stroke-width: 3.6; }
+.roda-reserva__raios { fill: none; stroke: var(--cor-apoio-noite); stroke-width: .7; stroke-linecap: round; }
+.roda-reserva__cubo { fill: none; stroke: var(--cor-apoio-noite); stroke-width: 5; stroke-linecap: round; }
 
 /* ---------- configurador 3D: a caramanhola ---------- */
 
@@ -50,16 +52,18 @@
   grid-template-areas: "texto" "palco" "escolhas" "fecho";
 }
 .configurador__texto { grid-area: texto; display: grid; gap: 1.25rem; }
-.configurador__titulo {
-  font-family: var(--fonte-titulo); font-weight: 900; text-transform: uppercase;
-  font-size: clamp(3rem, 1.6rem + 5vw, 6.25rem); line-height: .88; max-width: 9ch;
-}
+/* o título é a assinatura da marca (as quatro linhas de pesos da página inicial), menor e sobre
+   o fundo claro: as linhas fina e de luz trocam para as cores que leem no claro */
+.configurador__titulo.assinatura { font-size: clamp(2.25rem, 1rem + 5.2vw, 6rem); line-height: .9; }
+.configurador__titulo .assinatura__linha--fina { color: var(--cor-apoio); }
+.configurador__titulo .assinatura__linha--luz { color: var(--cor-destaque); }
 .configurador__lide { max-width: 36ch; color: var(--cor-apoio); font-size: clamp(1.0625rem, 1rem + .3vw, 1.25rem); }
 
+/* no celular o palco fica preso no alto enquanto a pessoa escolhe: a peça nunca sai da tela.
+   A altura tem teto em rem: a foto de conferência estica a janela e o palco não muda com ela. */
 .configurador__palco {
-  grid-area: palco; justify-self: center; width: min(100%, 30rem); aspect-ratio: 4 / 5;
-  background: radial-gradient(58% 46% at 50% 52%, color-mix(in srgb, #fff 62%, var(--cor-fundo)) 0%, transparent 72%);
-  cursor: grab;
+  grid-area: palco; position: sticky; top: 0; z-index: 2; width: 100%; height: min(44svh, 22rem);
+  background: var(--cor-fundo); cursor: grab;
 }
 .configurador__palco:active { cursor: grabbing; }
 
@@ -95,7 +99,7 @@
     grid-template-areas: "palco texto" "palco escolhas" "palco fecho";
     align-items: start;
   }
-  .configurador__palco { position: sticky; top: 1.5rem; width: 100%; max-width: 38rem; }
+  .configurador__palco { top: 1.5rem; align-self: center; height: auto; aspect-ratio: 4 / 5; max-width: 38rem; justify-self: center; }
 }
 
 /* a reserva da caramanhola acompanha a escolha só com CSS, sem JavaScript e sem 3D */
@@ -107,7 +111,10 @@
 .caramanhola-reserva__corpo { fill: var(--esmalte); transition: fill .3s ease; }
 .caramanhola-reserva__tampa { fill: var(--cor-tinta); }
 .caramanhola-reserva__faixa { fill: #C9CED1; }
-.caramanhola-reserva__brilho { fill: #fff; opacity: .1; transition: opacity .3s ease; }
+.caramanhola-reserva__brilho { fill: #fff; opacity: 0; transition: opacity .3s ease; }
+.caramanhola-reserva__bancada { stroke: color-mix(in srgb, var(--cor-tinta) 45%, var(--cor-fundo)); stroke-width: 1.2; }
+.caramanhola-reserva__emblema { fill: none; stroke: #E6E9E4; stroke-width: 1.8; stroke-linecap: round; }
+.configurador:has([data-tom="claro"]:checked) .caramanhola-reserva__emblema { stroke: var(--cor-tinta); }
 .configurador:has([data-faixa="nao"]:checked) .caramanhola-reserva__faixa { display: none; }
 .configurador:has([data-acabamento="brilhante"]:checked) .caramanhola-reserva__brilho { opacity: .55; }
 

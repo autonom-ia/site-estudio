@@ -1,8 +1,10 @@
 /* Cena do configurador: a caramanhola gira devagar no palco e muda na hora com cada escolha
-   (cor, acabamento, faixa refletiva). Arrastar com o dedo ou o mouse gira para os lados.
-   A forma vem do mesmo perfil que desenha a imagem de reserva (data-3d-perfil e data-3d-tampa),
-   então a reserva e o 3D mostram a mesma peça. Escolhas: atributos dos botões de rádio
-   (data-cor, data-brilho, data-faixa). */
+   (cor, acabamento, faixa refletiva). Arrastar com o dedo ou o mouse gira para os lados e mostra
+   o que a foto de frente não mostra: a rodinha raiada da marca, gravada num lado só.
+   A forma vem do mesmo perfil que desenha a imagem de reserva (data-3d-perfil, data-3d-tampa,
+   data-3d-faixa e data-3d-emblema), então a reserva e o 3D mostram a mesma peça. Escolhas:
+   atributos dos botões de rádio (data-cor, data-tom, data-brilho, data-faixa). A peça fica de pé
+   numa linha de bancada, a mesma da reserva. */
 (function () {
   'use strict';
   var GIRO_SOZINHO = 0.22; // radianos por segundo: um giro lento, que mostra o volume
@@ -17,20 +19,59 @@
     }
   }
 
+  // A rodinha gravada: aro e raios colados na superfície do corpo, num lado só (de frente para
+  // quem olha quando o giro é zero). raioCorpo: o raio do corpo na altura da rodinha.
+  function emblema(C, e, raioCorpo) {
+    var R = raioCorpo + 0.006;
+    var lado = Math.PI / 2;
+    var noCorpo = function (u, v) {
+      var a = lado - u / R;
+      return [Math.cos(a) * R, e.altura + v, Math.sin(a) * R];
+    };
+    var pecas = [];
+    var voltas = 32;
+    for (var i = 0; i < voltas; i += 1) {
+      var a0 = (i / voltas) * Math.PI * 2;
+      var a1 = ((i + 1) / voltas) * Math.PI * 2;
+      pecas.push(C.formas.tubo(noCorpo(Math.cos(a0) * e.raio, Math.sin(a0) * e.raio), noCorpo(Math.cos(a1) * e.raio, Math.sin(a1) * e.raio), 0.009, 6));
+    }
+    for (var k = 0; k < e.raios; k += 1) {
+      var a = (k / e.raios) * Math.PI * 2;
+      pecas.push(C.formas.tubo(noCorpo(0, 0), noCorpo(Math.cos(a) * e.raio, Math.sin(a) * e.raio), 0.006, 5));
+    }
+    return C.formas.juntar(pecas);
+  }
+
+  // raio do perfil numa altura (o perfil sobe de baixo para cima)
+  function raioNa(perfil, altura) {
+    for (var i = 1; i < perfil.length; i += 1) {
+      if (perfil[i][1] >= altura && perfil[i - 1][1] <= altura && perfil[i][1] !== perfil[i - 1][1]) {
+        var t = (altura - perfil[i - 1][1]) / (perfil[i][1] - perfil[i - 1][1]);
+        return perfil[i - 1][0] + (perfil[i][0] - perfil[i - 1][0]) * t;
+      }
+    }
+    return perfil[perfil.length - 1][0];
+  }
+
   function montar(palco, C) {
     var form = document.querySelector('[data-3d-opcoes="' + palco.id + '"]');
     var perfil = lerJson(palco.getAttribute('data-3d-perfil'), null);
     var tampa = lerJson(palco.getAttribute('data-3d-tampa'), null);
     var faixa = lerJson(palco.getAttribute('data-3d-faixa'), null);
-    if (!form || !perfil || !tampa || !faixa) return null;
+    var marca = lerJson(palco.getAttribute('data-3d-emblema'), null);
+    if (!form || !perfil || !tampa || !faixa || !marca) return null;
     var cena = C.criar(palco, { fov: 0.5 });
     if (!cena) return null;
 
     var altura = tampa[tampa.length - 1][1];
     var meio = altura / 2;
-    var corpo = cena.objeto(C.formas.torno(perfil, 72), { cor: '#2B3035', brilho: 0.15 });
+    var corpo = cena.objeto(C.formas.torno(perfil, 96), { cor: '#2B3035', brilho: 0.15 });
     var topo = cena.objeto(C.formas.torno(tampa, 48), { cor: C.corDaMarca(palco, '--cor-tinta', '#14181B'), brilho: 0.45 });
-    var tira = cena.objeto(C.formas.torno(faixa, 72), { cor: '#DCE1E4', brilho: 1, metal: 0.7, acende: 0.22 });
+    var tira = cena.objeto(C.formas.torno(faixa, 96), { cor: '#C9CED1', brilho: 1, metal: 0.95, acende: 0 });
+    var gravada = cena.objeto(emblema(C, marca, raioNa(perfil, marca.altura)), { cor: '#E6E9E4', brilho: 0.3 });
+    var tinta = C.corDaMarca(palco, '--cor-tinta', '#14181B');
+    var claro = C.corDaMarca(palco, '--cor-fundo', '#ECEEEA');
+    var bancada = cena.objeto(C.formas.tubo([-40, 0, -0.25], [40, 0, -0.25], 0.005, 6), { cor: C.misturar(tinta, claro, 0.55), brilho: 0 });
 
     cena.camera.olho = [0, 0.55, 5.6];
     cena.camera.alvo = [0, 0.02, 0];
@@ -41,8 +82,8 @@
     cena.chao([0, -meio, 0], [0.82, 0.82], 0.5, C.corDaMarca(palco, '--cor-tinta', '#14181B'));
 
     // estado da peça: o atual anima até o alvo
-    var alvo = { cor: corpo.material.cor, brilho: 0.15, faixa: true };
-    var atual = { cor: alvo.cor, brilho: alvo.brilho };
+    var alvo = { cor: corpo.material.cor, brilho: 0.15, faixa: true, marca: gravada.material.cor };
+    var atual = { cor: alvo.cor, brilho: alvo.brilho, marca: alvo.marca };
     var troca = null;
     function lerEscolha() {
       var marcado = function (nome) { return form.querySelector('input[name="' + nome + '"]:checked'); };
@@ -50,9 +91,11 @@
       var a = marcado('acabamento');
       var f = marcado('faixa');
       if (c) alvo.cor = C.cor(c.getAttribute('data-cor'));
+      // rodinha clara nas cores escuras e escura nas claras
+      if (c) alvo.marca = c.getAttribute('data-tom') === 'claro' ? tinta : claro;
       if (a) alvo.brilho = Number(a.getAttribute('data-brilho')) || 0;
       if (f) alvo.faixa = f.getAttribute('data-faixa') === 'sim';
-      troca = { inicio: performance.now(), cor: atual.cor, brilho: atual.brilho };
+      troca = { inicio: performance.now(), cor: atual.cor, brilho: atual.brilho, marca: atual.marca };
       tira.visivel = alvo.faixa;
       cena.acordar();
     }
@@ -60,6 +103,7 @@
     lerEscolha();
     atual.cor = alvo.cor;
     atual.brilho = alvo.brilho;
+    atual.marca = alvo.marca;
     troca = null;
 
     // giro: sozinho, devagar; arrastar gira na mão
@@ -96,15 +140,20 @@
         var k = Math.min(1, (t - troca.inicio) / TROCA_MS);
         var suave = k * k * (3 - 2 * k);
         atual.cor = C.misturar(troca.cor, alvo.cor, suave);
+        atual.marca = C.misturar(troca.marca, alvo.marca, suave);
         atual.brilho = troca.brilho + (alvo.brilho - troca.brilho) * suave;
         if (k >= 1) troca = null;
       }
       corpo.material.cor = atual.cor;
       corpo.material.brilho = atual.brilho;
+      gravada.material.cor = atual.marca;
+      gravada.material.brilho = atual.brilho * 0.6;
       var m = C.matriz.compor(C.matriz.girarX(inclinacao), C.matriz.girarY(angulo), C.matriz.mover(0, -meio, 0));
       corpo.matriz = m;
       topo.matriz = m;
       tira.matriz = m;
+      gravada.matriz = m;
+      bancada.matriz = C.matriz.mover(0, -meio, 0);
       return true;
     });
     return cena;
