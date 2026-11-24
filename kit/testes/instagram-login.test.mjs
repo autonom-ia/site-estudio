@@ -16,7 +16,7 @@ import { lugarPadrao, perfilEmUso, sairDaConta, criarPerfil, migrarPerfilAntigo,
 import { detalheDoErro, lerFontes } from '../scripts/lib/ler.mjs';
 import { acharNavegadorComJanela } from '../scripts/lib/chrome.mjs';
 import { KitErro } from '../scripts/lib/saida.mjs';
-import { argumentosDoNavegador, processosVivos } from '../scripts/lib/cdp.mjs';
+import { argumentosDoNavegador, processosVivos, ehEscritor } from '../scripts/lib/cdp.mjs';
 import { EH_MAC, EH_WINDOWS } from '../scripts/lib/caminhos.mjs';
 import { respostaDaGrade, itemLogado, USUARIO_LOGADO, USUARIO_DESAFIO, TOTAL_LOGADO, LARGURA_MAIOR, PROTECAO, codigoLogado, codigoDesafio } from './fixtures/instagram-logado.mjs';
 
@@ -121,6 +121,12 @@ test('processos vivos: só pergunta, e separa o que existe do que já saiu', () 
   assert.deepEqual(processosVivos([process.pid, 2147483646]), [process.pid]);
   assert.deepEqual(processosVivos([]), []);
   assert.deepEqual(processosVivos(undefined), []);
+});
+
+test('serviços que gravam no perfil: rede e armazenamento; páginas e GPU não', () => {
+  assert.equal(ehEscritor('network.mojom.NetworkService'), true);
+  assert.equal(ehEscritor('storage.mojom.StorageService'), true);
+  for (const tipo of ['browser', 'renderer', 'GPU', 'mac_notifications.mojom.MacNotificationProvider', '', undefined]) assert.equal(ehEscritor(tipo), false, String(tipo));
 });
 
 test('janela fechada: nenhuma aba de página aberta', () => {

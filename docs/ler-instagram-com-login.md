@@ -55,16 +55,14 @@ desinstalar (o desinstalar só apaga `.ferramentas/`). No Windows, a chave é a 
    depuração do navegador (`Storage.getCookies`), ele só olha, a cada segundo, se o cookie
    `sessionid` do Instagram apareceu. Nenhuma página é lida para isso.
 4. **Percebe, fecha e avisa.** Com a sessão, espera 3 segundos e fecha a janela pedindo ao navegador
-   (`Browser.close`, que grava os cookies no disco). Espera o processo principal **e** os processos
-   filhos que ele tinha (lista de `SystemInfo.getProcessInfo`) saírem sozinhos: no Windows, o serviço
-   de rede, que grava os cookies, pode terminar depois do principal. Só encerra à força o que ainda
-   estiver vivo depois de 30 s. Depois, confere num navegador novo, sem janela, que o login ficou
-   gravado; só então devolve `INSTAGRAM_ENTROU`. Se não ficou, `INSTAGRAM_ENTRAR_FALHOU`.
-   Janela (ou Chrome) fechada pela pessoa: `INSTAGRAM_JANELA_FECHADA`. DevTools sem responder com o
-   Chrome aberto, três vezes seguidas: `INSTAGRAM_ENTRAR_FALHOU`, com o erro em `dados.detalhe`.
-   Sem entrar em 9 minutos: `INSTAGRAM_PRAZO_ACABOU` (9, e não 10, para a janela fechar antes de o
-   assistente desistir). Sem Chrome nem Edge: `INSTAGRAM_SEM_CHROME`. No dia de uma verificação:
-   `INSTAGRAM_PAUSADO_HOJE`.
+   (`Browser.close`: no fechamento normal, o Chrome grava os cookies antes de o processo principal
+   sair). Espera o principal sair sozinho, até 30 s: num computador lento ele leva mais de 10 s
+   (medido num Mac sobrecarregado), e matar antes perde o login. Depois, dá até 15 s aos serviços
+   que gravam no perfil (rede e armazenamento, da lista de `SystemInfo.getProcessInfo`) e encerra o
+   que sobrar, para o próximo navegador abrir o perfil sem ninguém segurando os arquivos (no Windows,
+   um serviço de rede antigo segurando o arquivo dos cookies esconde o login). Encerrar o principal à
+   força é o último recurso, depois do teto. Por fim, confere num navegador novo, sem janela, que o
+   login ficou gravado; só então devolve `INSTAGRAM_ENTROU`. Se não ficou, `INSTAGRAM_ENTRAR_FALHOU`.
 5. **Nada fica para trás.** Todo Chrome aberto com o perfil guardado fecha junto se o processo do
    estúdio acabar ou for interrompido. No Windows, a árvore inteira (`taskkill /T /F`). Se mesmo
    assim o perfil estiver em uso, a mensagem é `INSTAGRAM_LOGIN_EM_USO`: pode ser a janela de

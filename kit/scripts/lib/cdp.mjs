@@ -14,9 +14,14 @@ const TETO_SUBIDA_MS = 20000;
 // Prazo de cada pergunta ao DevTools durante a subida e da aba nova (endereço e WebSocket).
 const TETO_PEDIDO_MS = 2000;
 const TETO_ABA_MS = 10000;
-// Teto para o navegador fechar sozinho. Normalmente fecha em menos de 1 s e a espera acaba ali;
-// o teto só vale para um navegador travado.
+// Teto para o processo principal fechar sozinho. Normalmente fecha em menos de 1 s e a espera acaba
+// ali; o teto só vale para um navegador travado.
 const TETO_FECHAR_MS = 30000;
+// Teto para os serviços que gravam no perfil saírem depois do principal. Medido num Mac sobrecarregado:
+// o principal levou 11 s para sair e o serviço de rede, mais 4 s; num Mac livre, os dois saem em 0,2 s.
+const TETO_ESCRITORES_MS = 15000;
+// Teto para um processo encerrado à força sumir da lista do sistema.
+const TETO_ENCERRAR_MS = 5000;
 
 // Números dos processos que ainda existem (process.kill com sinal 0 só pergunta, não encerra).
 export function processosVivos(pids) {
@@ -47,14 +52,31 @@ async function esperarSumirem(pids, fim) {
   return true;
 }
 
-// Os processos do navegador (principal, páginas, rede, armazenamento) pelo DevTools.
+// Os processos do navegador ({ pid, tipo }: principal, páginas, GPU, rede, armazenamento) pelo DevTools.
 async function processosDoNavegador(nav) {
   try {
     const r = await nav.send('SystemInfo.getProcessInfo', {}, TETO_PEDIDO_MS * 2);
-    return (r.processInfo || []).map((p) => Number(p.id)).filter((pid) => Number.isInteger(pid) && pid > 0);
+    return (r.processInfo || [])
+      .map((p) => ({ pid: Number(p.id), tipo: String(p.type || '') }))
+      .filter((p) => Number.isInteger(p.pid) && p.pid > 0);
   } catch {
     return [];
   }
+}
+
+// Serviços que gravam no perfil: o de rede (cookies) e o de armazenamento.
+export function ehEscritor(tipo) {
+  const t = String(tipo || '');
+  return t.includes('NetworkService') || t.includes('StorageService');
+}
+
+// Espera a promessa, no máximo ms, sem deixar relógio pendurado (ele seguraria o processo aberto).
+function ateNoMaximo(promessa, ms) {
+  let relogio;
+  const limite = new Promise((res) => {
+    relogio = setTimeout(res, ms);
+  });
+  return Promise.race([promessa, limite]).finally(() => clearTimeout(relogio));
 }
 
 // Prazo de um pedido sem passar do prazo total que ainda resta.
@@ -159,29 +181,38 @@ export async function launch({ largura = 1920, altura = 1080, perfil = '', comJa
       } catch {}
     }, 300);
   };
-  // Fecha pedindo ao navegador (Browser.close: ele grava os cookies no disco antes de sair) e espera
-  // de verdade: o processo principal E os processos filhos que ele tinha (o serviço de rede, que é
-  // quem grava os cookies, pode terminar depois do principal, sobretudo no Windows). Só se algum
-  // ainda estiver vivo depois do teto, encerra à força. Devolve true se fechou sozinho, por inteiro.
+  // Fecha pedindo ao navegador (Browser.close: no fechamento normal, o Chrome grava os cookies no
+  // disco antes de o processo principal sair) e espera o principal sair de verdade, até
+  // TETO_FECHAR_MS: num computador lento ele leva mais de 10 s, e matar antes perde o login. Depois,
+  // dá até TETO_ESCRITORES_MS aos serviços que gravam no perfil (rede e armazenamento), que podem
+  // sair depois do principal; o que sobrar (páginas, GPU, um serviço travado) é encerrado, para o
+  // próximo navegador abrir o perfil sem ninguém segurando os arquivos (no Windows, segurar o
+  // arquivo dos cookies esconde o login). Encerrar o principal à força é o último recurso, depois do
+  // teto. Devolve true se o principal saiu sozinho. ultimoFechamento() conta o que sobrou.
+  let sobraram = [];
   const fecharComCalma = async (tetoMs = TETO_FECHAR_MS) => {
-    let filhos = [];
+    let processos = [];
     let calmo = morreu;
     if (!morreu) {
-      const fim = Date.now() + tetoMs;
       try {
         const nav = await conectarNavegador(porta, { prazoMs: TETO_ABA_MS });
-        filhos = await processosDoNavegador(nav);
+        processos = await processosDoNavegador(nav);
         nav.send('Browser.close', {}, tetoMs).catch(() => {});
-        await Promise.race([saiu, esperar(Math.max(1, fim - Date.now()))]);
+        await ateNoMaximo(saiu, tetoMs);
         nav.close();
-        calmo = morreu && (await esperarSumirem(filhos, fim));
+        calmo = morreu;
+        const escritores = processos.filter((p) => ehEscritor(p.tipo)).map((p) => p.pid);
+        if (calmo) await esperarSumirem(escritores, Date.now() + TETO_ESCRITORES_MS);
       } catch {
         /* sem conexão: vai à força */
       }
     }
     close();
-    // último recurso: filho que sobrou depois do teto (o principal já foi encerrado acima)
-    if (!calmo) for (const pid of processosVivos(filhos)) encerrar(pid);
+    const vivos = processosVivos(processos.map((p) => p.pid));
+    sobraram = processos.filter((p) => vivos.includes(p.pid)).map((p) => p.tipo);
+    for (const pid of vivos) encerrar(pid);
+    // encerrar é um pedido ao sistema: espera os encerrados sumirem de fato
+    await esperarSumirem(vivos, Date.now() + TETO_ENCERRAR_MS);
     return calmo;
   };
   const fim = Date.now() + TETO_SUBIDA_MS;
@@ -189,7 +220,7 @@ export async function launch({ largura = 1920, altura = 1080, perfil = '', comJa
     try {
       // sem prazo, um navegador que aceita a conexão e não responde prenderia o laço para sempre
       const r = await fetch(`http://127.0.0.1:${porta}/json/version`, { signal: prazo(fim, TETO_PEDIDO_MS) });
-      if (r.ok) return { porta, close, fecharComCalma, vivo: () => !morreu, navegador: achado };
+      if (r.ok) return { porta, close, fecharComCalma, ultimoFechamento: () => ({ sobraram }), vivo: () => !morreu, navegador: achado };
     } catch {
       /* subindo */
     }
