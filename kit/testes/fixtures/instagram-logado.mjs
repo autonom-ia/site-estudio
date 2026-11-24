@@ -128,7 +128,8 @@ function responder(req, origem, exigirLogin) {
 }
 
 // Sobe o servidor numa porta livre. pedidos: tudo o que foi pedido.
-export function servirInstagramLogado({ exigirLogin = false } = {}) {
+// atrasoMs: quanto cada resposta da grade demora, como num computador ou numa internet lenta.
+export function servirInstagramLogado({ exigirLogin = false, atrasoMs = 0 } = {}) {
   const pedidos = [];
   return new Promise((resolve) => {
     const srv = http.createServer((req, res) => {
@@ -139,7 +140,9 @@ export function servirInstagramLogado({ exigirLogin = false } = {}) {
       if (r.para) return res.writeHead(302, { Location: r.para }).end();
       const cabecalhos = { 'Content-Type': `${r.tipo}${r.tipo.startsWith('text') ? '; charset=utf-8' : ''}` };
       if (r.cookie) cabecalhos['Set-Cookie'] = r.cookie;
-      return res.writeHead(200, cabecalhos).end(r.corpo);
+      const enviar = () => res.writeHead(200, cabecalhos).end(r.corpo);
+      if (atrasoMs && req.url.startsWith('/graphql/')) return setTimeout(enviar, atrasoMs);
+      return enviar();
     });
     srv.listen(0, '127.0.0.1', () => {
       const origem = `http://127.0.0.1:${srv.address().port}`;

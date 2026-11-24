@@ -111,6 +111,10 @@ test('respostas guardadas: só as de dados do próprio Instagram', () => {
   assert.equal(aceita('https://scontent.cdninstagram.com/v/foto.jpg', 'image/jpeg'), false);
   assert.equal(aceita('https://outro.example/graphql/query', 'application/json'), false);
   assert.equal(aceita('não é endereço', 'application/json'), false);
+  // só o endereço: é um pedido de dados (para saber se a página ainda está pedindo)
+  assert.equal(aceita('https://www.instagram.com/graphql/query'), true);
+  assert.equal(aceita('https://www.instagram.com/casa/'), false);
+  assert.equal(aceita('https://outro.example/graphql/query'), false);
 });
 
 test('janela fechada: nenhuma aba de página aberta', () => {
@@ -311,7 +315,7 @@ function leitorFalso({ links, jsonsDePosts = [], caiEm = [] }) {
     endereco: async () => atual,
     avaliar: async (fn) => (fn.name === 'lerPerfilNaPagina' ? { links, jsons: [], jsonsDePosts, descricao: '' } : true),
     esperarAte: async (fn) => (fn.name === 'contarLinks' ? links.length : { jsons: [], datas: ['2026-11-01T12:00:00Z'], descricao: 'x: "legenda lida"', foto: 'https://exemplo.invalid/f.jpg' }),
-    escutarRespostas: () => ({ textos: async () => [], parar: () => {} }),
+    escutarRespostas: () => ({ textos: async () => [], esperarQuieto: async () => true, parar: () => {} }),
   };
 }
 

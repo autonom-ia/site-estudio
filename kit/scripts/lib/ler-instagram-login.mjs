@@ -64,7 +64,8 @@ export function bloqueioDoEndereco(href) {
   return '';
 }
 
-// Resposta que vale guardar: do mesmo endereço do Instagram, nas rotas de dados da página.
+// Pedido de dados (só o endereço) ou resposta que vale guardar (endereço e tipo): do mesmo endereço do
+// Instagram, nas rotas de dados da página.
 export function respostaDaLeitura(base = BASE_INSTAGRAM) {
   let host;
   try {
@@ -81,6 +82,7 @@ export function respostaDaLeitura(base = BASE_INSTAGRAM) {
     }
     if (u.host !== host) return false;
     const rota = u.pathname.includes('graphql') || u.pathname.startsWith('/api/v1/');
+    if (tipo === undefined) return rota;
     const dados = tipo.includes('json') || tipo.includes('javascript') || tipo.includes('text');
     return rota && dados;
   };
@@ -128,7 +130,8 @@ async function bloqueio(leitor) {
 }
 
 // Rola a grade juntando os links e os itens do JSON, até ter "maximo", parar de vir novidade ou
-// aparecer um bloqueio.
+// aparecer um bloqueio. Depois de cada rolagem, espera a página terminar de pedir os dados (num
+// computador ou internet lentos, a resposta demora): "sem novidade" só conta com a página quieta.
 async function rolarGrade(leitor, o) {
   const grade = new Map();
   let itens = new Map();
@@ -152,6 +155,7 @@ async function rolarGrade(leitor, o) {
     o.aoAvancar(`Rolando o Instagram: ${total} publicações até agora...`);
     await leitor.avaliar(rolar);
     await esperar(ritmo(o.pausa));
+    await o.escuta.esperarQuieto();
     parou = await bloqueio(leitor);
     if (parou) break;
   }
@@ -173,6 +177,7 @@ async function percorrer(leitor, o) {
   let parou = await bloqueio(leitor);
   if (parou) return { perfil: perfilVazio, posts: [], fotos: [], comLogin: true, bloqueio: parou, prazo: false, falhas: [] };
   await leitor.esperarAte(contarLinks, PRAZO_DA_PAGINA_MS);
+  await o.escuta.esperarQuieto();
   const g = await rolarGrade(leitor, o);
   parou = g.parou;
   const respostas = (await o.escuta.textos()).filter((t) => t.includes('"biography"'));

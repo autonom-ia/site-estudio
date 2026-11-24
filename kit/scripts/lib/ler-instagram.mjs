@@ -58,9 +58,14 @@ export function contarLinks() {
   return [...document.querySelectorAll('a[href]')].filter((a) => a.href.includes('/p/') || a.href.includes('/reel/')).length;
 }
 
+// Rola e espera dois quadros: o evento de rolagem da página já rodou quando volta (com teto, para uma
+// aba sem quadros não prender a leitura).
 export function rolar() {
   window.scrollBy(0, window.innerHeight * 3);
-  return true;
+  return new Promise((pronto) => {
+    setTimeout(() => pronto(true), 1000);
+    requestAnimationFrame(() => requestAnimationFrame(() => pronto(true)));
+  });
 }
 
 // Roda dentro da página de uma publicação.

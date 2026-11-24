@@ -68,6 +68,18 @@ test('com login: rola a grade e lê 40 publicações das respostas da página, f
   for (const f of r.fotos) assert.equal(f.largura, LARGURA_MAIOR, f.arquivo);
 });
 
+// No computador lento de quem usa, a resposta da grade demora a chegar depois de rolar. A leitura
+// espera a página terminar de pedir (sem conversa em andamento), e não desiste pelo relógio.
+test('com login, grade lenta: cada resposta demora 1,5 s e mesmo assim saem as 40 publicações', opcoes, async (t) => {
+  const lento = await servirInstagramLogado({ atrasoMs: 1500 });
+  t.after(() => lento.fechar());
+  const r = await lerInstagramComLogin(leitor, USUARIO_LOGADO, { base: lento.origem, pausa: 50 });
+  assert.equal(r.bloqueio, '');
+  assert.equal(r.posts.length, 40);
+  assert.ok(r.posts.every((p) => p.de === 'json'));
+  assert.deepEqual(lento.pedidos.filter((p) => p.includes('/p/')), [], 'nenhuma página de publicação aberta');
+});
+
 test('verificação no meio: para na primeira página que pede, sem abrir as outras, e guarda o que já leu', opcoes, async () => {
   srv.pedidos.length = 0;
   const destino = path.join(pasta, 'desafio');

@@ -79,6 +79,10 @@ maior vira 40).
   `width` entre os candidatos, em geral 1080 ou 1440). Só abre a página das publicações que não
   vieram nas respostas. Uma publicação que falha não derruba as outras.
 - **Ritmo de gente.** Entre uma rolagem, ou uma página, e a próxima: de 2 a 4 segundos.
+- **Espera a página, não o relógio.** Depois de cada rolagem, o estúdio espera a página terminar de
+  pedir os dados (nenhum pedido em andamento e 0,6 s de silêncio, com teto de 20 s). Num computador ou
+  numa internet lenta, a resposta demora, e só com a página quieta uma rolagem conta como "sem novidade"
+  (três seguidas encerram a rolagem).
 - **Prazo próprio.** 7 minutos para o Instagram: acabou, para, guarda o que leu e avisa com
   `LER_INSTAGRAM_PARCIAL`. Cabe nos 10 minutos do assistente, com o Google, o site e as fotos.
 - **Para no primeiro sinal.** Depois de cada página, o estúdio olha o endereço. Verificação

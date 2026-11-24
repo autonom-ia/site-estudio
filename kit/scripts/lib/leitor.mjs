@@ -59,7 +59,7 @@ export async function abrirLeitor(deps = PECAS, opcoes = {}) {
     // Cookies que a aba mandaria a estes endereços (só para conferir se há login; nunca vão para a saída).
     cookies: async (urls) => (await tab.send('Network.getCookies', { urls })).cookies || [],
     // Guarda o texto das respostas que a própria página pede e que a função aceita (endereço, tipo).
-    // Devolve { textos() (espera as que ainda estão chegando), parar() }.
+    // Devolve { textos() (espera as que ainda estão chegando), esperarQuieto(), parar() }.
     escutarRespostas: (aceita) => escutarRespostas(tab, aceita),
     fechar: () => {
       try {
@@ -80,20 +80,42 @@ export async function abrirLeitor(deps = PECAS, opcoes = {}) {
   };
 }
 
+// Silêncio sem nenhum pedido de dados para a página ser dada como quieta, e o teto da espera.
+const SILENCIO_MS = 600;
+const TETO_DO_SILENCIO_MS = 20000;
+
+// aceita(url) diz se um pedido é de dados; aceita(url, tipo) se a resposta vale guardar.
 function escutarRespostas(tab, aceita) {
-  const pedidos = new Set();
+  const guardar = new Set();
+  const emVoo = new Set();
   const textos = [];
   const pendentes = [];
+  let ultimaAtividade = Date.now();
+  const mexeu = () => {
+    ultimaAtividade = Date.now();
+  };
   const ouvinte = (m) => {
     const p = m.params || {};
-    if (m.method === 'Network.responseReceived' && p.response && aceita(String(p.response.url || ''), String(p.response.mimeType || ''))) pedidos.add(p.requestId);
-    else if (m.method === 'Network.loadingFinished' && pedidos.has(p.requestId)) {
-      pedidos.delete(p.requestId);
+    if (m.method === 'Network.requestWillBeSent' && p.request && aceita(String(p.request.url || ''))) {
+      emVoo.add(p.requestId);
+      mexeu();
+    } else if (m.method === 'Network.responseReceived' && p.response && aceita(String(p.response.url || ''), String(p.response.mimeType || ''))) {
+      guardar.add(p.requestId);
+      mexeu();
+    } else if (m.method === 'Network.loadingFinished' && (guardar.has(p.requestId) || emVoo.has(p.requestId))) {
+      emVoo.delete(p.requestId);
+      mexeu();
+      if (!guardar.has(p.requestId)) return;
+      guardar.delete(p.requestId);
       const lido = tab
         .send('Network.getResponseBody', { requestId: p.requestId })
         .then((r) => textos.push(r.base64Encoded ? Buffer.from(r.body, 'base64').toString('utf8') : r.body))
         .catch(() => {});
       pendentes.push(lido);
+    } else if (m.method === 'Network.loadingFailed' && emVoo.has(p.requestId)) {
+      emVoo.delete(p.requestId);
+      guardar.delete(p.requestId);
+      mexeu();
     }
   };
   tab.on(ouvinte);
@@ -101,6 +123,18 @@ function escutarRespostas(tab, aceita) {
     textos: async () => {
       await Promise.allSettled(pendentes);
       return [...textos];
+    },
+    // Espera a página parar de pedir dados: nenhum pedido em andamento e SILENCIO_MS sem nada novo,
+    // contados também a partir de agora (o pedido de uma rolagem pode sair um instante depois).
+    // Devolve true quando ficou quieta, false se bateu no teto com pedido ainda em andamento.
+    esperarQuieto: async ({ silencioMs = SILENCIO_MS, tetoMs = TETO_DO_SILENCIO_MS } = {}) => {
+      const inicio = Date.now();
+      while (Date.now() - inicio < tetoMs) {
+        const desde = Math.max(ultimaAtividade, inicio);
+        if (emVoo.size === 0 && Date.now() - desde >= silencioMs) return true;
+        await esperar(100);
+      }
+      return false;
     },
     parar: () => tab.off(ouvinte),
   };
