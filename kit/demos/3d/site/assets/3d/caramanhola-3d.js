@@ -137,7 +137,16 @@
     var inclinacao = 0;
     var arrastando = null;
     var mexeu = false;
-    var inicio = performance.now();
+    // O giro do começo conta do primeiro quadro desenhado com o palco à vista, não da montagem:
+    // a cena monta um pouco antes de o palco aparecer (o carregador começa a 300 px da tela), e
+    // num aparelho lento o primeiro desenho demora. Contando da montagem, quem chega devagar ao
+    // palco, ou tem um celular lento, veria a peça já parada.
+    var inicio = null;
+    var aVista = function () {
+      if (document.visibilityState === 'hidden') return false;
+      var r = palco.getBoundingClientRect();
+      return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
+    };
     cena.ouvir(cena.tela, 'pointerdown', function (e) {
       arrastando = { x: e.clientX, y: e.clientY, angulo: angulo, inclinacao: inclinacao };
       mexeu = true;
@@ -159,7 +168,8 @@
 
     cena.animar(function (t) {
       // conta pelo tempo, não por quadro: no fim do prazo o ângulo é o repouso, exato
-      var k = Math.min(1, Math.max(0, (t - inicio) / GIRO_SOZINHO_MS));
+      if (inicio === null && !mexeu && aVista()) inicio = t;
+      var k = inicio === null ? 0 : Math.min(1, Math.max(0, (t - inicio) / GIRO_SOZINHO_MS));
       var girando = !mexeu && k < 1;
       if (!mexeu) angulo = repouso - GIRO_SOZINHO * Math.pow(1 - k, 3);
       if (!arrastando) inclinacao *= 0.92;
