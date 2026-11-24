@@ -62,16 +62,20 @@ export function recuperarSobras(c, renomear = fs.renameSync) {
 
 // Troca o conteúdo de destino pelo de origem sem deixar o site sem a pasta: o novo é montado ao lado
 // (.trocando), o atual vai para .descartando, o novo entra no lugar e só então o descartado sai. Se a
-// entrada do novo falhar (no Windows, um arquivo aberto em outro programa), o atual volta. Sobra de
-// uma troca anterior: a pasta volta ao lugar primeiro; o .trocando de antes é só uma cópia montada e
-// sai; um .descartando que sobra com a pasta no lugar é a versão vista, já guardada em tentativa/
-// (o "escolher" guarda antes de trocar), nunca a única cópia. "renomear" é injetável para os testes.
-export function trocarPasta(origem, destino, renomear = fs.renameSync) {
+// entrada do novo falhar (no Windows, um arquivo aberto em outro programa), o atual volta e o erro
+// sobe. Sobra de uma troca anterior: a pasta volta ao lugar primeiro; o .trocando de antes é só uma
+// cópia montada e sai; um .descartando que sobra com a pasta no lugar é o que uma troca já concluída
+// tirou (a versão vista já estava em tentativa/), nunca a única cópia. mover: origem é uma pasta
+// montada só para a troca, e entra pelo nome, sem cópia. "renomear" é injetável para os testes.
+// Devolve { sobra }: o .descartando que não saiu depois da troca feita (arquivo aberto no Windows),
+// ou null. A troca valeu; quem chama avisa, e a próxima troca apaga a sobra.
+export function trocarPasta(origem, destino, renomear = fs.renameSync, { mover = false } = {}) {
   const { novo, velho } = sobrasDaTroca(destino);
   devolverSeFora(destino, renomear);
   fs.rmSync(novo, { recursive: true, force: true });
   fs.rmSync(velho, { recursive: true, force: true });
-  copiarPasta(origem, novo, { links: 'recriar' });
+  if (mover) renomear(origem, novo);
+  else copiarPasta(origem, novo, { links: 'recriar' });
   const tinha = existeSemSeguir(destino);
   if (tinha) renomear(destino, velho);
   try {
@@ -81,13 +85,20 @@ export function trocarPasta(origem, destino, renomear = fs.renameSync) {
     fs.rmSync(novo, { recursive: true, force: true });
     throw erro;
   }
-  fs.rmSync(velho, { recursive: true, force: true });
+  try {
+    fs.rmSync(velho, { recursive: true, force: true });
+    return { sobra: null };
+  } catch {
+    return { sobra: velho };
+  }
 }
 
 // Guarda a versão que a pessoa viu (site/ e _gerador/) em tentativa/, antes de voltar ao antes. Fica
 // até o próximo "antes" ou o "depois"; uma tentativa nova substitui a anterior. Montada ao lado e
-// trocada no fim. Se uma troca parou no meio, a versão vista pode estar no .descartando: é dela que a
-// tentativa copia. Nada do site é apagado aqui. Devolve as pastas guardadas.
+// trocada no fim. A versão vista é a pasta no lugar; só se ela faltar (troca parada no meio que a
+// abertura do site ainda não pôs de volta) é o .descartando. Um .descartando ao lado da pasta é sobra
+// de uma troca já concluída, nunca a versão vista. Nada do site é apagado aqui. Devolve as pastas
+// guardadas.
 export function guardarTentativa(c, ad) {
   const montando = `${ad.tentativa}.guardando`;
   fs.rmSync(montando, { recursive: true, force: true });
@@ -95,7 +106,7 @@ export function guardarTentativa(c, ad) {
   for (const [nome, de] of PASTAS_TROCADAS) {
     const atual = de(c);
     const { velho } = sobrasDaTroca(atual);
-    const origem = existeSemSeguir(velho) ? velho : atual;
+    const origem = existeSemSeguir(atual) ? atual : velho;
     if (!ehPasta(origem)) continue;
     copiarPasta(origem, path.join(montando, nome), { links: 'recriar' });
     guardadas.push(nome);
@@ -104,12 +115,6 @@ export function guardarTentativa(c, ad) {
   fs.rmSync(ad.tentativa, { recursive: true, force: true });
   fs.renameSync(montando, ad.tentativa);
   return guardadas;
-}
-
-// Guarda uma cópia de origem em destino, trocando a anterior. Origem ausente: tira a cópia velha.
-export function guardarCopia(origem, destino) {
-  fs.rmSync(destino, { recursive: true, force: true });
-  if (ehPasta(origem)) copiarPasta(origem, destino, { links: 'recriar' });
 }
 
 // Só as mudanças com título de verdade contam. Devolve { pedido, mudancas, ignoradas }.

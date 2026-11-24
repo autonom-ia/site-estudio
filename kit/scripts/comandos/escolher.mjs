@@ -10,36 +10,45 @@
 // A volta é feita pasta por pasta sem nunca deixar o site sem ela (lib/antes-depois.mjs). Se uma troca
 // falhar (no Windows, um arquivo aberto em outro programa), reprova com RESTAURACAO_FALHOU e o estado
 // guarda que a volta ficou pendente: rodar de novo continua de onde parou e não guarda o site pela
-// metade por cima da versão vista.
+// metade por cima da versão vista. Troca feita com a cópia velha ainda ao lado (não saiu agora) vale,
+// com o aviso SOBRA_DA_TROCA. Se o antes foi guardado sem _gerador/ (estado.gerador false), voltar ao
+// antes tira o _gerador/ que apareceu depois (ele fica na tentativa/).
 import fs from 'node:fs';
 import path from 'node:path';
 import { nomeDoSite } from '../lib/args.mjs';
 import { abrirSite } from '../lib/site.mjs';
-import { ehPasta } from '../lib/caminhos.mjs';
+import { ehPasta, relativoARaiz } from '../lib/caminhos.mjs';
 import { escreverJson, lerJson } from '../lib/json.mjs';
 import { aviso, falha, reprovado } from '../lib/saida.mjs';
 import { caminhosDoAntesDepois, trocarPasta, guardarTentativa, ESCOLHAS } from '../lib/antes-depois.mjs';
 
 const CODIGO = Object.freeze({ depois: 'FICOU_O_DEPOIS', antes: 'VOLTOU_COMO_ESTAVA', outro: 'PRONTO_PARA_OUTRO_CAMINHO' });
 
-// Troca as pastas da lista [pasta, origem, destino]. Devolve as trocadas; falha vira RESTAURACAO_FALHOU.
+// Troca as pastas da lista [pasta, origem, destino]; origem null tira a pasta. Devolve { feitas,
+// sobras }; falha vira RESTAURACAO_FALHOU.
 function trocarTodas(c, escolha, trocas) {
   const feitas = [];
+  const sobras = [];
   for (const [pasta, origem, destino] of trocas) {
     try {
-      trocarPasta(origem, destino);
+      if (origem === null) fs.rmSync(destino, { recursive: true, force: true });
+      else {
+        const { sobra } = trocarPasta(origem, destino);
+        if (sobra) sobras.push(sobra);
+      }
     } catch (erro) {
       reprovado('RESTAURACAO_FALHOU', { nome: c.nome, escolha, pasta, erro: erro.code || String(erro.message || erro), tentativa: c.rel('revisao', 'antes-depois', 'tentativa') });
     }
     feitas.push(pasta);
   }
-  return feitas;
+  return { feitas, sobras };
 }
 
 // Volta site/ e _gerador/ ao que o "antes" guardou.
-function voltarAoAntes(c, ad, escolha) {
+function voltarAoAntes(c, ad, escolha, estado) {
   const trocas = [['site', ad.antes, c.site]];
   if (ehPasta(ad.gerador)) trocas.push(['_gerador', ad.gerador, c.gerador]);
+  else if (estado.gerador === false && ehPasta(c.gerador)) trocas.push(['_gerador', null, c.gerador]);
   return trocarTodas(c, escolha, trocas);
 }
 
@@ -61,9 +70,9 @@ export default async function escolher(args) {
   if (estado.aberto !== true) reprovado('ANTES_JA_RESOLVIDO', { nome, escolha: estado.escolha || '' });
 
   const avisos = [];
-  let restauradas = [];
+  let troca = { feitas: [], sobras: [] };
   if (escolha === 'depois') {
-    if (estado.restauracao_pendente === true) restauradas = voltarAVersaoVista(c, ad, escolha);
+    if (estado.restauracao_pendente === true) troca = voltarAVersaoVista(c, ad, escolha);
     fs.rmSync(ad.tentativa, { recursive: true, force: true });
   } else {
     // A versão vista só é guardada uma vez por volta: se uma volta anterior parou no meio, o site já
@@ -73,12 +82,14 @@ export default async function escolher(args) {
       guardarTentativa(c, ad);
       escreverJson(ad.estado, { ...estado, restauracao_pendente: true });
     }
-    restauradas = voltarAoAntes(c, ad, escolha);
+    troca = voltarAoAntes(c, ad, escolha, estado);
   }
+  const restauradas = troca.feitas;
+  avisos.push(...troca.sobras.map((sobra) => aviso('SOBRA_DA_TROCA', { sobra: relativoARaiz(sobra) })));
   if (escolha === 'outro') {
     const { pedido } = lerJson(ad.mudancas, { pedido: '' });
     escreverJson(ad.mudancas, { pedido: typeof pedido === 'string' ? pedido : '', mudancas: [] });
-    escreverJson(ad.estado, { aberto: true });
+    escreverJson(ad.estado, { aberto: true, ...(typeof estado.gerador === 'boolean' ? { gerador: estado.gerador } : {}) });
   } else {
     escreverJson(ad.estado, { aberto: false, escolha });
   }

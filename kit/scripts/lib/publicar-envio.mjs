@@ -57,10 +57,11 @@ export async function situacaoDoEndereco(cfg, chave, nome) {
   const c = exigir(await semFalhaDeRede(() => chamar(cfg, 'GET', '/api/estudio/sites', { chave })), 200);
   if (!Array.isArray(c.sites)) throw new KitErro('PUBLICAR_RESPOSTA_ESTRANHA', { etapa: 'listar sites' });
   const site = c.sites.find((s) => s && s.slug === nome);
-  if (!site) return { teveVersao: false, versao: null };
+  if (!site) return { teveVersao: false, versao: null, versoes: [] };
   const versao = Number.isInteger(site.versao) ? site.versao : null;
-  const guardadas = Array.isArray(site.versoes) ? site.versoes.length : 0;
-  return { teveVersao: versao !== null || guardadas > 0, versao };
+  const lista = Array.isArray(site.versoes) ? site.versoes : [];
+  const versoes = lista.map((v) => v && v.versao).filter(Number.isInteger);
+  return { teveVersao: versao !== null || lista.length > 0, versao, versoes };
 }
 
 const versaoNova = (site, antes) => site.versao !== null && site.versao !== antes;

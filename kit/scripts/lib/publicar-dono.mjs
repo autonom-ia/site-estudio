@@ -7,7 +7,8 @@
 // - sites/<nome>/no-ar.json: o nome do endereço e o link, para a pessoa e para a próxima vez
 //   (vale como lembrete, não como prova: ele vai junto quando a pasta é copiada);
 // - .ferramentas/publicar/donos.json: a prova. Indexada pelo caminho real da pasta do site e
-//   pelo endereço, guarda a versão que esta pasta pôs no ar (ou "pendente", com envio em curso). Fica
+//   pelo endereço, guarda a versão que esta pasta pôs no ar (ou "pendente", com envio em curso, e as
+//   versões que o endereço já tinha quando o envio começou). Fica
 //   fora das pastas da pessoa e a atualização do estúdio não mexe nela (atualizacao.mjs preserva
 //   .ferramentas/); desinstalar apaga, e aí a primeira publicação pede --por-cima uma vez.
 //
@@ -31,10 +32,11 @@ import { situacaoDoEndereco } from './publicar-envio.mjs';
 const arquivoDonos = (ferr = FERR) => path.join(pastaPublicar(ferr), 'donos.json');
 export const arquivoNoAr = (c) => path.join(c.pasta, 'no-ar.json');
 
-// Caminho real (sem link e sem "..") da pasta do site: a mesma pasta dá sempre a mesma chave.
+// Caminho real (sem link e sem "..") da pasta do site: a mesma pasta dá sempre a mesma chave. O
+// .native devolve a caixa que está no disco (no Windows, "Sites" e "sites" são a mesma pasta).
 const chaveDaPasta = (c) => {
   try {
-    return fs.realpathSync(c.pasta);
+    return fs.realpathSync.native(c.pasta);
   } catch {
     return path.resolve(c.pasta);
   }
@@ -80,7 +82,18 @@ export function anotarDono(c, endereco, registro, ferr = FERR) {
   gravarPrivado(arquivoDonos(ferr), novo);
 }
 
-const bate = (registro, situacao) => registro.pendente === true || situacao.versao === null || registro.versao === situacao.versao;
+// O que está no ar é o que esta pasta pôs? Com envio pendente (o processo pode ter caído no meio),
+// vale a versão que ela tinha ou a ÚNICA versão nova desde que o envio começou (a deste envio). Duas
+// ou mais novas: alguém mais publicou ali, e não dá para saber qual é desta pasta. Sem a lista de
+// antes do envio, só vale a versão que ela tinha.
+function bate(registro, situacao) {
+  if (situacao.versao === null) return true;
+  const antes = registro.pendente === true && Array.isArray(registro.versoes_antes) ? registro.versoes_antes : null;
+  if (!antes) return registro.versao === situacao.versao;
+  const novas = situacao.versoes.filter((v) => !antes.includes(v));
+  if (!novas.length) return registro.versao === situacao.versao;
+  return novas.length === 1 && novas[0] === situacao.versao;
+}
 
 // Outras pastas deste computador com registro para este endereço, primeiro a que pôs no ar o que está
 // lá agora (é dela que esta é cópia, ou de onde esta foi movida).
@@ -92,14 +105,15 @@ function outrasPastas(c, endereco, situacao, ferr) {
   return [...outras].sort((a, b) => primeiro(a) - primeiro(b)).map(([pasta]) => pasta);
 }
 
+// Devolve a situação do endereço ({ teveVersao, versao, versoes }), que o envio guarda no registro
+// pendente. --por-cima pula a conferência, mas a situação é lida do mesmo jeito.
 export async function conferirDono(cfg, chave, c, endereco, porCima, ferr = FERR) {
-  if (porCima) return;
   const situacao = await situacaoDoEndereco(cfg, chave, endereco);
-  if (!situacao.teveVersao) return;
+  if (porCima || !situacao.teveVersao) return situacao;
   const dono = lerDono(c, endereco, ferr);
   const emUso = (versaoDesta) => reprovado('PUBLICAR_ENDERECO_JA_EM_USO', { nome: endereco, versao_no_ar: situacao.versao, versao_desta: versaoDesta });
   if (dono) {
-    if (bate(dono, situacao)) return;
+    if (bate(dono, situacao)) return situacao;
     emUso(Number.isInteger(dono.versao) ? dono.versao : null);
   }
   const outras = outrasPastas(c, endereco, situacao, ferr);
@@ -114,7 +128,7 @@ export async function conferirDono(cfg, chave, c, endereco, porCima, ferr = FERR
   const anotado = lerNoAr(c);
   if (anotado.nome === endereco && bate(anotado, situacao)) {
     anotarDono(c, endereco, { versao: Number.isInteger(anotado.versao) ? anotado.versao : situacao.versao, migrado: true }, ferr);
-    return;
+    return situacao;
   }
   emUso(null);
 }

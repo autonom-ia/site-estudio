@@ -6,7 +6,8 @@
 //    e o molde não leva arquivo sem extensão (a licença do Lenis era LICENSE e o painel recusava);
 // 3. .nojekyll vai no pacote para o GitHub Pages, mas fica fora do envio para o painel;
 // 4. o endereço só é trocado se o que está no ar foi esta pasta que pôs (outro site, apresentação,
-//    cópia, pasta movida pedem --por-cima ou --no-ar); endereço só reservado não conta;
+//    cópia, pasta movida pedem --por-cima ou --no-ar); endereço só reservado não conta; envio que caiu
+//    no meio libera só a única versão nova que apareceu, nunca uma publicação de outro lugar depois;
 // 5. PARTE_EM_ANDAMENTO se reenvia; pedidos de espera do painel têm frase própria;
 // 6. aviso de arquivo sem uso compara o nome inteiro ("data.png" não usa "a.png").
 // Serviço falso só em 127.0.0.1.
@@ -185,6 +186,36 @@ test('4c. versão no ar que não foi esta pasta que pôs pede --por-cima; --volt
   assert.equal((await ctx.publicar('--voltar')).json.codigo, 'PUBLICAR_ENDERECO_JA_EM_USO');
   assert.equal(e.aberturas, 3, 'nada foi mandado');
   assert.equal((await ctx.publicar('--por-cima')).json.dados.versao, 5);
+});
+
+test('4f. envio que caiu no meio: a única versão nova é desta pasta; com outra publicação depois, pede --por-cima', async (t) => {
+  const ctx = await preparar(t);
+  darChave(ctx);
+  const e = ctx.servico.estado;
+  assert.equal((await ctx.publicar()).json.dados.versao, 1);
+  e.concluirCai = 'sem_publicar';
+  escrever(ctx, 'site/index.html', '<title>Meu site</title><h1>Segunda</h1><img src="assets/foto.txt">');
+  assert.equal((await ctx.publicar()).json.codigo, 'PUBLICAR_CONCLUSAO_INCERTA');
+  ctx.servico.publicarPendentes(); // a deste envio entrou no ar (versão 2)
+  e.publicados.push({ slug: NOME, versao: 3, zip: Buffer.from('de outro computador') });
+  e.noAr.set(NOME, 3);
+  const r = await ctx.publicar();
+  assert.deepEqual([r.json.codigo, r.json.dados.versao_no_ar], ['PUBLICAR_ENDERECO_JA_EM_USO', 3], r.saida);
+  assert.equal((await ctx.publicar('--por-cima')).json.codigo, 'PUBLICADO');
+});
+
+test('4g. envio que caiu no meio e só ele entrou no ar: a próxima publicação segue sem pedir nada', async (t) => {
+  const ctx = await preparar(t);
+  darChave(ctx);
+  const e = ctx.servico.estado;
+  assert.equal((await ctx.publicar()).json.dados.versao, 1);
+  e.concluirCai = 'sem_publicar';
+  escrever(ctx, 'site/index.html', '<title>Meu site</title><h1>Segunda</h1><img src="assets/foto.txt">');
+  assert.equal((await ctx.publicar()).json.codigo, 'PUBLICAR_CONCLUSAO_INCERTA');
+  ctx.servico.publicarPendentes();
+  escrever(ctx, 'site/index.html', '<title>Meu site</title><h1>Terceira</h1><img src="assets/foto.txt">');
+  const r = await ctx.publicar();
+  assert.deepEqual([r.json.codigo, r.json.dados.versao], ['PUBLICADO', 3], r.saida);
 });
 
 test('4d. cópia da pasta pede --por-cima; pasta movida pede uma vez; a mesma pasta republica sem pedir', async (t) => {

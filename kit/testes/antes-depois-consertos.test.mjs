@@ -147,3 +147,85 @@ test('"antes" diz o que da comparação anterior apagou; ANTES_NAO_GUARDADO não
   assert.ok(MENSAGENS.ANTES_NAO_GUARDADO.acao.includes('Não desfaça de memória'));
   for (const codigo of ['RESTAURACAO_FALHOU', 'SITE_POSTO_DE_VOLTA', 'TENTATIVA_SUBSTITUIDA']) assert.ok(MENSAGENS[codigo]?.texto && MENSAGENS[codigo]?.acao, codigo);
 });
+
+// Pasta que o sistema não deixa apagar (no Mac e no Linux, sem permissão de escrita): faz a parte de
+// dentro de uma troca concluída sobrar, como um arquivo aberto no Windows.
+function travar(pasta) {
+  const trava = path.join(pasta, 'trava');
+  escrever(path.join(trava, 'aberto.txt'), 'em uso');
+  fs.chmodSync(trava, 0o500);
+  return trava;
+}
+const destravar = (pasta) => {
+  for (const nome of fs.existsSync(pasta) ? fs.readdirSync(pasta) : []) {
+    const trava = path.join(pasta, nome, 'trava');
+    if (fs.existsSync(trava)) fs.chmodSync(trava, 0o700);
+  }
+};
+const SEM_CHMOD = process.platform === 'win32' ? 'no Windows a permissão não trava a remoção' : false;
+
+test('troca feita com a cópia velha presa: vale, devolve a sobra, e a tentativa seguinte copia a pasta no lugar, nunca a sobra', { skip: SEM_CHMOD }, (t) => {
+  const { env, arq } = siteDeTeste(t);
+  t.after(() => destravar(arq.pasta));
+  estudio(env, 'antes', 'loja');
+  mudar(arq, '#aaa');
+  travar(arq.site);
+  const r = estudio(env, 'escolher', 'loja', 'antes');
+  assert.deepEqual([r.codigo, r.json.codigo], [0, 'VOLTOU_COMO_ESTAVA'], JSON.stringify(r.json));
+  assert.deepEqual(r.json.avisos.map((a) => a.codigo), ['SOBRA_DA_TROCA']);
+  assert.ok(r.json.avisos[0].dados.sobra.endsWith('site.descartando'));
+  assert.equal(ler(arq.css), 'body{background:#123}', 'a troca valeu');
+  // A pessoa fechou o programa (a trava sai), mas a sobra continua ao lado: é a versão #aaa, e o site
+  // no lugar é o antes. Uma tentativa nova guarda o que está no lugar, e a troca apaga a sobra.
+  destravar(arq.pasta);
+  assert.ok(fs.existsSync(`${arq.site}.descartando`));
+  estudio(env, 'antes', 'loja', '--de-novo');
+  mudar(arq, '#bbb');
+  assert.equal(estudio(env, 'escolher', 'loja', 'outro').json.codigo, 'PRONTO_PARA_OUTRO_CAMINHO');
+  assert.equal(ler(path.join(arq.ad, 'tentativa', 'site', 'assets', 'site.css')), 'body{background:#bbb}');
+  assert.equal(fs.existsSync(`${arq.site}.descartando`), false);
+});
+
+test('"antes --de-novo" com volta parada no meio reprova e não apaga a versão vista', (t) => {
+  const { env, arq } = siteDeTeste(t);
+  estudio(env, 'antes', 'loja');
+  mudar(arq, '#f4ecdc');
+  const tentativa = path.join(arq.ad, 'tentativa');
+  fs.cpSync(arq.site, path.join(tentativa, 'site'), { recursive: true });
+  fs.writeFileSync(arq.css, 'body{background:#123}');
+  fs.writeFileSync(path.join(arq.ad, 'estado.json'), JSON.stringify({ aberto: true, restauracao_pendente: true }));
+  const r = estudio(env, 'antes', 'loja', '--de-novo');
+  assert.deepEqual([r.codigo, r.json.codigo, r.json.dados.restauracao_pendente], [2, 'ANTES_EM_ABERTO', true], JSON.stringify(r.json));
+  assert.equal(ler(path.join(tentativa, 'site', 'assets', 'site.css')), 'body{background:#f4ecdc}');
+});
+
+test('"antes" troca a comparação inteira de uma vez e não deixa nada ao lado', (t) => {
+  const { env, arq } = siteDeTeste(t);
+  estudio(env, 'antes', 'loja');
+  mudar(arq, '#aaa');
+  const r = estudio(env, 'antes', 'loja', '--de-novo');
+  assert.equal(r.json.codigo, 'ANTES_GUARDADO');
+  assert.equal(ler(path.join(arq.ad, 'antes', 'assets', 'site.css')), 'body{background:#aaa}');
+  assert.equal(ler(path.join(arq.pasta, 'revisao', 'antes-gerador', 'secoes', 'topo.mjs')), "export default '#aaa';");
+  assert.deepEqual(JSON.parse(ler(path.join(arq.ad, 'estado.json'))), { aberto: true, gerador: true });
+  const soltos = fs.readdirSync(path.join(arq.pasta, 'revisao')).filter((n) => n.includes('.'));
+  assert.deepEqual(soltos, []);
+});
+
+test('antes guardado sem _gerador/: voltar ao antes tira o _gerador/ que apareceu depois, e ele fica na tentativa', (t) => {
+  const { env, arq } = siteDeTeste(t);
+  const gerador = path.join(arq.pasta, '_gerador');
+  fs.rmSync(gerador, { recursive: true });
+  assert.equal(estudio(env, 'antes', 'loja').json.dados.gerador, false);
+  escrever(arq.parte, "export default 'novo';");
+  fs.writeFileSync(arq.css, 'body{background:#aaa}');
+  let r = estudio(env, 'escolher', 'loja', 'outro');
+  assert.deepEqual([r.json.codigo, r.json.dados.restauradas], ['PRONTO_PARA_OUTRO_CAMINHO', ['site', '_gerador']], JSON.stringify(r.json));
+  assert.equal(fs.existsSync(gerador), false);
+  assert.equal(ler(path.join(arq.ad, 'tentativa', '_gerador', 'secoes', 'topo.mjs')), "export default 'novo';");
+  assert.equal(JSON.parse(ler(path.join(arq.ad, 'estado.json'))).gerador, false, '"outro" mantém a anotação');
+  escrever(arq.parte, "export default 'de novo';");
+  r = estudio(env, 'escolher', 'loja', 'antes');
+  assert.equal(r.json.codigo, 'VOLTOU_COMO_ESTAVA');
+  assert.equal(fs.existsSync(gerador), false);
+});

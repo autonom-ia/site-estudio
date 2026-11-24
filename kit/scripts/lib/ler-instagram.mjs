@@ -3,7 +3,7 @@
 // pública). Os dados saem do JSON que a própria página traz embutido; sem ele, das etiquetas
 // og: e do <time datetime>. Sem expressão regular: JSON.parse, URL e métodos de texto.
 import path from 'node:path';
-import { acharObjetos, jsonOuNada, TempoEsgotado } from './leitor.mjs';
+import { acharObjetos, jsonOuNada, TempoEsgotado, antesDoPrazo } from './leitor.mjs';
 import { baixar } from './baixar.mjs';
 import { esperar } from './cdp.mjs';
 
@@ -204,15 +204,18 @@ async function listarPosts(leitor, maximo, pausa) {
 const SEM_PRAZO = Number.POSITIVE_INFINITY;
 
 // Lê o perfil e as publicações. pasta: onde salvar as fotos. prazo: hora (Date.now) em que a leitura
-// inteira acaba (lib/ler.mjs); passou dela, para e devolve o que já leu, com esgotou. Devolve
+// inteira acaba (lib/ler.mjs); passou dela, para e devolve o que já leu, com esgotou: cada passo no
+// navegador espera só até o prazo, e o que já foi lido fica. Se o prazo acaba antes da lista de
+// publicações, não há nada lido, e o TempoEsgotado sobe. Devolve
 // { perfil, posts, fotos, esgotou }. permitirEnderecoLocal: só os testes (que servem as fotos em
 // 127.0.0.1) ligam.
 export async function lerInstagram(leitor, entrada, { base = BASE_INSTAGRAM, maximo = 24, pasta, pausa = 1500, aoAvancar = () => {}, permitirEnderecoLocal = false, prazo = SEM_PRAZO } = {}) {
   const usuario = usuarioDoInstagram(entrada);
   if (!usuario) throw new Error('o @ do Instagram veio vazio');
   const endereco = `${base}/${encodeURIComponent(usuario)}/`;
-  await leitor.ir(endereco);
-  const { lido, posts: lista } = await listarPosts(leitor, maximo, pausa);
+  const passo = (promessa) => antesDoPrazo(promessa, prazo);
+  await passo(leitor.ir(endereco));
+  const { lido, posts: lista } = await passo(listarPosts(leitor, maximo, pausa));
   const perfil = { ...dadosDoPerfil(lido, usuario), endereco };
   const posts = [];
   let esgotou = false;
@@ -222,8 +225,15 @@ export async function lerInstagram(leitor, entrada, { base = BASE_INSTAGRAM, max
       break;
     }
     aoAvancar(`Lendo a publicação ${posts.length + 1} de ${lista.length} do Instagram...`);
-    await leitor.ir(href);
-    const lidoPost = await leitor.esperarAte(lerPostNaPagina, PRAZO_DA_PAGINA_MS);
+    let lidoPost;
+    try {
+      await passo(leitor.ir(href));
+      lidoPost = await passo(leitor.esperarAte(lerPostNaPagina, PRAZO_DA_PAGINA_MS));
+    } catch (e) {
+      if (!(e instanceof TempoEsgotado)) throw e;
+      esgotou = true;
+      break;
+    }
     if (!lidoPost) continue;
     posts.push(dadosDoPost(lidoPost, codigo, href));
   }

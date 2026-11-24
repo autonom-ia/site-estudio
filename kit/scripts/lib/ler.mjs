@@ -50,9 +50,10 @@ export function detalheDoErro(e) {
 }
 
 // Teto da leitura inteira, contado do início do comando: passa dele, para e grava o que já leu. Vale
-// para as três partes (o Instagram com login tem ainda o prazo próprio, de 7 minutos). O assistente
-// espera 10 minutos: o minuto que sobra é para fechar o navegador e gravar.
-export const TETO_DA_LEITURA_MS = 9 * 60 * 1000;
+// para as três partes (o Instagram com login tem ainda o prazo próprio, de 7 minutos, e para entre
+// uma publicação e outra: passa do teto por no máximo um passo, de uns 30 segundos). O assistente
+// espera 10 minutos: os dois que sobram são para esse passo, fechar os navegadores e gravar.
+export const TETO_DA_LEITURA_MS = 8 * 60 * 1000;
 
 async function tentar(fn) {
   try {

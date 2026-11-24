@@ -329,7 +329,7 @@
   },
   "ANTES_EM_ABERTO": {
     "texto": "Ainda falta você escolher entre o antes e o depois da última mudança.",
-    "acao": "A pessoa ainda não respondeu o \"Qual fica?\". Não guarde um antes novo por cima: rode ./estudio escolher <nome> com depois, antes ou outro, conforme a resposta. Só use --de-novo se a pessoa pediu para partir do site como está agora."
+    "acao": "A pessoa ainda não respondeu o \"Qual fica?\". Não guarde um antes novo por cima: rode ./estudio escolher <nome> com depois, antes ou outro, conforme a resposta. Só use --de-novo se a pessoa pediu para partir do site como está agora. Se dados.restauracao_pendente for true, nem --de-novo serve: uma volta ao antes parou no meio e a versão vista inteira só está em tentativa/. Termine a volta com o mesmo ./estudio escolher <nome> que parou (ou escolher depois, para ficar com a versão vista) antes de guardar outro antes."
   },
   "ANTES_JA_RESOLVIDO": {
     "texto": "Essa comparação já foi resolvida. Vou guardar o site de agora antes de mudar de novo.",
@@ -350,6 +350,10 @@
   "RESTAURACAO_FALHOU": {
     "texto": "Não consegui voltar o site agora. Nada se perdeu: a versão de antes e a que você viu continuam guardadas. Vou tentar de novo.",
     "acao": "dados.pasta não trocou; dados.erro diz por quê (no Windows, quase sempre um arquivo do site aberto em outro programa, como uma foto num editor). Peça para fechar o que estiver usando os arquivos do site e rode o mesmo ./estudio escolher <nome> dados.escolha de novo: ele continua de onde parou e não guarda o site pela metade por cima da versão vista (dados.tentativa). Se a pessoa preferir ficar com a versão vista, rode escolher depois: ela volta inteira. Não desfaça de memória e não apague nada com final .trocando ou .descartando."
+  },
+  "SOBRA_DA_TROCA": {
+    "texto": "Troquei a versão do site. Ficou uma cópia velha ao lado que eu não consegui apagar agora.",
+    "acao": "A troca valeu: o site já está como a pessoa escolheu. dados.sobra é a cópia que saiu do lugar e não pôde ser apagada (no Windows, quase sempre um arquivo dela aberto em outro programa). Não use nada dela e não a ponha de volta: a próxima troca apaga sozinha. Se a pessoa quiser liberar o espaço já, peça para fechar o que estiver usando os arquivos e apagar a pasta dados.sobra."
   },
   "SITE_POSTO_DE_VOLTA": {
     "texto": "Uma troca anterior tinha parado no meio. Pus o site de volta inteiro antes de continuar.",
