@@ -79,7 +79,7 @@ Não rode a skill `minha-marca` agora. A marca nasce junto com o primeiro site, 
 Quando a pessoa pedir "desinstalar o estúdio":
 1. Rode `desinstalar` (sem `--confirmar`). Ele só diz o que seria apagado (`apagaria`, `tamanho_mb`).
 2. Diga o `DESINSTALAR-PERGUNTA`.
-3. Só com "Pode apagar": rode `desinstalar --confirmar`. `ARQUIVO_EM_USO`: diga o texto do código e espere o "pronto".
+3. Só com "Pode apagar": rode antes `./estudio instagram sair` (o login do Instagram, se a pessoa entrou pela janela do estúdio, fica fora da pasta do estúdio e o desinstalar não o alcança) e depois `desinstalar --confirmar`. `ARQUIVO_EM_USO`: diga o texto do código e espere o "pronto".
 4. Diga o `DESINSTALAR-PRONTO`.
 
 Nunca apague a pasta do estúdio nem `minha-marca/`, `sites/` ou `referencias/`, nem quando desinstalar.

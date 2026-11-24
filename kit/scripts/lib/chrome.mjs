@@ -108,3 +108,13 @@ export function acharNavegador(env = process.env) {
 export function ehShell(caminho) {
   return path.basename(caminho).startsWith('chrome-headless-shell');
 }
+
+// Navegador que abre janela de verdade, para a pessoa entrar numa conta (o chrome-headless-shell não
+// abre janela). Ordem: ESTUDIO_CHROME, se não for o shell → Chrome, Chromium ou Edge instalados.
+// Devolve { caminho, tipo } ou null.
+export function acharNavegadorComJanela(env = process.env) {
+  const forcado = env.ESTUDIO_CHROME;
+  if (forcado && fs.existsSync(forcado) && !ehShell(forcado)) return { caminho: forcado, tipo: 'forcado' };
+  for (const c of candidatosDoSistema(env)) if (fs.existsSync(c)) return { caminho: c, tipo: 'sistema' };
+  return null;
+}

@@ -18,7 +18,7 @@ const json = (o) => `<script type="application/json">${JSON.stringify(o)}</scrip
 const esc = (t) => String(t).split('&').join('&amp;').split('"').join('&quot;').split('<').join('&lt;');
 
 // JPEG mínimo: só o cabeçalho com largura e altura (é baixado, nunca desenhado).
-function jpeg(largura, altura) {
+export function jpeg(largura, altura) {
   const sof = Buffer.from([0xff, 0xc0, 0x00, 0x11, 0x08, altura >> 8, altura & 255, largura >> 8, largura & 255, 3, 1, 0x11, 0, 2, 0x11, 1, 3, 0x11, 1]);
   return Buffer.concat([Buffer.from([0xff, 0xd8]), sof, Buffer.from([0xff, 0xd9])]);
 }
@@ -44,7 +44,9 @@ function png(largura, altura) {
 }
 
 function perfil() {
-  const dados = { require: [['Perfil', { data: { user: { username: USUARIO, full_name: NEGOCIO, biography: 'Revisão de bicicleta sob encomenda.\nRua Inventada, 100.', bio_links: [{ url: 'https://wa.me/5500900001111' }], external_url: null } } }]] };
+  // uma conta sugerida vem antes do perfil pedido: nada dela pode ser lido
+  const sugerida = { username: 'conta.sugerida', full_name: 'Conta Sugerida', biography: 'Outra bio.', bio_links: [{ url: 'https://sugerida.example' }] };
+  const dados = { require: [['Sugestoes', { users: [sugerida] }], ['Perfil', { data: { user: { username: USUARIO, full_name: NEGOCIO, biography: 'Revisão de bicicleta sob encomenda.\nRua Inventada, 100.', bio_links: [{ url: 'https://wa.me/5500900001111' }], external_url: null } } }]] };
   const links = [];
   for (let n = 1; n <= TOTAL_DE_POSTS; n += 1) links.push(`<a href="/${USUARIO}/${n === 5 ? 'reel' : 'p'}/${codigo(n)}/">publicação</a>`);
   // a grade aparece depois de carregar, como na página de verdade
