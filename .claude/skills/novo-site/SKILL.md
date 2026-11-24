@@ -166,7 +166,7 @@ Rode também `./estudio desempenho <nome>` (`DESEMPENHO_MEDIDO`, números em `da
 
 ## Etapa 8. Fotos lidas
 
-`./estudio prints <nome>` de novo, depois do preflight. Abra **todas** as fotos, uma a uma: todas as páginas, nos quatro tamanhos, inteiras e por parte. Para cada página e tamanho, escreva no `andamento.md` uma linha: "<página> <largura>: ok" ou o problema e o que você corrigiu. Corrigiu algo: monte, rode o `preflight` e as fotos de novo. Nunca declare pronto pelas fotos que você não abriu. Parte em 3D: as fotos esperam a cena abrir; `CENA_3D_NAO_ABRIU` ou `CENA_3D_VAZIA` se corrigem antes de seguir, e `./estudio prints <nome> --reduzido` mostra a imagem de reserva.
+`./estudio prints <nome>` de novo, depois do preflight. Abra **todas** as fotos, uma a uma: todas as páginas, nos quatro tamanhos, inteiras e por parte. Para cada página e tamanho, escreva no `andamento.md` uma linha: "<página> <largura>: ok" ou o problema e o que você corrigiu. Corrigiu algo: monte, rode o `preflight` e as fotos de novo. Nunca declare pronto pelas fotos que você não abriu. Parte em 3D: as fotos esperam a cena abrir; `CENA_3D_NAO_ABRIU`, `CENA_3D_VAZIA` ou `CENA_3D_FORA_DA_FOTO` se corrigem antes de seguir, e `./estudio prints <nome> --reduzido` mostra a imagem de reserva.
 
 ## Etapa 9. Revisão
 

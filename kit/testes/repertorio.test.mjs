@@ -60,9 +60,22 @@ function problemasDoLink(link) {
   return p;
 }
 
+// conferidaEm (opcional): o dia em que a ficha foi conferida ao vivo, AAAA-MM-DD, nunca no futuro.
+const HOJE = new Date().toISOString().slice(0, 10);
+function dataValida(v) {
+  if (typeof v !== 'string' || v.length !== 10) return false;
+  const [ano, mes, dia] = v.split('-');
+  const digitos = (x, n) => typeof x === 'string' && x.length === n && [...x].every((c) => c >= '0' && c <= '9');
+  if (!digitos(ano, 4) || !digitos(mes, 2) || !digitos(dia, 2)) return false;
+  const d = new Date(`${v}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v && v <= HOJE;
+}
+
 function problemasDaFicha(f) {
-  if (!mesmasChaves(f, CAMPOS)) return [`campos diferentes de: ${CAMPOS.join(', ')}`];
+  const campos = f && Object.hasOwn(f, 'conferidaEm') ? [...CAMPOS, 'conferidaEm'] : CAMPOS;
+  if (!mesmasChaves(f, campos)) return [`campos diferentes de: ${CAMPOS.join(', ')} (e conferidaEm, opcional)`];
   const p = [];
+  if (campos.length > CAMPOS.length && !dataValida(f.conferidaEm)) p.push('conferidaEm fora do formato AAAA-MM-DD ou no futuro');
   const idOk = typeof f.id === 'string' && f.id.length >= 2 && !f.id.startsWith('-') && !f.id.endsWith('-')
     && [...f.id].every((c) => PERMITIDOS_NO_ID.includes(c));
   if (!idOk) p.push('id fora do formato (minúsculas, números e hífen)');
@@ -92,6 +105,11 @@ test('o repertório tem um arquivo por ação, e cada um diz o que quem visita q
     assert.deepEqual(problemasDoTexto('visitanteQuer', dados.visitanteQuer, '.'), [], arquivo);
     assert.ok(Array.isArray(dados.fichas) && dados.fichas.length >= 4, `${arquivo}: pelo menos 4 fichas`);
   }
+});
+
+test('a data de conferência é AAAA-MM-DD de verdade e nunca no futuro', () => {
+  for (const v of ['2026-11-24', '2024-02-29']) assert.equal(dataValida(v), true, v);
+  for (const v of ['2026-13-01', '2026-02-30', '2023-02-29', '24/11/2026', '2026-1-24', '2026-11-2a', '9999-12-31', 20261124, null]) assert.equal(dataValida(v), false, String(v));
 });
 
 test('toda ficha do repertório segue o formato', () => {
@@ -131,6 +149,8 @@ test('os jeitos com 3D apontam para a demo própria e o como-usar diz quando usa
     const com = fichas.filter((f) => f.comoFazemosAqui.padrao === padrao);
     assert.ok(com.length >= 1, `nenhuma ficha com ${padrao}`);
     for (const f of com) assert.ok(f.comoFazemosAqui.texto.includes(DEMO_3D), `${f.id}: não aponta para ${DEMO_3D}`);
+    // ficha de 3D só entra conferida ao vivo, com a data da conferência
+    for (const f of com) assert.ok(dataValida(f.conferidaEm), `${f.id}: sem conferidaEm`);
   }
   assert.ok(fs.existsSync(path.join(RAIZ, ...DEMO_3D.split('/'), '_gerador', 'ordem.mjs')), 'a demo não existe');
   const guia = fs.readFileSync(path.join(PASTA, 'como-usar.md'), 'utf8');

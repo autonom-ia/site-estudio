@@ -51,6 +51,7 @@ O estúdio guarda de cada referência só o endereço público e o que aprendemo
 | `comoFazemosAqui` | como o estúdio entrega a mesma ideia num site sem servidor: `padrao` (um dos cinco jeitos abaixo, ou um dos dois de 3D) e `texto` (a adaptação) |
 | `noCelular` | como a ideia fica na tela pequena |
 | `naoTrazer` | o que é da marca deles, ou o que não cabe num site sem servidor |
+| `conferidaEm` | opcional: o dia (AAAA-MM-DD) em que a ficha foi conferida ao vivo, seguindo o `ondeVer`. Obrigatório nas fichas de 3D |
 
 ## Como escolher (etapa 3 da skill `novo-site`)
 
@@ -120,8 +121,9 @@ Dois jeitos usam 3D. Os dois têm demo própria do estúdio em `kit/demos/3d/`, 
 - Imagem de reserva no palco desde o começo (desenho parado da mesma peça): é o que aparece sem WebGL, com "reduzir movimento" ligado e se algo falhar.
 - Teclado e leitor de tela: escolhas em botões de rádio dentro de `<fieldset>` com `<legend>`, a escolha escrita num `aria-live`; forma só de enfeite leva `aria-hidden`.
 - Cores da marca, lidas dos tokens: a peça muda junto com a marca.
-- Limite de peso: o código de `site/assets/3d/` até **200 KB comprimido** e cada modelo (`.glb`, `.gltf`, `.obj`) até **1,5 MB**. O `checar` reprova acima (`3d-pesado`). As demos, em WebGL puro, somam cerca de 12 KB.
-- As fotos de conferência esperam a cena abrir. `CENA_3D_NAO_ABRIU` (saiu a imagem parada) e `CENA_3D_VAZIA` (o palco saiu liso) se corrigem antes de mostrar.
+- Limite de peso: todo o código do 3D até **200 KB comprimido** e cada modelo até **1,5 MB**. Entra na conta tudo de `site/assets/3d/`, todo `.wasm` e toda biblioteca que fala com o WebGL, em qualquer pasta (o three.js sozinho passa de 170 KB). O modelo `.gltf` soma os `.bin` e as texturas dele; `.glb` e `.obj` contam sozinhos. O `checar` reprova acima (`3d-pesado`). As demos, em WebGL puro, somam cerca de 14 KB.
+- As fotos de conferência esperam cada cena abrir. `CENA_3D_NAO_ABRIU` (saiu a imagem parada; o motivo vem junto), `CENA_3D_VAZIA` (o palco saiu liso) e `CENA_3D_FORA_DA_FOTO` (o palco não aparece na foto) se corrigem antes de mostrar.
+- Movimento que ninguém pediu para em até 5 s (a peça gira sozinha só no começo). Falha no 3D aparece no console e o `checar` mostra; a imagem de reserva fica no lugar.
 
 ### `configurador-3d`: a peça muda na hora com cada escolha
 
