@@ -321,11 +321,59 @@ test('o configurador funciona só com o teclado, e a escolha é dita e levada ao
   }
 });
 
-// Conta os desenhos WebGL (o molde tem outros laços de quadro, de rolagem e de animação, que não
-// interessam aqui): com a cena parada, a conta não sobe.
-const CONTAR_QUADROS = "(() => { window.__quadros = 0; for (const C of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) { if (!C) continue; for (const m of ['drawArrays', 'drawElements']) { const o = C.prototype[m]; C.prototype[m] = function (...a) { window.__quadros += 1; return o.apply(this, a); }; } } })();";
+// Conta os quadros da cena WebGL (o molde tem outros laços de quadro, de rolagem e de animação,
+// que não interessam aqui): cada quadro do motor começa limpando a imagem (clear), uma vez só.
+// Com a cena parada, a conta não sobe.
+const CONTAR_QUADROS = "(() => { window.__quadros = 0; for (const C of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) { if (!C) continue; const o = C.prototype.clear; C.prototype.clear = function (...a) { window.__quadros += 1; return o.apply(this, a); }; } })();";
 const quadros = (s) => s.tab.evaluate('window.__quadros');
+// Espera por estado, não por relógio fixo (o CI no Windows desenha devagar, por software):
+// "subir" espera ao menos n desenhos novos; "parar" espera a conta ficar parada por calmoMs.
+async function quadrosSubirem(s, desde, n = 1, teto = 15000) {
+  const fim = Date.now() + teto;
+  while (Date.now() < fim) {
+    if ((await quadros(s)) >= desde + n) return true;
+    await esperar(50);
+  }
+  return false;
+}
+async function quadrosPararem(s, calmoMs = 1500, teto = 30000) {
+  const fim = Date.now() + teto;
+  let ultimo = await quadros(s);
+  let desde = Date.now();
+  while (Date.now() < fim) {
+    await esperar(100);
+    const agora = await quadros(s);
+    if (agora !== ultimo) {
+      ultimo = agora;
+      desde = Date.now();
+    } else if (Date.now() - desde >= calmoMs) return { parou: true, quadros: agora, em: desde };
+  }
+  return { parou: false, quadros: ultimo, em: desde };
+}
 const semRolarDeLado = (s) => s.tab.evaluate('document.documentElement.scrollWidth <= innerWidth');
+
+test('quem chega devagar ao palco ainda vê o giro: ele conta do primeiro quadro com o palco à vista', opcoes, async () => {
+  if (!fs.existsSync(path.join(base, 'demo'))) assert.equal(estudio('novo', 'demo', '--demo', '3d').codigo, 0);
+  const site = paginaLonge();
+  const s = await abrirSessao(site, { tamanho: CELULAR });
+  try {
+    await s.tab.send('Page.addScriptToEvaluateOnNewDocument', { source: CONTAR_QUADROS });
+    await s.ir(s.url('longe/'));
+    // o palco a 150 px abaixo da tela: perto o bastante para a cena montar, mas fora da vista
+    await s.tab.evaluate(`(() => { const p = document.getElementById('caramanhola'); window.scrollTo(0, p.getBoundingClientRect().top + scrollY - innerHeight - 150); })()`);
+    assert.ok(await esperarEstado(s, 'pronta'), `ficou em ${await estado(s)}`);
+    assert.equal(await s.tab.evaluate(`document.getElementById('caramanhola').getBoundingClientRect().top > innerHeight`), true, 'o palco já estava à vista');
+    // a pessoa demora mais que o giro inteiro para chegar
+    await esperar(6000);
+    const a = await quadros(s);
+    await irAoPalco(s);
+    assert.ok(await quadrosSubirem(s, a, 3), 'chegou ao palco e a peça já estava parada: o giro contou de antes de aparecer');
+    assert.ok((await quadrosPararem(s)).parou, 'a peça continua girando sozinha');
+    assert.deepEqual(s.errosJs(), []);
+  } finally {
+    await s.fechar();
+  }
+});
 
 test('a caramanhola gira sozinha só nos primeiros segundos; o mouse só pega a cena pronta; parar solta tudo', opcoes, async () => {
   if (!fs.existsSync(path.join(base, 'demo'))) assert.equal(estudio('novo', 'demo', '--demo', '3d').codigo, 0);
@@ -340,23 +388,24 @@ test('a caramanhola gira sozinha só nos primeiros segundos; o mouse só pega a 
     await irAoPalco(s);
     assert.ok(await esperarEstado(s, 'pronta'), `ficou em ${await estado(s)}`);
     assert.equal(await s.tab.evaluate(`getComputedStyle(${canvas}).pointerEvents`), 'auto');
-    // girando: os quadros sobem
+    // girando: logo depois de pronta, a peça segue desenhando (o giro conta do primeiro quadro à
+    // vista, então a máquina lenta não perde o giro); o critério é haver desenhos novos, não quantos
     const a = await quadros(s);
-    await esperar(600);
-    assert.ok((await quadros(s)) > a + 5, 'a peça não está girando logo depois de abrir');
-    // depois de ~5 s (WCAG 2.2.2), para sozinha: nenhum quadro novo
-    await esperar(5200);
-    const b = await quadros(s);
-    await esperar(800);
-    assert.equal(await quadros(s), b, 'a peça continua girando sozinha depois de 5 s');
+    const t0 = Date.now();
+    assert.ok(await quadrosSubirem(s, a, 3), 'a peça não está girando logo depois de abrir');
+    // e para sozinha (WCAG 2.2.2: movimento que ninguém pediu acaba em até 5 s)
+    const parada = await quadrosPararem(s);
+    assert.ok(parada.parou, 'a peça continua girando sozinha');
+    // girou por um tempo de verdade (não parou no primeiro quadro), e parou no prazo: o giro é de
+    // 4,5 s contados do primeiro quadro à vista; a folga cobre o quadro lento do CI
+    const girou = parada.em - t0;
+    assert.ok(girou >= 3000, `parou cedo demais: ${girou} ms`);
+    assert.ok(girou <= 4500 + 3000, `parou tarde demais: ${girou} ms`);
+    const b = parada.quadros;
     // uma escolha acorda a cena para a troca de cor, que acaba e dorme de novo
     await s.tab.evaluate(`(() => { const i = document.querySelector('input[name="cor"][value="azul"]'); i.checked = true; i.dispatchEvent(new Event('change', { bubbles: true })); })()`);
-    await esperar(150);
-    assert.ok((await quadros(s)) > b, 'a escolha não acordou a cena');
-    await esperar(800);
-    const c = await quadros(s);
-    await esperar(500);
-    assert.equal(await quadros(s), c, 'depois da troca, a cena não voltou a dormir');
+    assert.ok(await quadrosSubirem(s, b, 1), 'a escolha não acordou a cena');
+    assert.ok((await quadrosPararem(s)).parou, 'depois da troca, a cena não voltou a dormir');
 
     // parar: tira o canvas, volta a reserva e solta os ouvintes (escolher não pede mais quadro)
     await s.tab.evaluate(`window.Cena3D.cenaDo(document.getElementById('caramanhola')).parar()`);
@@ -457,10 +506,12 @@ test('o giro do começo termina na pose da reserva: a rodinha no mesmo lugar no 
   for (const tamanho of [CELULAR, { largura: 1440, altura: 900, movel: false }]) {
     const s = await abrirSessao(path.join(base, 'demo', 'site'), { tamanho });
     try {
+      await s.tab.send('Page.addScriptToEvaluateOnNewDocument', { source: CONTAR_QUADROS });
       await s.ir(s.url('monte/'));
       await irAoPalco(s);
       assert.ok(await esperarEstado(s, 'pronta'), `ficou em ${await estado(s)}`);
-      await esperar(5200); // o giro do começo acabou
+      // o giro do começo acabou: a cena parou de desenhar (por estado, não por relógio fixo)
+      assert.ok((await quadrosPararem(s)).parou, 'a peça não parou de girar');
       const no3d = await meioDaRodinha(s, false);
       const naReserva = await meioDaRodinha(s, true);
       assert.ok(no3d.n > 20 && naReserva.n > 20, `rodinha não achada: 3D ${no3d.n}, reserva ${naReserva.n}`);
