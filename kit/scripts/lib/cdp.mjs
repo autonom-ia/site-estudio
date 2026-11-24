@@ -83,17 +83,18 @@ function jeitosDaPasta(pasta) {
   }
 }
 
-// Pergunta ao sistema a linha de comando de cada processo. Sem resposta, ''.
+// Pergunta ao sistema a linha de comando de cada processo (sem números: de todos). Sem resposta, ''.
 const TETO_PERGUNTA_MS = 15000;
-function linhasDeComando(pids) {
+function linhasDeComando(pids = []) {
   const opcoes = { encoding: 'utf8', windowsHide: true, timeout: TETO_PERGUNTA_MS };
   try {
     if (EH_WINDOWS) {
-      const filtro = pids.map((pid) => `ProcessId=${pid}`).join(' OR ');
-      const script = `[Console]::OutputEncoding=[Text.Encoding]::UTF8; Get-CimInstance Win32_Process -Filter '${filtro}' | ForEach-Object { [string]$_.ProcessId + ' ' + $_.CommandLine }`;
+      const filtro = pids.length ? ` -Filter '${pids.map((pid) => `ProcessId=${pid}`).join(' OR ')}'` : '';
+      const script = `[Console]::OutputEncoding=[Text.Encoding]::UTF8; Get-CimInstance Win32_Process${filtro} | ForEach-Object { [string]$_.ProcessId + ' ' + $_.CommandLine }`;
       return spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], opcoes).stdout || '';
     }
-    return spawnSync('ps', ['-ww', '-o', 'pid=,args=', '-p', pids.join(',')], opcoes).stdout || '';
+    const quais = pids.length ? ['-p', pids.join(',')] : ['-A'];
+    return spawnSync('ps', ['-ww', '-o', 'pid=,args=', ...quais], opcoes).stdout || '';
   } catch {
     return '';
   }
@@ -107,6 +108,11 @@ function linhasDeComando(pids) {
 export function processosComAPasta(pids, pasta) {
   if (!pids.length) return [];
   return pidsComAPasta(linhasDeComando(pids), jeitosDaPasta(pasta)).filter((pid) => pids.includes(pid));
+}
+
+// Todos os processos da máquina com esta pasta de perfil na linha de comando (fora este).
+function todosComAPasta(pasta) {
+  return pidsComAPasta(linhasDeComando(), jeitosDaPasta(pasta)).filter((pid) => pid !== process.pid);
 }
 
 function encerrar(pid) {
@@ -253,11 +259,16 @@ export async function launch({ largura = 1920, altura = 1080, perfil = '', comJa
     } catch {}
   };
   // Se o processo do estúdio acabar, o Chrome não fica para trás (aberto e escondido; com perfil
-  // guardado, segurando o login). Perfil temporário: apaga a pasta, repetindo por alguns segundos (o
-  // Windows solta os arquivos de um processo encerrado com atraso).
+  // guardado, segurando o login). No Mac e no Linux, encerrar o principal não leva os filhos (páginas,
+  // GPU, rede) na hora: eles ainda gravam no perfil por um instante e somem sozinhos depois. Por isso
+  // encerra também todo processo com esta pasta de perfil (no Windows, o taskkill /T já levou a
+  // árvore). Perfil temporário: apaga a pasta, repetindo por alguns segundos (o Windows solta os
+  // arquivos de um processo encerrado com atraso).
   // Interrompido (Ctrl+C), só o perfil guardado: ele é o que segura o login.
   const aoSair = () => {
+    const estavaAberto = !morreu;
     matar();
+    if (estavaAberto && !EH_WINDOWS) for (const pid of todosComAPasta(pastaPerfil)) encerrar(pid);
     if (guardado) return;
     try {
       fs.rmSync(pastaPerfil, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });

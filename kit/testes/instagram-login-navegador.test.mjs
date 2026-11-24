@@ -196,7 +196,8 @@ describe('Instagram com login, no navegador', { timeout: TETO_DO_ARQUIVO_MS }, (
     conexao.close();
     const pids = info.map((p) => p.id);
     assert.ok(info.some((p) => ehEscritor(p.type)), `serviço de rede na lista: ${info.map((p) => p.type).join(', ')}`);
-    assert.equal(processosVivos(pids).length, pids.length);
+    // o principal está vivo (um processo de apoio pode já ter saído entre a lista e esta conferência)
+    assert.ok(processosVivos(info.filter((p) => p.type === 'browser').map((p) => p.id)).length === 1, 'o principal está aberto');
     assert.equal(await nav.fecharComCalma(), true, 'o principal saiu sozinho, sem ser encerrado à força');
     assert.equal(nav.vivo(), false);
     assert.deepEqual(processosVivos(pids), [], `nenhum processo do navegador sobrou (encerrados depois: ${nav.ultimoFechamento().sobraram.join(', ') || 'nenhum'})`);
@@ -287,7 +288,8 @@ describe('Instagram com login, no navegador', { timeout: TETO_DO_ARQUIVO_MS }, (
         sobraram = processosDoChromeNaPasta(pasta);
       }
       assert.deepEqual(sobraram.map((l) => l.slice(0, 160)), [], 'nenhum processo do Chrome sobrou com o perfil');
-      if (!perfil) assert.deepEqual(fs.readdirSync(temporaria), [], 'o perfil temporário foi apagado');
+      // só o perfil do estúdio (o Chrome no Linux também guarda ali uma pasta dele, com.google.Chrome.*)
+      if (!perfil) assert.deepEqual(fs.readdirSync(temporaria).filter((nome) => nome.startsWith('estudio-cdp-')), [], 'o perfil temporário foi apagado');
     }
   });
 
