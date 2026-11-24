@@ -1,0 +1,116 @@
+/* Site Estúdio: 3D (demos kit/demos/3d). Cores e letras vêm de assets/marca/tokens.css.
+   O palco guarda a imagem de reserva; a cena 3D entra por cima quando fica pronta
+   (data-3d-estado="pronta") e a reserva some. Sem caixa em volta: a peça fica sobre o fundo.
+   Tamanhos só pela largura (aspect-ratio): a foto de conferência muda a altura da janela e o
+   palco não pode mudar de tamanho com ela. */
+
+/* ---------- o palco (comum às duas demos) ---------- */
+
+.palco-3d { position: relative; isolation: isolate; }
+.palco-3d > canvas {
+  position: absolute; inset: 0; z-index: 1; display: block; width: 100%; height: 100%;
+  opacity: 0; transition: opacity .5s ease; touch-action: pan-y;
+}
+.palco-3d[data-3d-estado="pronta"] > canvas { opacity: 1; }
+.palco-3d__reserva { display: block; width: 100%; height: 100%; transition: opacity .5s ease; }
+.palco-3d[data-3d-estado="pronta"] > .palco-3d__reserva { opacity: 0; }
+
+/* ---------- marca em 3D: a roda raiada no topo da página ---------- */
+
+.abertura--3d .abertura__grade { grid-template-areas: "assina" "lado" "roda"; }
+.abertura--3d .assinatura { grid-area: assina; position: relative; z-index: 1; }
+.abertura--3d .abertura__lado { grid-area: lado; position: relative; z-index: 1; }
+.marca-3d {
+  grid-area: roda; justify-self: end; width: min(92%, 26rem); aspect-ratio: 1;
+  margin-right: calc(-1 * var(--margem) - 10%); margin-top: -.5rem;
+  /* no celular a roda encosta no pé da abertura, como se rolasse na linha de baixo */
+  margin-bottom: calc(-1 * clamp(3.5rem, 8vw, 7rem) - 6%);
+}
+@container (min-width: 60rem) {
+  .abertura--3d .abertura__grade {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, .7fr);
+    grid-template-areas: "assina roda" "lado roda";
+    align-items: end;
+  }
+  .abertura--3d .abertura__lado { max-width: 26rem; }
+  .marca-3d { align-self: center; width: 128%; max-width: 44rem; margin: 0 -24% 0 0; }
+}
+
+.roda-reserva__pneu { fill: none; stroke: var(--cor-noite-2); stroke-width: 11; }
+.roda-reserva__faixa { fill: none; stroke: var(--cor-luz); stroke-width: 1.4; }
+.roda-reserva__aro { fill: none; stroke: var(--cor-apoio-noite); stroke-width: 4.5; }
+.roda-reserva__raios { fill: none; stroke: var(--cor-apoio-noite); stroke-width: .8; stroke-linecap: round; }
+.roda-reserva__cubo { fill: var(--cor-apoio-noite); }
+
+/* ---------- configurador 3D: a caramanhola ---------- */
+
+.configurador { padding-block: clamp(2.5rem, 6vw, 6rem) var(--respiro); container-type: inline-size; --esmalte: var(--esmalte-1); }
+.configurador__grade {
+  display: grid; gap: clamp(1.5rem, 4vw, 2.75rem) clamp(2rem, 6vw, 6rem);
+  grid-template-areas: "texto" "palco" "escolhas" "fecho";
+}
+.configurador__texto { grid-area: texto; display: grid; gap: 1.25rem; }
+.configurador__titulo {
+  font-family: var(--fonte-titulo); font-weight: 900; text-transform: uppercase;
+  font-size: clamp(3rem, 1.6rem + 5vw, 6.25rem); line-height: .88; max-width: 9ch;
+}
+.configurador__lide { max-width: 36ch; color: var(--cor-apoio); font-size: clamp(1.0625rem, 1rem + .3vw, 1.25rem); }
+
+.configurador__palco {
+  grid-area: palco; justify-self: center; width: min(100%, 30rem); aspect-ratio: 4 / 5;
+  background: radial-gradient(58% 46% at 50% 52%, color-mix(in srgb, #fff 62%, var(--cor-fundo)) 0%, transparent 72%);
+  cursor: grab;
+}
+.configurador__palco:active { cursor: grabbing; }
+
+.escolhas { grid-area: escolhas; display: grid; gap: 1.75rem; }
+.escolhas__grupo { margin: 0; padding: 0; border: 0; min-width: 0; }
+.escolhas__legenda { padding: 0; margin-bottom: .75rem; font-weight: 700; font-size: 1rem; color: var(--cor-tinta); }
+.escolhas__opcoes { display: flex; flex-wrap: wrap; gap: .5rem; }
+
+.escolha {
+  position: relative; display: inline-flex; align-items: center; gap: .6rem; min-height: 48px;
+  padding: 0 1.15rem; border: 1px solid var(--fio); border-radius: 999px; cursor: pointer;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+.escolha input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.escolha:hover { border-color: var(--cor-tinta); }
+.escolha:has(input:checked) { background: var(--cor-tinta); border-color: var(--cor-tinta); color: var(--cor-fundo); }
+.escolha:has(input:focus-visible) { outline: 3px solid var(--cor-destaque); outline-offset: 3px; }
+
+/* a cor: a amostra redonda manda; o nome fica escrito ao lado (cor sozinha não basta) */
+.escolhas__grupo--cor .escolha { padding: 0 1rem 0 .3rem; }
+.escolha__tinta {
+  width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--amostra);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cor-tinta) 18%, transparent);
+}
+.escolha:has(input:checked) .escolha__tinta { box-shadow: inset 0 0 0 2px var(--cor-fundo); }
+
+.configurador__fecho { grid-area: fecho; display: grid; gap: 1.25rem; padding-top: 1.5rem; border-top: 1px solid var(--fio); }
+.configurador__resumo { font-family: var(--fonte-titulo); font-weight: 700; font-size: clamp(1.625rem, 1.2rem + 1.4vw, 2.375rem); line-height: 1.05; max-width: 22ch; }
+
+@container (min-width: 60rem) {
+  .configurador__grade {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+    grid-template-areas: "palco texto" "palco escolhas" "palco fecho";
+    align-items: start;
+  }
+  .configurador__palco { position: sticky; top: 1.5rem; width: 100%; max-width: 38rem; }
+}
+
+/* a reserva da caramanhola acompanha a escolha só com CSS, sem JavaScript e sem 3D */
+.configurador:has([data-esmalte="2"]:checked) { --esmalte: var(--esmalte-2); }
+.configurador:has([data-esmalte="3"]:checked) { --esmalte: var(--esmalte-3); }
+.configurador:has([data-esmalte="4"]:checked) { --esmalte: var(--esmalte-4); }
+.configurador:has([data-esmalte="5"]:checked) { --esmalte: var(--esmalte-5); }
+.configurador:has([data-esmalte="6"]:checked) { --esmalte: var(--esmalte-6); }
+.caramanhola-reserva__corpo { fill: var(--esmalte); transition: fill .3s ease; }
+.caramanhola-reserva__tampa { fill: var(--cor-tinta); }
+.caramanhola-reserva__faixa { fill: #C9CED1; }
+.caramanhola-reserva__brilho { fill: #fff; opacity: .1; transition: opacity .3s ease; }
+.configurador:has([data-faixa="nao"]:checked) .caramanhola-reserva__faixa { display: none; }
+.configurador:has([data-acabamento="brilhante"]:checked) .caramanhola-reserva__brilho { opacity: .55; }
+
+@media (prefers-reduced-motion: reduce) {
+  .palco-3d > canvas, .palco-3d__reserva, .escolha, .caramanhola-reserva__corpo, .caramanhola-reserva__brilho { transition: none; }
+}
