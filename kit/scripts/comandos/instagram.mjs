@@ -2,15 +2,15 @@
 //   ./estudio instagram entrar              não abre nada nem olha o login guardado: devolve
 //                                            INSTAGRAM_ANTES_DE_ENTRAR (o aviso que o assistente diz antes).
 //   ./estudio instagram entrar --confirmar  se o login guardado ainda vale, INSTAGRAM_JA_ENTROU; senão
-//                                            abre a janela do Instagram e espera a pessoa entrar (até 9
-//                                            minutos): INSTAGRAM_ENTROU, INSTAGRAM_JANELA_FECHADA,
+//                                            abre a janela do Instagram e espera a pessoa entrar (até 7
+//                                            minutos; o comando inteiro cabe em 9 min 30 s): INSTAGRAM_ENTROU, INSTAGRAM_JANELA_FECHADA,
 //                                            INSTAGRAM_PRAZO_ACABOU ou INSTAGRAM_ENTRAR_FALHOU.
 //   ./estudio instagram sair                apaga o login guardado neste computador (INSTAGRAM_SAIU).
 // No dia em que o Instagram pediu verificação, entrar devolve INSTAGRAM_PAUSADO_HOJE.
 // A senha nunca passa pelo estúdio: a pessoa digita direto no Instagram, numa janela normal do Chrome.
 import { falha } from '../lib/saida.mjs';
 import { progresso } from '../lib/executar.mjs';
-import { esperarEntrar, temLoginSalvo, sairDaConta, lugarPadrao, pausadoHoje } from '../lib/instagram-conta.mjs';
+import { esperarEntrar, temLoginSalvo, sairDaConta, lugarPadrao, pausadoHoje, ORCAMENTO_PARA_ENTRAR_MS } from '../lib/instagram-conta.mjs';
 import { acharNavegadorComJanela } from '../lib/chrome.mjs';
 
 const ACOES = Object.freeze(['entrar', 'sair']);
@@ -26,9 +26,11 @@ async function entrar(opcoes, lugar) {
   if (!acharNavegadorComJanela()) falha('INSTAGRAM_SEM_CHROME', {});
   if (pausadoHoje(lugar)) return { ok: false, codigo: 'INSTAGRAM_PAUSADO_HOJE', dados: { entrou: false } };
   if (opcoes.confirmar !== true) return { ok: true, codigo: 'INSTAGRAM_ANTES_DE_ENTRAR', dados: { entrou: false } };
-  if (await temLoginSalvo({ lugar })) return { ok: true, codigo: 'INSTAGRAM_JA_ENTROU', dados: { entrou: true } };
+  // Um orçamento só para o comando inteiro, desde aqui: cabe antes de o assistente desistir dele.
+  const fim = Date.now() + ORCAMENTO_PARA_ENTRAR_MS;
+  if (await temLoginSalvo({ lugar, fim })) return { ok: true, codigo: 'INSTAGRAM_JA_ENTROU', dados: { entrou: true } };
   progresso('Abrindo a janela do Instagram. Esperando você entrar na sua conta...');
-  const r = await esperarEntrar({ lugar });
+  const r = await esperarEntrar({ lugar, fim });
   const dados = r.detalhe ? { entrou: false, detalhe: r.detalhe } : { entrou: r.estado === 'entrou' };
   return { ok: r.estado === 'entrou', codigo: CODIGO_DA_ESPERA[r.estado], dados };
 }
