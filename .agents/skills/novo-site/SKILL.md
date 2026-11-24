@@ -111,7 +111,7 @@ Escreva `sites/<nome>/direcao.md`, nesta ordem (tipografia e foto vêm antes de 
 - **Foto.** Que tipo (gente real, produto, lugar), luz, enquadramento, cor, vindas da coleta. Fotos reais pequenas e agrupadas, nunca esticadas (regra 4); só uma foto que aguenta a tela inteira (original grande e nítido) pode abrir a página. Sem foto boa, a direção diz como compensar (tipografia como imagem, textura, cor) e o que a pessoa pode fotografar com o celular para melhorar. Nunca use banco de imagem genérico, e imagem gerada só com o OK da pessoa.
 - **Cor.** A paleta da marca e a tabela de contraste medida (mínimo 4,5:1 no texto, 3:1 no título grande).
 - **Composição.** Grade, respiro, assimetria, onde a tela fica cheia e onde respira, como as partes se emendam. Sem grade de cartões com borda e fundo.
-- **Movimento.** O que anima e por quê (o que conduz o olhar ou conta a história), o que nunca anima, durações e curvas, rolagem suave (Lenis) sim ou não, passagem entre páginas (View Transitions), e como fica com movimento reduzido (o conteúdo aparece inteiro, parado).
+- **Movimento.** O que anima e por quê (o que conduz o olhar ou conta a história), o que nunca anima, durações e curvas, rolagem suave (Lenis) sim ou não (se não, ponha `lenis: false` em `_gerador/ordem.mjs` e apague `site/assets/vendor/lenis/`: a página para de carregar o Lenis e a conferência deixa de pedir por ele), passagem entre páginas (View Transitions), e como fica com movimento reduzido (o conteúdo aparece inteiro, parado).
 - **Nunca fazer**: as três tentações genéricas deste ramo, para evitar.
 
 Ajuste `site/assets/marca/tokens.css` do site, se a direção pedir algo além da marca (sem mudar `minha-marca/`).

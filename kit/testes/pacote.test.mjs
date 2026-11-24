@@ -1,5 +1,6 @@
 // lib/pacote.mjs (montarPacote) e o comando pacote que a usa: a saída JSON do comando é a mesma de
 // antes da extração, e o SHA-256 bate entre o zip gravado, o arquivo .sha256 e o que a lib devolve.
+// E o checar exige do vendor só o que o pacote conta como usado.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -11,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { montarPacote } from '../scripts/lib/pacote.mjs';
 import { montarZip, lerZip } from '../scripts/lib/zip.mjs';
 import { KitErro } from '../scripts/lib/saida.mjs';
+import { vendorAusente } from '../scripts/comandos/checar.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DESPACHANTE = path.join(RAIZ, 'kit', 'scripts', 'estudio.mjs');
@@ -126,6 +128,47 @@ test('montarPacote: recusa arquivo privado com PACOTE_ARQUIVO_PRIVADO (saída 2)
       assert.deepEqual(e.dados, { arquivos: ['site/.env', 'site/backup/'] });
       return true;
     });
+  } finally {
+    fs.rmSync(base, { recursive: true, force: true });
+  }
+});
+
+// O checar e o pacote contam "usado" do mesmo jeito: o que o pacote avisa como não usado, o checar
+// não exige. A direção pode dispensar a rolagem suave (lenis: false na ordem): a página deixa de
+// citar o Lenis, a pasta dele pode sair, e só o que a página ainda cita continua exigido.
+test('vendor: o checar só exige o que a página cita, e nunca o que o pacote chama de não usado', () => {
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-vendor-'));
+  const env = { ...process.env, ESTUDIO_NAO_ABRIR: '1', ESTUDIO_SITES: base, ESTUDIO_MARCA: path.join(base, 'sem-marca') };
+  const estudio = (...args) => spawnSync(process.execPath, [DESPACHANTE, ...args], { encoding: 'utf8', env });
+  try {
+    assert.equal(estudio('novo', 'calmo').status, 0);
+    const site = path.join(base, 'calmo', 'site');
+    const lenis = path.join(site, 'assets', 'vendor', 'lenis');
+    // com o Lenis ligado (o padrão do molde), tirar a pasta dele faz falta
+    assert.deepEqual(vendorAusente(site), []);
+    fs.rmSync(lenis, { recursive: true });
+    assert.deepEqual(vendorAusente(site), ['assets/vendor/lenis/lenis.min.js', 'assets/vendor/lenis/lenis.css']);
+
+    // a direção dispensa a rolagem suave: a página para de citar o Lenis e ninguém exige mais
+    const ordem = path.join(base, 'calmo', '_gerador', 'ordem.mjs');
+    const texto = fs.readFileSync(ordem, 'utf8');
+    assert.ok(texto.includes('  lenis: true,\n'), 'o molde traz a chave lenis');
+    fs.writeFileSync(ordem, texto.replace('  lenis: true,\n', '  lenis: false,\n'));
+    assert.equal(estudio('montar', 'calmo').status, 0);
+    for (const pagina of ['index.html', path.join('a-oficina', 'index.html')]) {
+      assert.ok(!fs.readFileSync(path.join(site, pagina), 'utf8').includes('lenis'), `${pagina} ainda cita o Lenis`);
+    }
+    assert.deepEqual(vendorAusente(site), []);
+
+    // com a pasta de volta mas sem uso, o pacote avisa e o checar continua sem exigir
+    fs.cpSync(path.join(RAIZ, 'kit', 'molde', 'site', 'assets', 'vendor', 'lenis'), lenis, { recursive: true });
+    const naoUsados = montarPacote(site).naoCitados;
+    assert.ok(naoUsados.includes('assets/vendor/lenis/lenis.min.js'), naoUsados.join(', '));
+    assert.deepEqual(vendorAusente(site).filter((rel) => naoUsados.includes(rel)), []);
+
+    // o que a página cita continua exigido: sem o GSAP, reprova
+    fs.rmSync(path.join(site, 'assets', 'vendor', 'gsap', 'gsap.min.js'));
+    assert.deepEqual(vendorAusente(site), ['assets/vendor/gsap/gsap.min.js']);
   } finally {
     fs.rmSync(base, { recursive: true, force: true });
   }

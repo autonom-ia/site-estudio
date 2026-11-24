@@ -93,6 +93,9 @@ async function carregarSecao(nome) {
   return modulo.default;
 }
 
+// Rolagem suave (Lenis): ligada, a não ser que a ordem diga lenis: false.
+const comLenis = (site) => site.lenis !== false;
+
 function cabeca(ctx) {
   const { site, pagina, assets } = ctx;
   const titulo = pagina.rota ? `${pagina.titulo} · ${site.nome}` : `${site.nome} · ${pagina.titulo}`;
@@ -117,7 +120,7 @@ function cabeca(ctx) {
   linhas.push(
     `<link rel="icon" href="${assets}img/icone.svg" type="image/svg+xml">`,
     `<link rel="stylesheet" href="${assets}marca/tokens.css">`,
-    `<link rel="stylesheet" href="${assets}vendor/lenis/lenis.css">`,
+    ...(comLenis(site) ? [`<link rel="stylesheet" href="${assets}vendor/lenis/lenis.css">`] : []),
     `<link rel="stylesheet" href="${assets}css/site.css">`,
   );
   const n = site.negocio;
@@ -166,8 +169,7 @@ ${partes.join('\n')}
 ${fim}
 <script src="${a}vendor/gsap/gsap.min.js" defer></script>
 <script src="${a}vendor/gsap/ScrollTrigger.min.js" defer></script>
-<script src="${a}vendor/lenis/lenis.min.js" defer></script>
-<script src="${a}js/site.js" defer></script>
+${comLenis(ordem.site) ? `<script src="${a}vendor/lenis/lenis.min.js" defer></script>\n` : ''}<script src="${a}js/site.js" defer></script>
 </body>
 </html>
 `;
