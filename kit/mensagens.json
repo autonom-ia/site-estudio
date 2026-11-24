@@ -275,6 +275,14 @@
     "texto": "Uma foto saiu quase toda de uma cor só.",
     "acao": "Abra dados.arquivo. Se não foi de propósito, algo não carregou ou ficou invisível."
   },
+  "CENA_3D_NAO_ABRIU": {
+    "texto": "Uma parte em 3D não abriu na foto: no lugar dela saiu a imagem parada.",
+    "acao": "Veja dados.cena e dados.estado na página dados.pagina, em dados.largura. reserva: o 3D falhou (rode ./estudio checar para ver erro-de-script e confira se assets/3d/cena-3d.js e assets/3d/<cena>-3d.js existem) ou o navegador não tem WebGL. carregando: passou do prazo de espera. Com --reduzido a imagem parada é o certo e este aviso não sai."
+  },
+  "CENA_3D_VAZIA": {
+    "texto": "Uma parte em 3D abriu, mas saiu quase toda de uma cor só na foto.",
+    "acao": "Abra dados.arquivo e olhe o palco de dados.cena. A cena desenhou, mas a peça não aparece: confira a câmera e o tamanho da peça (assets/3d/<cena>-3d.js) e se a cor da peça não some no fundo da seção."
+  },
   "PAGINA_MUITO_ALTA": {
     "texto": "Uma página é alta demais para uma foto só; a foto parou no limite.",
     "acao": "Veja dados.altura. As fotos por seção cobrem o resto; considere se a página precisa ser tão longa."

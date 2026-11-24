@@ -29,14 +29,19 @@ function portaLivre() {
   });
 }
 
-// Abre o navegador. largura/altura = tamanho da janela (viewport inicial).
-export async function launch({ largura = 1920, altura = 1080 } = {}) {
-  const achado = acharNavegador();
-  if (!achado) falha('CHROME_NAO_ACHADO', {});
-  const porta = await portaLivre();
-  const perfil = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-cdp-'));
+// 3D nas fotos: o desenho em WebGL é sempre feito pelo SwiftShader, o desenhista por software que
+// vem dentro do Chrome. Igual no Mac, no Linux e no Windows, com ou sem placa de vídeo (o servidor
+// de testes não tem nenhuma), e a mesma foto em toda máquina. Desde o Chrome 137 o Chrome não cai
+// mais sozinho no SwiftShader quando falta placa: sem "--enable-unsafe-swiftshader" a página fica
+// sem WebGL e a parte 3D sai vazia (ou na imagem de reserva). O "unsafe" é sobre página de fora
+// rodando no desenhista por software: só o navegador que abre as páginas do próprio site liga
+// (com3d). O leitor, que abre sites da internet, abre sem.
+export const ARGS_3D = Object.freeze(['--use-angle=swiftshader', '--enable-unsafe-swiftshader']);
+
+// Os argumentos do navegador sem janela (separados para o teste conferir as chaves do 3D).
+export function argumentos({ caminho, porta, perfil, largura, altura, com3d = true }) {
   const args = [
-    ehShell(achado.caminho) ? '--headless' : '--headless=new',
+    ehShell(caminho) ? '--headless' : '--headless=new',
     `--remote-debugging-port=${porta}`,
     `--user-data-dir=${perfil}`,
     '--no-first-run',
@@ -48,8 +53,19 @@ export async function launch({ largura = 1920, altura = 1080 } = {}) {
     '--autoplay-policy=no-user-gesture-required',
     '--force-device-scale-factor=1',
     `--window-size=${largura},${altura}`,
+    ...(com3d ? ARGS_3D : []),
   ];
   if (!EH_MAC && !EH_WINDOWS) args.push('--no-sandbox');
+  return args;
+}
+
+// Abre o navegador. largura/altura = tamanho da janela (viewport inicial). com3d: ver ARGS_3D.
+export async function launch({ largura = 1920, altura = 1080, com3d = true } = {}) {
+  const achado = acharNavegador();
+  if (!achado) falha('CHROME_NAO_ACHADO', {});
+  const porta = await portaLivre();
+  const perfil = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-cdp-'));
+  const args = argumentos({ caminho: achado.caminho, porta, perfil, largura, altura, com3d });
   const proc = spawn(achado.caminho, [...args, 'about:blank'], { stdio: 'ignore', windowsHide: true });
   let morreu = false;
   proc.on('error', () => {

@@ -53,3 +53,41 @@ export function prenderParaFoto() {
   }
   return { presos, altura: document.documentElement.scrollHeight };
 }
+
+// Espera as partes em 3D (palcos com data-3d) terminarem de abrir antes da foto. O "assentar" já
+// rolou a página inteira, então todo palco foi visto e começou a baixar a cena. Espera até nenhum
+// estar "carregando" (com teto), mais dois quadros, e termina a troca suave da reserva para a cena.
+// Lição: sem esperar, a foto saía com o palco vazio (a cena ainda baixando) ou no meio da troca.
+export async function esperarCenas3d(tetoMs) {
+  const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
+  const quadro = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const palcos = [...document.querySelectorAll('[data-3d]')];
+  if (!palcos.length) return 0;
+  const inicio = Date.now();
+  while (Date.now() - inicio < tetoMs && palcos.some((p) => p.getAttribute('data-3d-estado') === 'carregando')) await dormir(100);
+  await quadro();
+  for (const a of document.getAnimations()) {
+    try {
+      const tempo = a.effect && a.effect.getComputedTiming ? a.effect.getComputedTiming() : null;
+      if (tempo && tempo.endTime !== Infinity) a.finish();
+    } catch (e) {}
+  }
+  await quadro();
+  return palcos.length;
+}
+
+// Onde está cada palco 3D na página (depois de prenderParaFoto) e em que estado ficou:
+// pronta (a cena desenhou), reserva (imagem parada) ou carregando (passou do prazo).
+export function cenas3d() {
+  return [...document.querySelectorAll('[data-3d]')].map((p) => {
+    const r = p.getBoundingClientRect();
+    return {
+      cena: p.getAttribute('data-3d'),
+      estado: p.getAttribute('data-3d-estado') || 'sem-estado',
+      x: Math.max(0, r.left + scrollX),
+      y: Math.max(0, r.top + scrollY),
+      largura: Math.min(r.width, innerWidth),
+      altura: r.height,
+    };
+  });
+}

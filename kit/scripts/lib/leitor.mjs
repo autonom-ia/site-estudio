@@ -14,7 +14,8 @@ const TETO_DE_AVALIAR_MS = 60000;
 const PECAS = Object.freeze({ launch, openTab });
 
 export async function abrirLeitor(deps = PECAS) {
-  const nav = await deps.launch({ largura: LARGURA, altura: ALTURA });
+  // sites de fora: sem o desenhista 3D por software (cdp.mjs, ARGS_3D)
+  const nav = await deps.launch({ largura: LARGURA, altura: ALTURA, com3d: false });
   let tab = null;
   try {
     tab = await deps.openTab(nav.porta);
