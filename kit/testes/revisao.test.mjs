@@ -127,20 +127,26 @@ test('metas separadas: rodadas por passou_na_rodada; estabilidade só por reaval
   // subir de 7,7 para 8,7 com conserto no meio é progresso, não instabilidade
   const r2 = rodada(2, { arte: 8.4, geral: 8.6, fatos: 8.8, qa: 9.0 }, { reavaliacao: { notas: { arte: 8.6, geral: 8.4, fatos: 8.8, qa: 9.1 } } });
   const t = trajetoria([r1, r2]);
-  assert.deepEqual(t.estabilidade, { arte: 0.2, geral: 0.2, fatos: 0, qa: 0.1, media: 0, rodadas: [2] });
+  assert.deepEqual(t.estabilidade, { arte: 0.2, geral: 0.2, fatos: 0, qa: 0.1, media: 0, rodadas: [2], lentes_medidas: 4 });
   assert.deepEqual(t.metas, { em_ate_2_rodadas: true, estabilidade: true });
   const instavel = trajetoria([rodada(1, { arte: 9, geral: 9, fatos: 9, qa: 9 }, { reavaliacao: { notas: { arte: 8.4, geral: 9, fatos: 9, qa: 9 } } })]);
   assert.equal(instavel.estabilidade.arte, 0.6);
   assert.equal(instavel.metas.estabilidade, false);
 });
 
-test('estabilidade com reavaliação só da arte: mede a arte, as outras lentes e a média ficam sem medida', () => {
+test('estabilidade com reavaliação só da arte: mede a arte; a meta das 4 lentes fica em aberto', () => {
   // o mesmo estado, avaliado por dois diretores de arte novos: 8,5 e 8,4
   const r2 = rodada(2, { arte: 8.5, geral: 8.5, fatos: 8.5, qa: 8.5 }, { reavaliacao: { notas: { arte: 8.4 } } });
   const t = trajetoria([rodada(1, { arte: 8, geral: 7, fatos: 7.5, qa: 8.5 }), r2]);
-  assert.deepEqual(t.estabilidade, { arte: 0.1, geral: null, fatos: null, qa: null, media: null, rodadas: [2] });
-  assert.deepEqual(t.metas, { em_ate_2_rodadas: true, estabilidade: true });
-  // a arte que oscila mais de 0,3 reprova a meta, mesmo sem as outras lentes medidas
+  assert.deepEqual(t.estabilidade, { arte: 0.1, geral: null, fatos: null, qa: null, media: null, rodadas: [2], lentes_medidas: 1 });
+  // a meta da arte (até 0,3) se lê em estabilidade.arte; a das 4 lentes só fecha com as 4 medidas
+  assert.ok(t.estabilidade.arte <= 0.3);
+  assert.deepEqual(t.metas, { em_ate_2_rodadas: true, estabilidade: null });
+  // três lentes medidas e dentro: ainda em aberto; as 4: cumprida
+  const tres = trajetoria([rodada(1, { arte: 9, geral: 9, fatos: 9, qa: 9 }, { reavaliacao: { notas: { arte: 8.8, geral: 9, fatos: 9.1 } } })]);
+  assert.equal(tres.estabilidade.lentes_medidas, 3);
+  assert.equal(tres.metas.estabilidade, null);
+  // uma lente medida acima de 0,3 já descumpre a meta das 4, mesmo sem as outras
   const instavel = trajetoria([rodada(1, { arte: 9, geral: 9, fatos: 9, qa: 9 }, { reavaliacao: { notas: { arte: 8.5 } } })]);
   assert.equal(instavel.estabilidade.arte, 0.5);
   assert.equal(instavel.metas.estabilidade, false);
@@ -208,7 +214,8 @@ test('revisao: escreve contexto-rN.md, avisa rodada ilegível e devolve a trajet
   assert.deepEqual(parcial.json.avisos, []);
   assert.deepEqual(parcial.json.dados.rodadas_anteriores, [1, 2]);
   assert.equal(parcial.json.dados.estabilidade.arte, 0.1);
-  assert.equal(parcial.json.dados.metas.estabilidade, true);
+  assert.equal(parcial.json.dados.estabilidade.lentes_medidas, 1);
+  assert.equal(parcial.json.dados.metas.estabilidade, null);
   // a rodada pode ser escolhida
   const r2 = estudio('revisao', 'rev', '--rodada', '1');
   assert.equal(r2.json.dados.rodada, 1);

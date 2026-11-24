@@ -6,7 +6,8 @@
 //   (notas e reavaliacao.notas, sem conserto no meio), varia no máximo 0,3. Entre rodadas há
 //   conserto, então a diferença ali é progresso, não ruído, e não entra nessa medida.
 //   A reavaliação pode ser parcial: só as lentes reavaliadas (por exemplo, só a de arte) entram na
-//   conta; a lente que não foi reavaliada fica null, e a média só sai com as 4.
+//   conta; a lente que não foi reavaliada fica null, e a média só sai com as 4. A meta das 4 lentes
+//   (metas.estabilidade) só vira true com as 4 medidas; a de uma lente se lê no campo dela.
 //
 // revisao/rodada-N.json (escrito pela skill revisar, junto do rodada-N.md):
 // { "rodada": N,
@@ -141,7 +142,18 @@ function estabilidade(rodadas) {
   const completas = medidas.filter((r) => LENTES.every((l) => reavaliou(r, l)));
   resultado.media = maior(completas, (r) => Math.abs(mediaExata(r.notas) - mediaExata(r.reavaliacao.notas)));
   resultado.rodadas = medidas.map((r) => r.rodada);
+  resultado.lentes_medidas = LENTES.filter((l) => resultado[l] !== null).length;
   return resultado;
+}
+
+// A meta de estabilidade é das 4 lentes: true só com as 4 medidas e nenhuma acima de 0,3; false se
+// alguma lente medida já passou de 0,3 (a meta não tem mais como ser cumprida); null enquanto faltar
+// lente. A meta de uma lente só (como a da arte) se lê no campo dela em estabilidade.
+function metaDeEstabilidade(est) {
+  if (!est) return null;
+  const dentro = (l) => centesimos(est[l]) <= centesimos(META.estabilidade_lente);
+  if (LENTES.some((l) => est[l] !== null && !dentro(l))) return false;
+  return est.lentes_medidas === LENTES.length ? true : null;
 }
 
 // Nota de cada rodada, se passou, e as duas metas (rodadas e estabilidade) medidas em separado.
@@ -152,8 +164,7 @@ export function trajetoria(rodadas) {
   const est = estabilidade(rodadas);
   const metas = {
     em_ate_2_rodadas: passouNaRodada !== null && passouNaRodada <= META.rodadas,
-    // só as lentes medidas contam: uma reavaliação só da arte mede a meta da arte
-    estabilidade: est ? LENTES.every((l) => est[l] === null || centesimos(est[l]) <= centesimos(META.estabilidade_lente)) : null,
+    estabilidade: metaDeEstabilidade(est),
   };
   return { notas, passou_na_rodada: passouNaRodada, estabilidade: est, metas };
 }
