@@ -65,7 +65,7 @@ Quem tem acesso publica o site num endereço próprio, como `seunegocio.sites.au
 
 Recebeu um link de convite? Abra o link, entre com o Google e o acesso já fica liberado.
 
-A publicação pelo assistente (você pede **"publique meu site"** e o link aparece na conversa) está chegando. Quem já tiver acesso recebe um e-mail quando estiver pronta.
+Com o acesso liberado, peça ao assistente **"publique meu site"**. Ele confere o site, pergunta antes de publicar e devolve o link na conversa. Na primeira vez neste computador, ele abre uma página para você autorizar com o Google e um código.
 
 ## As suas pastas
 

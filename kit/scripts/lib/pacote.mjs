@@ -69,6 +69,21 @@ export function arquivosPrivados(pasta, rel = '') {
   return achados;
 }
 
+// Letra que continua um nome de arquivo (o resto, como aspas, parêntese, espaço, "/", "?" e "#",
+// termina o nome).
+const continuaNome = (ch) => ch !== undefined && (ch.toLowerCase() !== ch.toUpperCase() || (ch >= '0' && ch <= '9') || '_-.~%'.includes(ch));
+
+// O texto cita este nome de arquivo inteiro, e não só um pedaço de outro ("data.png" não cita
+// "a.png")? Antes e depois do nome só vale o que termina um nome, inclusive "/" da pasta.
+export function citaNome(texto, nome) {
+  let i = texto.indexOf(nome);
+  while (i !== -1) {
+    if (!continuaNome(texto[i - 1]) && !continuaNome(texto[i + nome.length])) return true;
+    i = texto.indexOf(nome, i + 1);
+  }
+  return false;
+}
+
 // Arquivos (fora as páginas) cujo nome não aparece em nenhuma página, CSS, script ou manifesto.
 export function arquivosNaoCitados(pasta, arquivos) {
   const textos = arquivos
@@ -79,7 +94,7 @@ export function arquivosNaoCitados(pasta, arquivos) {
     const nome = rel.split('/').pop();
     if (extensao(rel) === '.html' || LIDOS_PELO_SERVIDOR.includes(nome.toLowerCase())) continue;
     if (ehLicencaDeFonte(nome) || nome.toUpperCase().startsWith('LICENSE')) continue;
-    if (!textos.some((t) => t.rel !== rel && t.texto.includes(nome))) soltos.push(rel);
+    if (!textos.some((t) => t.rel !== rel && citaNome(t.texto, nome))) soltos.push(rel);
   }
   return soltos;
 }
@@ -91,19 +106,37 @@ function lerEntradas(pastaSite, arquivos) {
   });
 }
 
+// Só para o GitHub Pages: o painel de sites.autonomia.site recusa todo arquivo oculto.
+const SO_DO_GITHUB_PAGES = '.nojekyll';
+
+// Impressão do conteúdo: nomes e bytes, em ordem, sem a data dos arquivos (que muda o zip). É ela que
+// diz se um envio sem resposta era deste mesmo conteúdo.
+function impressaoDo(entradas) {
+  const h = crypto.createHash('sha256');
+  for (const e of [...entradas].sort((a, b) => (a.nome < b.nome ? -1 : a.nome > b.nome ? 1 : 0))) {
+    h.update(`${e.nome}\0${e.dados.length}\0`);
+    h.update(e.dados);
+  }
+  return h.digest('hex');
+}
+
 // Monta o zip de pastaSite (a pasta site/ de um site) sem gravar nada.
 // Recusa com PACOTE_ARQUIVO_PRIVADO (saída 2) antes de ler qualquer arquivo para o zip.
 // Caminhos devolvidos são relativos a site/, sem o prefixo "site/".
-export function montarPacote(pastaSite) {
+// paraOPainel: o pacote vai para sites.autonomia.site, e o .nojekyll da raiz fica fora (lá ele não
+// serve e o painel recusa arquivo oculto); no pacote para outro serviço ele vai.
+export function montarPacote(pastaSite, { paraOPainel = false } = {}) {
   const privados = arquivosPrivados(pastaSite);
   if (privados.length) reprovado('PACOTE_ARQUIVO_PRIVADO', { arquivos: privados.map((r) => `site/${r}`) });
   const todos = listarArquivos(pastaSite);
-  const arquivos = todos.filter((rel) => !foraDoPacote(rel));
+  const arquivos = todos.filter((rel) => !foraDoPacote(rel) && !(paraOPainel && rel === SO_DO_GITHUB_PAGES));
   const entradas = lerEntradas(pastaSite, arquivos);
   const zip = montarZip(entradas);
   return {
     zip,
     sha256: crypto.createHash('sha256').update(zip).digest('hex'),
+    impressao: impressaoDo(entradas),
+    nomes: arquivos,
     arquivos: entradas.length,
     paginas: arquivos.filter((a) => a.endsWith('.html')).length,
     conteudoBytes: entradas.reduce((s, e) => s + e.dados.length, 0),

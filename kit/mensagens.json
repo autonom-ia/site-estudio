@@ -441,7 +441,7 @@
   },
   "PUBLICAR_SITE_GRANDE_DEMAIS": {
     "texto": "O site ficou grande demais para publicar aqui.",
-    "acao": "Veja dados.detalhe. Reduza fotos e vídeos (o desempenho mostra os arquivos mais pesados) e tire de site/ o que nenhuma página usa. Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
+    "acao": "Veja dados.mb e dados.mb_max (ou dados.detalhe, quando quem recusou foi o serviço). Reduza fotos e vídeos (o desempenho mostra os arquivos mais pesados) e tire de site/ o que nenhuma página usa. Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar. Pelo pacote (./estudio pacote) para outro serviço não há esse teto."
   },
   "PUBLICAR_LIMITE_DO_DIA": {
     "texto": "Você já publicou muitas vezes hoje. Amanhã dá para publicar de novo.",
@@ -490,6 +490,34 @@
   "PUBLICAR_NO_AR_AJUSTANDO": {
     "texto": "A mudança já foi para o ar, mas um passo final do serviço falhou. Ele acerta sozinho em alguns minutos.",
     "acao": "Não publique de novo por isso. Peça para a pessoa abrir o endereço do site daqui a uns minutos e conferir. Se depois de 15 minutos ainda estiver estranho, diga para avisar em sites.autonomia.site."
+  },
+  "PUBLICAR_TIPO_NAO_ACEITO": {
+    "texto": "Há arquivos no site de um tipo que o serviço de publicação não aceita.",
+    "acao": "Veja dados.arquivos. O serviço aceita página, estilo, script, imagem (png, jpg, gif, webp, avif, svg, ico), letra (woff2, woff, ttf, otf), vídeo mp4 ou webm, áudio mp3, ogg ou wav, pdf, txt, json e xml. Arquivo de texto sem extensão (como LICENSE): renomeie para o mesmo nome com .txt (LICENSE.txt), sem perguntar, porque nenhuma página o usa. Vídeo .mov ou .m4v: converta para mp4. Modelo 3D (.glb, .gltf): hoje não vai por este serviço; diga isso à pessoa e ofereça o pacote (./estudio pacote) para outro serviço. Se o arquivo não é do site, tire-o de site/ (o que for dela vai para material/). Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
+  },
+  "PUBLICAR_NOME_DE_ARQUIVO_RECUSADO": {
+    "texto": "Há arquivos no site com um nome que o serviço de publicação não aceita.",
+    "acao": "Veja dados.arquivos. O serviço recusa nome com barra invertida, dois-pontos, caractere invisível ou de direção de texto, nome escondido (começa com ponto, fora a pasta .well-known/ na raiz) e nome comprido demais. Renomeie o arquivo (letras, números e hífen) e troque o nome também onde a página o usa. Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
+  },
+  "PUBLICAR_NOMES_REPETIDOS": {
+    "texto": "Há dois arquivos no site com o mesmo nome, mudando só maiúsculas e minúsculas. O serviço de publicação não aceita.",
+    "acao": "Veja dados.pares. Renomeie um de cada par e troque o nome também onde a página o usa (no Windows e no Mac os dois podem até parecer o mesmo arquivo). Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
+  },
+  "PUBLICAR_ARQUIVOS_DEMAIS": {
+    "texto": "O site tem arquivos demais para publicar aqui.",
+    "acao": "Veja dados.arquivos e dados.maximo (10.000). Tire de site/ o que nenhuma página usa (o aviso ARQUIVO_NAO_USADO lista) e rode a conferência completa do passo 1 da skill hospedar de novo. Pelo pacote (./estudio pacote) para outro serviço não há esse limite."
+  },
+  "PUBLICAR_ESPERE_UM_POUCO": {
+    "texto": "O serviço de publicação pediu para esperar um pouco antes de tentar de novo.",
+    "acao": "Veja dados.detalhe. Espere uns 2 minutos e rode a mesma publicação de novo, sem perguntar outra vez à pessoa. Se repetir três vezes, diga a ela que o serviço está ocupado e tente mais tarde."
+  },
+  "PUBLICAR_ENDERECO_JA_EM_USO": {
+    "texto": "Nesse endereço está no ar algo que não foi este site que pôs ali daqui: outro site seu, uma apresentação, ou uma versão publicada de outro computador. Se eu publicar, este site toma o lugar do que está no ar.",
+    "acao": "Veja dados.nome, dados.versao_no_ar e dados.versao_desta. Pergunte à pessoa, com duas opções: \"Usar outro endereço ★\" (proponha um nome curto e livre e, com o sim dela, rode ./estudio publicar <nome> --no-ar <outro>) ou \"Trocar o que está lá por este site\" (rode de novo com --por-cima; as versões de antes ficam guardadas por um tempo e dá para voltar com --voltar). Nunca use --por-cima sem esse sim, dado para este endereço."
+  },
+  "PUBLICAR_PASTA_MUDOU": {
+    "texto": "Este site está num lugar diferente de onde eu o pus no ar da última vez. Pode ser que você tenha movido ou copiado o site. Antes de trocar o que está no ar, preciso que você confirme.",
+    "acao": "Veja dados.lugar (onde ele está agora), dados.lugar_anterior (de onde foi publicado) e dados.anterior_existe. Se anterior_existe é false, ele foi movido: diga isso em uma frase e pergunte \"Posso pôr este no lugar do que está no ar? ★\"; com o sim, rode de novo com --por-cima (só desta vez: daí em diante este lugar é o dele). Se anterior_existe é true, há duas cópias: pergunte qual deve ficar no ar. Se for esta, com o sim rode com --por-cima; se as duas devem ficar no ar, proponha outro endereço para esta e rode com --no-ar <outro>. Nunca use --por-cima sem esse sim."
   },
   "PUBLICAR_SITE_AINDA_NAO_PUBLICADO": {
     "texto": "Esse site ainda não foi publicado em sites.autonomia.site, então não há versão anterior para voltar.",
