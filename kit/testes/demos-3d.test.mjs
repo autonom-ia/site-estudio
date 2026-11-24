@@ -324,7 +324,7 @@ test('o configurador funciona só com o teclado, e a escolha é dita e levada ao
 // Conta os quadros da cena WebGL (o molde tem outros laços de quadro, de rolagem e de animação,
 // que não interessam aqui): cada quadro do motor começa limpando a imagem (clear), uma vez só.
 // Com a cena parada, a conta não sobe.
-const CONTAR_QUADROS = "(() => { window.__quadros = 0; for (const C of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) { if (!C) continue; const o = C.prototype.clear; C.prototype.clear = function (...a) { window.__quadros += 1; return o.apply(this, a); }; } })();";
+const CONTAR_QUADROS = "(() => { window.__quadros = 0; window.__primeiro = 0; window.__ultimo = 0; for (const C of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) { if (!C) continue; const o = C.prototype.clear; C.prototype.clear = function (...a) { const t = performance.now(); if (!window.__quadros) window.__primeiro = t; window.__ultimo = t; window.__quadros += 1; return o.apply(this, a); }; } })();";
 const quadros = (s) => s.tab.evaluate('window.__quadros');
 // Espera por estado, não por relógio fixo (o CI no Windows desenha devagar, por software):
 // "subir" espera ao menos n desenhos novos; "parar" espera a conta ficar parada por calmoMs.
@@ -391,14 +391,14 @@ test('a caramanhola gira sozinha só nos primeiros segundos; o mouse só pega a 
     // girando: logo depois de pronta, a peça segue desenhando (o giro conta do primeiro quadro à
     // vista, então a máquina lenta não perde o giro); o critério é haver desenhos novos, não quantos
     const a = await quadros(s);
-    const t0 = Date.now();
     assert.ok(await quadrosSubirem(s, a, 3), 'a peça não está girando logo depois de abrir');
     // e para sozinha (WCAG 2.2.2: movimento que ninguém pediu acaba em até 5 s)
     const parada = await quadrosPararem(s);
     assert.ok(parada.parou, 'a peça continua girando sozinha');
     // girou por um tempo de verdade (não parou no primeiro quadro), e parou no prazo: o giro é de
-    // 4,5 s contados do primeiro quadro à vista; a folga cobre o quadro lento do CI
-    const girou = parada.em - t0;
+    // 4,5 s contados do primeiro quadro à vista. Medido no relógio da própria página, do primeiro
+    // ao último desenho, para não depender de quando o teste percebe que a cena ficou pronta.
+    const girou = Math.round(await s.tab.evaluate('window.__ultimo - window.__primeiro'));
     assert.ok(girou >= 3000, `parou cedo demais: ${girou} ms`);
     assert.ok(girou <= 4500 + 3000, `parou tarde demais: ${girou} ms`);
     const b = parada.quadros;
