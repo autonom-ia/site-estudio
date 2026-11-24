@@ -20,6 +20,8 @@ Um piloto com um negócio de verdade mostrou o que leva a primeira versão de "p
 3. **Um único momento forte, com a ação logo abaixo.** A página inicial tem um pico só, o "momento mais forte" do brief: uma foto, um número ou uma frase em tamanho de cartaz. A ação principal vem logo abaixo dele, não três telas depois. Dois picos na mesma página se anulam.
 4. **Fotos reais pequenas e agrupadas, nunca esticadas.** Foto de celular ou de rede social não aguenta a tela inteira. Em grupo, cada uma no máximo do tamanho do arquivo, ela mostra o lugar e a gente de verdade. Nunca exiba uma foto maior que o arquivo dela. A anatomia está em `_gerador/secoes/fotos.mjs` do molde.
 
+**E a ação principal funciona sozinha desde a primeira versão.** Quem chega faz o passo sem perguntar nada a ninguém: a página diz o que dá para pedir, marcar ou comprar, a partir das linhas do `fatos.md`; a mensagem pronta do WhatsApp nunca sai vazia e não repete palavra; nenhuma opção vem marcada por padrão sem um fato com fonte que a sustente (um dia, um tamanho, "para quem"). Pedido montado na página segue a seção `pedido-no-whatsapp` de `kit/repertorio/como-usar.md` e usa a peça pronta `kit/pecas/pedido.js`, que junta a mensagem e só avisa o leitor de tela quando a pessoa termina um campo. Sem fonte do que dá para pedir, não há pedido montado: o botão de WhatsApp leva a mensagem pronta e a pergunta vai para as Pendências do `andamento.md`.
+
 E as letras nascem leves: baixe com `./estudio fonte` (skill `minha-marca`), que traz só o alfabeto latino em `.woff2` e a licença com o nome da família. O `checar` reprova letra sem licença (`fonte-sem-licenca`) e avisa letra pesada (`fonte-pesada`).
 
 ## O andamento
@@ -128,7 +130,7 @@ Como uma parte é feita:
 - CSS moderno: tipografia fluida com `clamp()`, container queries, `:has()`, `color-mix()`, subgrid quando a grade pedir. Pense primeiro no celular.
 - Movimento com GSAP e ScrollTrigger já copiados em `site/assets/vendor/`, Lenis quando a direção pede rolagem suave, View Transitions na passagem entre páginas. Tudo dentro de `prefers-reduced-motion: no-preference`; sem isso, o conteúdo aparece inteiro e parado. Nada fica invisível esperando um script.
 - Fotos em `site/assets/`, em WebP ou JPG, na largura em que aparecem (não uma foto de 6000 px num espaço de 800) e nunca exibidas maiores que o arquivo (regra 4). `loading="lazy"` em tudo que não está no topo.
-- Contato sem servidor: link de WhatsApp, `tel:` e `mailto:`, com os dados de `fatos.md`.
+- Contato sem servidor: link de WhatsApp, `tel:` e `mailto:`, com os dados de `fatos.md`. O link de WhatsApp sempre leva uma mensagem pronta que diz o que a pessoa quer; pedido montado na página usa `kit/pecas/pedido.js` (copie para `site/assets/js/`).
 - A cabeça de cada página sai do `ordem.mjs`: `idioma`, o `titulo` e a `descricao` próprios de cada página, e os dados do negócio em `site.negocio`, que viram JSON-LD (escolha o `tipo` mais certo, como `Dentist`, `HairSalon` ou `LocalBusiness`), só com fatos de `fatos.md`. O endereço completo do site (`site.endereco`) e a imagem de compartilhamento (`site.imagemSocial`) ficam vazios até a pessoa ter onde hospedar (skill `hospedar`).
 - Sem `<select>` nativo, sem travessão no texto (use vírgula, dois-pontos ou ponto), nenhum endereço da internet carregado pela página.
 

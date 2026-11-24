@@ -78,10 +78,12 @@ Tudo roda na própria página, com os dados do `fatos.md`. Nada de servidor, con
 
 ### `pedido-no-whatsapp`: pedido montado na página e enviado pelo WhatsApp
 
-- Itens reais do `fatos.md` com preço, botões de menos e mais (com nome acessível, como "Mais uma câmara de ar") e a quantidade num `aria-live`.
-- O total somado na página. O botão monta o endereço `https://wa.me/<número com país e DDD, só dígitos>?text=<mensagem>`, com a mensagem passada por `encodeURIComponent`.
-- A mensagem é legível para quem atende: uma linha por item, o total e os dados que a casa pediu (bairro, data, nome).
-- Sem JavaScript: um link de WhatsApp com um texto padrão. No celular, a barra com o total pode ficar presa no pé; lembre que a conferência fotografa elementos presos.
+- **A página diz o que dá para pedir.** Cada item é uma linha do `fatos.md`, com a fonte: o produto, o tamanho, o sabor, o serviço, e o preço e o prazo quando a fonte traz. Se a fonte só cita o tipo de coisa (por exemplo, a bio diz "rodas montadas sob encomenda"), esses tipos viram as opções. Se nenhuma fonte diz o que dá para pedir, não monte o pedido: use um botão de WhatsApp com a mensagem pronta e ponha "o que dá para pedir, e com quanto tempo de antecedência" nas Pendências do `andamento.md`. Um campo de texto livre sozinho ("escreva o que você quer") não é pedido montado.
+- **Nada vem marcado sem fonte.** Nenhuma opção começa marcada (dia, tamanho, para quem), a não ser que uma linha do `fatos.md` sustente a escolha (o único tamanho que existe, o único dia de entrega). Opção marcada por padrão põe na boca de quem visita uma promessa ou uma escolha que a casa não fez.
+- **Use a peça pronta `kit/pecas/pedido.js`.** Copie para `site/assets/js/pedido.js` e carregue no fim da parte do pedido; o cabeçalho dela diz os atributos que a parte escreve. Ela junta a mensagem, soma o total, monta o endereço `https://wa.me/<número com país e DDD, só dígitos>?text=<mensagem>` e avisa o leitor de tela. Não reescreva essa conta à mão: é nela que nascem a mensagem vazia e a palavra repetida.
+- **A mensagem pronta nunca sai vazia.** A abertura (`data-mensagem`) é uma frase completa que diz sozinha o que a pessoa quer ("Olá! Quero encomendar na <nome da casa>."), sem dois-pontos no fim. Abaixo dela, uma linha por item escolhido, o total e uma linha por campo preenchido ("Para o dia: 25/12/2026"). Os rótulos não repetem palavra da abertura: se a abertura diz "Quero", nenhum rótulo diz "Quero" de novo. O botão já sai do gerador com a abertura no endereço: sem JavaScript, ele funciona.
+- **O leitor de tela fala uma vez, não a cada letra.** O resumo visível da mensagem nunca é região viva (sem `aria-live`). Quem fala é uma linha à parte com `role="status"`, e só quando a pessoa termina um campo ou envia (a peça faz assim). Botões de menos e mais têm nome acessível ("Mais uma câmara de ar").
+- No celular, a barra com o total pode ficar presa no pé; lembre que a conferência fotografa elementos presos.
 
 ### `link-de-pagamento-ou-agenda`: link de pagamento ou de agenda
 
