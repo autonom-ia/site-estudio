@@ -69,29 +69,17 @@ export function arquivosPrivados(pasta, rel = '') {
   return achados;
 }
 
-// O texto de cada página, CSS, script ou manifesto da pasta: é nele que um arquivo é citado.
-export function textosQueCitam(pasta, arquivos) {
-  return arquivos
-    .filter((rel) => TEXTOS_QUE_CITAM.includes(extensao(rel)))
-    .map((rel) => ({ rel, texto: fs.readFileSync(path.join(pasta, ...rel.split('/')), 'utf8') }));
-}
-
-// Algum outro texto da pasta cita o nome deste arquivo? É a mesma conta para o pacote (que avisa o
-// arquivo que ninguém cita) e para o checar (que só exige o arquivo que alguém cita).
-export function citado(textos, rel) {
-  const nome = rel.split('/').pop();
-  return textos.some((t) => t.rel !== rel && t.texto.includes(nome));
-}
-
 // Arquivos (fora as páginas) cujo nome não aparece em nenhuma página, CSS, script ou manifesto.
 export function arquivosNaoCitados(pasta, arquivos) {
-  const textos = textosQueCitam(pasta, arquivos);
+  const textos = arquivos
+    .filter((rel) => TEXTOS_QUE_CITAM.includes(extensao(rel)))
+    .map((rel) => ({ rel, texto: fs.readFileSync(path.join(pasta, ...rel.split('/')), 'utf8') }));
   const soltos = [];
   for (const rel of arquivos) {
     const nome = rel.split('/').pop();
     if (extensao(rel) === '.html' || LIDOS_PELO_SERVIDOR.includes(nome.toLowerCase())) continue;
     if (ehLicencaDeFonte(nome) || nome.toUpperCase().startsWith('LICENSE')) continue;
-    if (!citado(textos, rel)) soltos.push(rel);
+    if (!textos.some((t) => t.rel !== rel && t.texto.includes(nome))) soltos.push(rel);
   }
   return soltos;
 }
