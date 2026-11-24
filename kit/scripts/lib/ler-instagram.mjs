@@ -200,6 +200,9 @@ async function listarPosts(leitor, maximo, pausa) {
   return { lido, posts: [...vistos.entries()].slice(0, maximo) };
 }
 
+// Publicações seguidas que não abrem até a leitura parar: uma é a página; três, o navegador.
+const FALHAS_SEGUIDAS_DE_PARAR = 3;
+
 // Sem prazo: a leitura não tem hora para acabar (só os testes de uma parte isolada).
 const SEM_PRAZO = Number.POSITIVE_INFINITY;
 
@@ -207,7 +210,9 @@ const SEM_PRAZO = Number.POSITIVE_INFINITY;
 // inteira acaba (lib/ler.mjs); passou dela, para e devolve o que já leu, com esgotou: cada passo no
 // navegador espera só até o prazo, e o que já foi lido fica. Se o prazo acaba antes da lista de
 // publicações, não há nada lido, e o TempoEsgotado sobe. Publicação que não abre (erro do navegador)
-// fica de fora, e a leitura segue para a próxima. Devolve
+// fica de fora, e a leitura segue para a próxima; três seguidas querem dizer navegador quebrado: a
+// leitura para ali com o que já leu, ou, sem nada lido, o erro sobe (vira LER_INSTAGRAM_FALHOU, não
+// "poucas publicações"). Devolve
 // { perfil, posts, fotos, esgotou }. permitirEnderecoLocal: só os testes (que servem as fotos em
 // 127.0.0.1) ligam.
 export async function lerInstagram(leitor, entrada, { base = BASE_INSTAGRAM, maximo = 24, pasta, pausa = 1500, aoAvancar = () => {}, permitirEnderecoLocal = false, prazo = SEM_PRAZO } = {}) {
@@ -220,6 +225,7 @@ export async function lerInstagram(leitor, entrada, { base = BASE_INSTAGRAM, max
   const perfil = { ...dadosDoPerfil(lido, usuario), endereco };
   const posts = [];
   let esgotou = false;
+  let seguidas = 0;
   for (const [codigo, href] of lista) {
     if (Date.now() >= prazo) {
       esgotou = true;
@@ -231,10 +237,16 @@ export async function lerInstagram(leitor, entrada, { base = BASE_INSTAGRAM, max
       await passo(leitor.ir(href));
       lidoPost = await passo(leitor.esperarAte(lerPostNaPagina, PRAZO_DA_PAGINA_MS));
     } catch (e) {
-      if (!(e instanceof TempoEsgotado)) continue;
-      esgotou = true;
+      if (e instanceof TempoEsgotado) {
+        esgotou = true;
+        break;
+      }
+      seguidas += 1;
+      if (seguidas < FALHAS_SEGUIDAS_DE_PARAR) continue;
+      if (!posts.length) throw e;
       break;
     }
+    seguidas = 0;
     if (!lidoPost) continue;
     posts.push(dadosDoPost(lidoPost, codigo, href));
   }

@@ -422,6 +422,9 @@ test('teto de tempo no Instagram é duro: uma página que nunca abre não segura
   assert.ok(Date.now() - inicio < 3000, `parou em ${Date.now() - inicio} ms`);
   assert.equal(r.esgotou, true);
   assert.deepEqual(r.posts.map((p) => p.codigo), ['AAA'], 'a que não abriu fica de fora e a leitura segue');
+  // Navegador quebrado: toda publicação falha. Sem nada lido, o erro sobe (LER_INSTAGRAM_FALHOU no ler).
+  const quebrado = { ...leitor, ir: (url) => (url.includes('/p/') ? Promise.reject(new Error('conexão com o navegador caiu')) : Promise.resolve()) };
+  await assert.rejects(lerInstagram(quebrado, 'casa', { base: 'https://ig.example', maximo: 3, pausa: 0 }), (e) => e.message.includes('caiu'));
   const nada = { ...leitor, ir: () => new Promise(() => {}) };
   await assert.rejects(lerInstagram(nada, 'casa', { base: 'https://ig.example', prazo: Date.now() + 200 }), (e) => e instanceof TempoEsgotado);
 });

@@ -62,7 +62,10 @@ export default async function antes(args) {
   try {
     sobras = [trocarCopia(c.gerador, ad.gerador), trocarComparacao(c, ad, temGerador)].filter(Boolean);
   } catch (erro) {
-    reprovado('ANTES_NAO_TROCADO', { nome, erro: erro.code || String(erro.message || erro) });
+    // Só erro do sistema de arquivos (EPERM, EBUSY, EACCES...) vira reprovação, e só o código dele sai
+    // (a mensagem traz caminhos da pessoa). Outro erro é defeito do estúdio e sobe como é.
+    if (typeof erro?.code !== 'string' || typeof erro.syscall !== 'string') throw erro;
+    reprovado('ANTES_NAO_TROCADO', { nome, erro: erro.code });
   }
   return {
     ok: true,
