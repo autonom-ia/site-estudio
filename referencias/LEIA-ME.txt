@@ -3,7 +3,7 @@ REFERENCIAS
 Esta pasta e sua. Ponha aqui o que ajuda o assistente a fazer o site:
 
   - fotos, logos e videos que voce pode usar;
-  - planilhas, cardapios, tabelas de preco e documentos de onde vem cada dado
+  - planilhas, catalogos, tabelas de preco e documentos de onde vem cada dado
     (endereco, telefone, horario, numeros): e a fonte dos fatos;
   - enderecos de sites de que voce gosta (como inspiracao, nunca para copiar).
 

@@ -26,7 +26,7 @@ Os três têm plano grátis que serve para um site como este. As telas desses se
 
 ## 2. Publicar em sites.autonomia.site
 
-Diga, com estas palavras ou parecidas: "Eu publico só com a sua confirmação, em sites.autonomia.site. Se você ainda não tem acesso, peça em sites.autonomia.site." Pergunte "Posso publicar o site {{nome}} agora?" com "Pode publicar ★" e "Ainda não". Só siga com o sim dela; cada publicação nova pede um sim novo.
+Antes de perguntar, leia `sites/<nome>/andamento.md` > Pendências e, no `fatos.md`, os fatos que o site usa e que ainda estão só na parte "Lido pelo estúdio" (a pessoa ainda não confirmou). Diga, com estas palavras ou parecidas: "Eu publico só com a sua confirmação, em sites.autonomia.site. Se você ainda não tem acesso, peça em sites.autonomia.site." Pergunte "Posso publicar o site {{nome}} agora?" com "Pode publicar ★" e "Ainda não". Havendo pendência ou fato não confirmado, ponha na mesma pergunta, antes do pedido, cada um em palavras simples, como "Antes de pôr no ar: o horário de sábado é mesmo das 9h às 13h?". O que ela confirmar sai das Pendências e passa para a tabela de cima do `fatos.md`, com a fonte "a própria pessoa disse em <data>"; o que ela corrigir, corrija, monte e confira de novo antes de publicar. Só siga com o sim dela; cada publicação nova pede um sim novo.
 
 1. Rode `./estudio publicar <nome>`. No Codex, fora da área protegida (ele usa a internet). Dê a ele até 5 minutos para terminar: no Claude Code, rode com `timeout` de 300000. Quase sempre termina em menos de 2 minutos, mas um site grande numa internet lenta demora mais, e cortar no meio deixa você sem a resposta.
 2. `PUBLICAR_AGUARDANDO_LOGIN`: é a primeira vez neste computador (ou o acesso dele venceu). Mostre `dados.codigo_curto` bem visível e diga: "Abri a página de autorização no navegador (`dados.endereco`). Entre com o Google, digite o código e clique em Autorizar. Me avise quando fizer." O navegador mostra o nome do computador, a hora e o lugar de quem pediu: só autorize se foi ela que acabou de pedir. Quando ela avisar, rode o mesmo `./estudio publicar <nome>` de novo; ele continua o mesmo pedido. Se de novo vier `PUBLICAR_AGUARDANDO_LOGIN`, pergunte se ela já digitou o código e repita.
@@ -34,6 +34,8 @@ Diga, com estas palavras ou parecidas: "Eu publico só com a sua confirmação, 
 3. `PUBLICADO`: diga o endereço (`dados.endereco`) e confira com ela (seção 6). `PUBLICADO_CERTIFICADO_PENDENTE`: o site subiu, mas o cadeado leva alguns minutos; peça para abrir daqui a pouco e não publique de novo só por isso.
 4. `PUBLICAR_CONCLUSAO_INCERTA`: o site chegou inteiro, mas a confirmação não voltou a tempo. Não publique por cima: espere uns 3 minutos e rode o mesmo `./estudio publicar <nome>`; ele confere primeiro se a versão já está no ar e, se estiver, só confirma.
 5. Qualquer outro código: diga o `texto` de `kit/mensagens.json` e faça a `acao`. Nenhum erro deixa o site no ar pela metade.
+
+**Nome recusado ou endereço de outra pessoa** (`PUBLICAR_NOME_RECUSADO`, `PUBLICAR_SITE_DE_OUTRA_PESSOA`): proponha um nome curto e livre. Com o sim dela para o endereço novo, copie a pasta inteira `sites/<nome>/` para `sites/<novo>/` (nunca só `site/`), rode `./estudio montar <novo>` e `./estudio preflight <novo>`, e só então rode `./estudio publicar <novo>`. O sim para o endereço novo vale como a confirmação desta publicação. Site grande demais ou arquivo recusado pelo serviço (`PUBLICAR_SITE_GRANDE_DEMAIS`, `PUBLICAR_PACOTE_RECUSADO`): depois de corrigir, rode o `preflight` e pergunte de novo antes de publicar.
 
 **Atualizar depois:** depois de mudar o site (montar, conferir e `preflight` aprovado), pergunte de novo e rode `./estudio publicar <nome>`. Cada publicação vira uma versão nova; as anteriores ficam guardadas por um tempo.
 
@@ -47,7 +49,7 @@ O acesso deste computador fica guardado em `.ferramentas/publicar/`. Nunca abra,
 
 1. "Abra o endereço app.netlify.com/drop no navegador."
 2. "Crie uma conta grátis (pode entrar com o e-mail ou com o Google). Sem conta, o site some depois de um tempo."
-3. "Arraste para a área indicada a pasta `site` que eu abri para você. Se ele aceitar o arquivo `.zip`, pode ser o arquivo também."
+3. "Arraste para a área indicada o `site` que eu abri para você na tela. Se ele aceitar o arquivo que eu preparei, pode ser o arquivo também."
 4. "Espere terminar. Ele mostra um endereço terminado em `.netlify.app`. Abra e confira."
 5. Opcional: "Em Configurações do site, dá para trocar o nome do endereço por um mais curto."
 
@@ -58,7 +60,7 @@ O acesso deste computador fica guardado em `.ferramentas/publicar/`. Nunca abra,
 1. "Abra dash.cloudflare.com e crie uma conta grátis."
 2. "No menu, entre em Workers e Pages e escolha criar um projeto de Pages, na opção de enviar arquivos (Upload assets ou Direct Upload). Não escolha a opção de ligar ao Git."
 3. "Dê um nome ao projeto: ele vira o endereço, terminado em `.pages.dev`."
-4. "Envie o arquivo `.zip` ou a pasta `site`."
+4. "Envie o arquivo que eu preparei, ou o `site` que eu abri para você na tela."
 5. "Clique para publicar (Deploy) e abra o endereço que aparece."
 
 **Atualizar depois:** no projeto, crie uma nova publicação (Create deployment) e envie o pacote novo.
@@ -68,9 +70,9 @@ O acesso deste computador fica guardado em `.ferramentas/publicar/`. Nunca abra,
 1. "Abra github.com e crie uma conta grátis, se ainda não tiver."
 2. "Crie um repositório novo (o botão New). Dê um nome curto, por exemplo o nome do negócio, e deixe como público. No plano grátis, o site só sai de repositório público."
 3. "Na página do repositório, clique em enviar arquivos (uploading an existing file)."
-4. "Abra a pasta `site` e arraste **o que está dentro dela** (o `index.html`, a pasta `assets` e as outras pastas), não a pasta `site` em si. O `index.html` precisa ficar na primeira tela do repositório." Se forem mais de 100 arquivos, arraste em mais de uma vez.
+4. "No `site` que eu abri para você na tela, selecione **tudo o que está dentro** (o arquivo `index`, o `assets` e o resto) e arraste, sem levar o `site` em si. O arquivo `index` precisa ficar na primeira tela do repositório." Se forem mais de 100 arquivos, arraste em mais de uma vez.
 5. "Clique em confirmar (Commit changes)."
-6. "Vá em Settings, depois em Pages. Em Source, escolha publicar a partir de um ramo (Deploy from a branch), escolha `main` e a pasta `/ (root)`, e salve."
+6. "Vá em Settings, depois em Pages. Em Source, escolha publicar a partir de um ramo (Deploy from a branch), escolha `main` e depois `/ (root)`, e salve."
 7. "Em um ou dois minutos aparece o endereço, no formato `seu-usuario.github.io/nome-do-repositorio`. Abra e confira."
 
 **Atualizar depois:** envie os arquivos novos do mesmo jeito, por cima dos antigos, e confirme.
@@ -83,7 +85,7 @@ O acesso deste computador fica guardado em `.ferramentas/publicar/`. Nunca abra,
 
 ## 7. Endereço próprio (opcional)
 
-Quando a pessoa quiser um endereço como `cafeaurora.com.br`:
+Quando a pessoa quiser um endereço como `oficinaraio.com.br`:
 
 Em sites.autonomia.site isso ainda não está disponível: o endereço fica `<nome>.sites.autonomia.site`. Para um endereço próprio agora, use Netlify, Cloudflare Pages ou GitHub Pages.
 

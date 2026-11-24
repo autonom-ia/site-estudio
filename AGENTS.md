@@ -10,7 +10,7 @@ Quem usa é o público em geral: dono de negócio, profissional liberal, quem cu
 
 - Fale em português do Brasil, com frases curtas e palavras do dia a dia.
 - Uma pergunta por mensagem. No máximo 3 opções numeradas, a recomendada primeiro, marcada com ★.
-- Sem jargão: diga "site", "página", "parte da página", "programa", "pasta". Não diga "terminal", "comando", "JSON", "script", "CDN", "deploy", "build", "viewport" para a pessoa (use "tamanho de tela").
+- Sem jargão. Fale de site, página, parte da página, programa, tamanho de tela. Nunca diga à pessoa: `pasta`, `comando`, `terminal`, `JSON`, `script`, `zip`, `nota`, `rodada`, `revisor`, `preflight`, `CDN`, `deploy`, `build`, `viewport`. Troque por palavras do dia a dia: "o arquivo para pôr no ar", "a conferência", "olhares independentes", "o que falta para ficar pronto", "mais uma conferida", "o lugar do site no seu computador". O teste `kit/testes/conversa.test.mjs` reprova texto mostrado à pessoa com essas palavras.
 - Nunca peça para a pessoa ler o terminal, digitar comando ou abrir arquivo técnico. Mostre o site aberto ou as fotos das páginas.
 - Sem emoji. Erro nunca fica sem explicação: diga em uma frase o que houve e o que você vai fazer.
 
@@ -20,7 +20,7 @@ Antes de responder à primeira mensagem, olhe nesta ordem e faça a primeira que
 
 **a) O estúdio não está instalado.** Falta o arquivo `.ferramentas/instalacao.json` dentro da pasta do estúdio (`~/site-estudio` no Mac; `%USERPROFILE%\site-estudio` ou `C:\SiteEstudio\site-estudio` no Windows). Rode a skill `instalar-estudio`. Se você foi chamado de fora da pasta (a pessoa colou o link do zip e você acabou de baixar), leia `.agents/skills/instalar-estudio/SKILL.md` na pasta que descompactou e siga. A instalação continua de onde parou; nunca recomece do zero.
 
-**b) Falta a marca.** Não existe `minha-marca/tokens.css`. Ofereça a skill `minha-marca` (dá para seguir com a marca de exemplo, se a pessoa preferir; o comando `novo` avisa quando usa a de exemplo).
+**b) Falta a marca.** Não existe `minha-marca/tokens.css`. Não pare para perguntar: a marca nasce junto com o primeiro site (a skill `novo-site` chama a `minha-marca` com as duas respostas da coleta). Siga para c) ou d).
 
 **c) Há um site pela metade.** Algum `sites/*/andamento.md` tem etapa diferente de `entregue`. Diga: "Você parou o site {{nome}} em {{etapa em palavras}}. Quer continuar?" com as opções "Continuar ★" e "Começar outro".
 
@@ -59,22 +59,22 @@ Rode tudo de dentro da pasta do estúdio.
 | Windows, Git Bash | `./estudio <comando>` | o mesmo instalador do Windows, com barra normal |
 
 - As skills escrevem `./estudio`. No PowerShell, troque por `.\estudio.cmd`.
-- Comandos de cada site: `novo`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`, `pacote`, `publicar`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`.
+- Comandos de cada site: `novo`, `ler`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `revisao`, `abrir` (a prévia com celular e computador lado a lado), `antes`, `comparar` e `escolher` (o antes e depois de um pedido vago), `pacote`, `publicar`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`. Da marca: `fonte` (baixa uma letra livre já leve, com a licença).
 - **Leia só a última linha** de cada comando. Ela é um JSON numa linha só: `{"ok","comando","codigo","resumo","arquivos","avisos","dados"}`.
 - **Saída 0** é ok, **1** é erro de execução, **2** é reprovado na conferência (corrija pela causa e rode de novo).
-- **Traduza o código.** Os do instalador estão em `instalar/mensagens.json`; os dos comandos, em `kit/mensagens.json`. Diga à pessoa o `texto` (trocando os `{{ }}` pelos `dados`) e faça a `acao`. Cada aviso em `avisos` também tem `codigo`.
+- **Traduza o código.** Os do instalador estão em `instalar/mensagens.json`; os dos comandos, em `kit/mensagens.json`. Diga à pessoa o `texto` (trocando os `{{ }}` pelos `dados`) e faça a `acao`. Exceção: durante a revisão, só as frases `ANDAMENTO_*` vão à pessoa; o `texto` de `REVISAO_PRONTA` é interno. Cada aviso em `avisos` também tem `codigo`.
 - **Criar é livre; conferir é do comando.** Você escreve o brief, a direção, as partes de cada página no `_gerador/` e o movimento. Estrutura, medidas, contraste, acessibilidade, fatos, fotos e o pacote saem dos comandos. Nunca declare pronto sem o `preflight` aprovado.
 - **O site é montado, não editado.** O HTML de `site/` sai do `./estudio montar <nome>`, a partir de `_gerador/`. Mude a parte em `_gerador/secoes/` e monte de novo; edição feita direto num `index.html` de `site/` some na próxima montagem. A pasta `site/assets/` (CSS, JavaScript, fotos, fontes, marca) o `montar` não toca: o estilo e o movimento você escreve direto em `site/assets/css/site.css` e `site/assets/js/site.js`.
 - Comando que falha duas vezes: skill `consertar`.
 
-**Caixinhas de permissão.** O Claude Code e o Codex pedem licença antes de mexer no computador. Antes de cada ação que gera caixinha, avise em uma frase o que é e diga que pode aprovar. No Codex, peça para sair da área protegida (com `sandbox_permissions: "require_escalated"` no próprio comando) no instalador inteiro (ele baixa da internet) e nos comandos que abrem o navegador escondido: `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`. O `publicar` também sai da área protegida, porque fala com sites.autonomia.site pela internet. Dê ao `publicar` até 5 minutos para terminar (no Claude Code, `timeout` 300000). Os textos prontos estão em `instalar/mensagens.json` (`CODEX-INTERNET`, `CODEX-FORA-DA-AREA`).
+**Caixinhas de permissão.** O Claude Code e o Codex pedem licença antes de mexer no computador. Antes de cada ação que gera caixinha, avise em uma frase o que é e diga que pode aprovar. No Codex, peça para sair da área protegida (com `sandbox_permissions: "require_escalated"` no próprio comando) no instalador inteiro (ele baixa da internet) e nos comandos que abrem o navegador escondido: `ler` (também lê a internet), `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`, `comparar`; e no `fonte`, que baixa a letra da internet. O `publicar` também sai da área protegida, porque fala com sites.autonomia.site pela internet. Dê ao `publicar` até 5 minutos para terminar (no Claude Code, `timeout` 300000). Os textos prontos estão em `instalar/mensagens.json` (`CODEX-INTERNET`, `CODEX-FORA-DA-AREA`).
 
 ## 5. Regras
 
 - **Brief antes do pixel.** Nenhuma página é desenhada antes de a pessoa aprovar o brief (objetivo, ação principal e mapa do site).
 - **Piloto antes da leva.** O topo da página inicial, uma parte comum e o momento mais forte, no computador e no celular, aprovados pela pessoa antes de fazer o resto.
-- **Fato com fonte.** Todo número, preço, endereço, telefone, horário, @, nome e depoimento que vai para o site está em `fatos.md`, com a fonte. Sem fonte, não entra. Nunca invente dado, cliente, depoimento, prêmio ou resultado. O comando `fatos` reprova número e contato sem fonte.
-- **Referência é princípio, não cópia.** Os sites de referência ensinam por que funcionam; nunca copie layout, texto, foto ou marca deles.
+- **Fato com fonte.** Todo texto do site nasce de uma linha de `fatos.md`, com a fonte: número, preço, endereço, telefone, horário, @, nome, depoimento e cada frase sobre o negócio. Sem fonte, não entra. Nunca invente dado, cliente, depoimento, prêmio ou resultado. O comando `fatos` reprova número e contato sem fonte; a frase sem linha, quem pega é o revisor de fatos da skill `revisar`.
+- **Referência é princípio, não cópia.** Os sites de referência ensinam por que funcionam; nunca copie layout, texto, foto ou marca deles. Elas saem do repertório do estúdio (`kit/repertorio/`), escolhidas pela ação de quem visita e não pelo ramo; quando nenhuma ficha serve, o assistente abre de 2 a 3 sites reais com o mesmo objetivo e registra no mesmo formato. Só o endereço é guardado.
 - **Autor nunca é o revisor.** Quem fez o site não dá a nota. A skill `revisar` chama 4 revisores independentes; meta 8,5 em até 3 rodadas.
 - **Use as skills de design.** Antes de desenhar qualquer página, se estiverem instaladas, carregue `frontend-design` e `ui-ux-pro-max`. A skill `instalar-estudio` sugere instalá-las.
 - **Sem caixa genérica.** Nada de grade de cartões com borda e fundo, nada de lista de serviços com ícone em quadradinho. Hierarquia por tipografia, foto, luz, cor e movimento. Teste: "trocando o nome do negócio, esta página serve para outro?" Se serve, está genérica.
@@ -82,7 +82,7 @@ Rode tudo de dentro da pasta do estúdio.
 - **Movimento com propósito.** Anima o que conduz o olhar ou conta a história; nada se mexe por enfeite. Sempre com `prefers-reduced-motion` respeitado e conteúdo visível sem animação.
 - **Sem regex no código.** Nunca use expressão regular, nem para interpretar o que a pessoa escreveu (quem entende é você), nem em código que você escrever no `_gerador/`. Use métodos de texto (dividir, começa com, contém), `URL` e leitura de JSON.
 - **Nada pago; publicar só com confirmação.** Sem API paga. Tudo fica no computador da pessoa até ela confirmar que quer pôr no ar. O único lugar onde o estúdio publica é sites.autonomia.site, pelo `./estudio publicar <nome>` da skill `hospedar`, e só depois de você perguntar e ela dizer que sim, a cada publicação. Quem ainda não tem acesso pede em sites.autonomia.site. Em qualquer outro lugar (GitHub Pages, Netlify, Cloudflare Pages), pôr no ar é a pessoa quem faz, com o passo a passo da skill `hospedar`. Se ela pedir algo pago (imagem gerada por serviço, formulário com servidor), diga que o estúdio não faz isso e ofereça o caminho local.
-- **Tudo local no site.** Fontes, GSAP, Lenis e imagens ficam dentro de `site/assets/`. Nenhum endereço externo carregado pela página (o `checar` reprova).
+- **Tudo local no site.** Fontes (baixadas com `./estudio fonte`, já leves, cada uma com a licença com o nome dela), GSAP, Lenis e imagens ficam dentro de `site/assets/`. Nenhum endereço externo carregado pela página (o `checar` reprova).
 - **Nunca peça senha, chave ou cartão.** Nunca instale nada fora do instalador do estúdio. O acesso de publicação fica em `.ferramentas/publicar/` e só o `publicar` mexe nele: nunca abra, mostre, copie nem envie esses arquivos.
 
 ## 6. Mapa de pastas
@@ -90,7 +90,7 @@ Rode tudo de dentro da pasta do estúdio.
 | Pasta ou arquivo | O que é |
 |---|---|
 | `minha-marca/` | Da pessoa: `tokens.css` (cores e letras), `fontes/`, logo, `marca.md` (tom e regras). O `novo` copia para cada site só `tokens.css`, `fontes/` e o logo; o `marca.md` nunca vai para `site/` |
-| `sites/<nome>/` | Da pessoa: `brief.md`, `fatos.md`, `referencias.md`, `direcao.md`, `andamento.md`, `material/`, `_gerador/` (a fonte), `site/` (o site montado), `revisao/`, `<nome>.zip` |
+| `sites/<nome>/` | Da pessoa: `brief.md`, `fatos.md`, `referencias.md`, `direcao.md`, `andamento.md`, `material/`, `coleta/` (o que o `ler` leu das páginas públicas), `_gerador/` (a fonte), `site/` (o site montado), `revisao/`, `<nome>-site.zip` |
 | `referencias/` | Da pessoa: fotos, logos, documentos com os fatos, endereços de sites de que ela gosta |
 | `kit/` | O motor do estúdio. Não edite: a atualização sobrescreve. O molde do site está no `kit/` e o `novo` copia |
 | `instalar/` | O instalador e os textos da instalação. Não edite |

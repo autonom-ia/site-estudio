@@ -12,7 +12,7 @@ import { falha, aviso } from '../lib/saida.mjs';
 import { lerTexto, escreverTexto } from '../lib/json.mjs';
 import { rodarGerador } from './montar.mjs';
 
-const NOME_PADRAO = 'Café Aurora';
+const NOME_PADRAO = 'Oficina Raio';
 const MARCADOR = "'{{NOME_DO_SITE}}'";
 
 export default async function novo(args) {

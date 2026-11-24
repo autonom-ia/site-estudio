@@ -1,19 +1,26 @@
-// Primeira dobra da página inicial: a promessa em uma frase, a ação principal e o horizonte.
-// O sol sobe uma vez, ao abrir (site.js). Sem movimento no sistema, ele já aparece no lugar.
+// Primeira tela da página inicial: a assinatura tipográfica da marca (o nome da promessa composto
+// como cartaz, cada linha num peso), o que o negócio é em uma frase e a ação principal.
+// As linhas da assinatura ganham peso uma a uma ao abrir (site.js). Sem movimento, já aparecem prontas.
 export default function abertura({ esc, link }) {
+  const linhas = [
+    ['fina', 'Bicicleta'],
+    ['pesada', 'no ponto,'],
+    ['media', 'pronta no'],
+    ['luz', 'mesmo dia.'],
+  ];
   return `<section class="abertura" data-secao="abertura" data-molde="abertura" aria-labelledby="abertura-titulo">
-  <div class="envelope abertura__texto">
-    <p class="sobretitulo">Padaria e café de bairro, desde 2019</p>
-    <h1 id="abertura-titulo">O pão sai do forno <span class="luz">antes do sol.</span></h1>
-    <p class="abertura__lide">${esc('Fermentação natural, café coado na hora e uma mesa perto da janela. A gente abre cedo porque é cedo que o bairro acorda.')}</p>
-    <div class="acoes">
-      <a class="botao" href="${link('#visita')}">Como chegar</a>
-      <a class="botao-linha" href="${link('#cardapio')}">Ver o cardápio</a>
+  <div class="envelope abertura__grade">
+    <h1 class="assinatura" id="abertura-titulo" data-assina>
+      ${linhas.map(([peso, texto]) => `<span class="assinatura__linha assinatura__linha--${peso}">${esc(texto)}</span>`).join('\n      ')}
+    </h1>
+    <div class="abertura__lado">
+      <p class="sobretitulo">Oficina de bicicletas na Vila Exemplo</p>
+      <p class="abertura__lide">${esc('Revisão, freio, câmbio e câmara, em bicicleta de qualquer marca. O preço vem antes do serviço.')}</p>
+      <div class="acoes">
+        <a class="botao" href="tel:+551100000000">Agendar: (11) 0000-0000</a>
+        <a class="botao-linha" href="${link('#servicos')}">Ver os preços</a>
+      </div>
     </div>
-  </div>
-  <div class="horizonte" aria-hidden="true">
-    <div class="horizonte__sol" data-sol></div>
-    <div class="horizonte__chao"></div>
   </div>
 </section>`;
 }

@@ -7,7 +7,7 @@ export default function rodape({ site, paginas, esc, link }) {
     <nav class="rodape__menu" aria-label="Rodapé">
       <ul>
         ${paginas.map((p) => `<li><a href="${link(p.rota)}">${esc(p.menu)}</a></li>`).join('\n        ')}
-        <li><a href="${link('/#visita')}">Como chegar</a></li>
+        <li><a href="${link('/#visita')}">Onde fica</a></li>
       </ul>
     </nav>
     <p class="rodape__nota" data-molde="rodape">Site de exemplo do Site Estúdio, feito para um negócio fictício. Troque todo o texto, as cores e as fotos pelos do seu.</p>

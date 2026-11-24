@@ -1,6 +1,6 @@
 ---
 name: minha-marca
-description: Registra a marca da pessoa no Site Estúdio (cores, letras, logo e tom) em minha-marca/tokens.css e minha-marca/marca.md, confere o contraste e mostra uma página de amostra com a marca aplicada, no computador e no celular, para aprovação. Use logo depois da instalação, quando faltar minha-marca/tokens.css, ou quando a pessoa quiser mudar cores, letras, logo ou o jeito de falar dos sites.
+description: Registra a marca da pessoa no Site Estúdio (cores, letras, logo e tom) em minha-marca/tokens.css e minha-marca/marca.md, confere o contraste e, quando usada sozinha, mostra uma página de amostra com a marca aplicada, no computador e no celular, para aprovação (vinda da novo-site, não pergunta nada: quem mostra a marca é o piloto). Use logo depois da instalação, quando faltar minha-marca/tokens.css, ou quando a pessoa quiser mudar cores, letras, logo ou o jeito de falar dos sites.
 ---
 
 # Minha marca
@@ -14,26 +14,31 @@ Comandos: `./estudio <comando>` (no PowerShell, `.\estudio.cmd <comando>`). Leia
 ```
 minha-marca/
   tokens.css     as variáveis do tema (mesmos nomes de kit/marca-exemplo/tokens.css)
-  fontes/        arquivos .woff2 e a licença de cada fonte
+  fontes/        arquivos .woff2 e a licença de cada fonte (OFL-<Família>.txt)
   logo.svg       ou logo.png (se a pessoa tiver)
   marca.md       tom de voz, palavras que usa e que evita, regras de foto (fica só aqui: nunca vai para o site)
 ```
 
 ## Passo a passo
 
+**Vinda da skill `novo-site` (o primeiro site), não pergunte nada.** Nem a pergunta 3, nem as 3 direções da pergunta 4, nem a aprovação da amostra do passo 6: a marca nasce junto com o primeiro site. O tom sai do que a pessoa já escreve (Instagram, site atual) e a cor sai das peças lidas (logo, fachada, fotos); sem nada para olhar, você escolhe a direção pelo ramo e pelo que ela contou, e anota no `marca.md` de onde veio cada escolha. Faça os passos 1 a 5 sem perguntas e pule o passo 6: quem mostra a marca à pessoa é o piloto da `novo-site` (portão 2), e o que ela pedir ali muda a marca também. Usada sozinha (a pessoa pediu para criar ou mudar a marca), siga o passo a passo inteiro, com as perguntas e a amostra.
+
 ### 1. Juntar o que já existe (uma pergunta por vez)
 1. "Qual é o nome do seu negócio ou projeto, e o que ele faz, em uma frase?"
-2. "Você tem logo, site, Instagram ou alguma peça pronta (cartão, cardápio, fachada) que eu possa olhar? Pode pôr os arquivos na pasta referencias, ou me passar o endereço." Se tiver, abra e leia as imagens e as páginas. Tire as cores reais delas (hex), não as que você imagina.
-3. "Que três palavras descrevem como a sua marca fala?" (exemplo: acolhedora, direta, curiosa).
+2. "Onde o seu negócio aparece hoje? Pode ser o Instagram, um site, o nome no Google, ou uma foto do logo, do cartão ou da fachada. Se tiver arquivos, pode me mandar aqui mesmo." Se tiver, abra e leia as imagens e as páginas. Tire as cores reais delas (hex), não as que você imagina.
+3. Opcional: "Quer me dar três palavras do jeito que a sua marca fala? Se preferir, eu decido pelo que vi." (exemplo: acolhedora, direta, curiosa). Se a pessoa delegar, tire o tom do que ela já escreve no Instagram ou no site.
 4. Só se não houver nada para olhar: proponha 3 direções de cor e letra, cada uma com um nome e uma frase do porquê, e deixe a pessoa escolher. A recomendada primeiro, com ★.
 
-Não pergunte o que dá para ver nas peças. Não pergunte código de cor.
+Não pergunte o que dá para ver nas peças. Não pergunte código de cor. Vindo da skill `novo-site`, as perguntas 1 e 2 já foram feitas na coleta: não repita, use as respostas.
 
 ### 2. Escolher as letras
 - Duas famílias no máximo: uma para título, uma para texto. A letra de título é a maior alavanca de personalidade do site: escolha com intenção, não a mais comum.
-- Só fontes de licença livre (SIL Open Font License), com o arquivo `.woff2` guardado em `minha-marca/fontes/` junto com o texto da licença. Nada carregado da internet quando o site abre.
-- Se a pessoa já usa uma fonte livre (Google Fonts), baixe os arquivos dela do repositório oficial (`github.com/google/fonts`) para `minha-marca/fontes/`, avisando antes ("Vou baixar a letra da sua marca. O {{agente}} vai pedir licença. Pode aprovar."). Se só houver `.ttf`, use-o e diga que o site fica um pouco mais pesado. Fonte paga ou sem licença clara: use uma livre parecida e diga isso em uma frase.
-- Sem fonte definida: comece pelas fontes de `kit/marca-exemplo/fontes/` e copie-as com as licenças.
+- Só fontes de licença livre (SIL Open Font License), guardadas em `minha-marca/fontes/` com a licença ao lado, **com o nome da família** (`OFL-<Família>.txt`): duas licenças chamadas `OFL.txt` na mesma pasta se sobrescrevem, e o `checar` reprova letra sem a sua licença (`fonte-sem-licenca`). Nada carregado da internet quando o site abre.
+- **Letras leves.** Baixe com o estúdio, avisando antes ("Vou baixar a letra da sua marca. O {{agente}} vai pedir licença. Pode aprovar."):
+  `./estudio fonte "<Família>"` (o nome exato do catálogo do Google Fonts, como "Big Shoulders Display"). Opções: `--pesos 400..800` (só os pesos que o site usa), `--italico` (só se o site usa itálico), `--larguras` (só se a assinatura do topo usa larguras diferentes; pesa mais). Ele baixa o `.woff2` já recortado no alfabeto latino (cobre o português) e a licença com o nome da família, tudo ou nada. Em `FONTE_BAIXADA`, cole `dados.css` no topo do `tokens.css`, no lugar das linhas `@font-face` antigas daquela família. `dados.letras_kb_na_pasta` é o peso total das letras: acima de 100 KB o `checar` avisa `fonte-pesada`.
+- Nunca baixe `.ttf` do repositório do Google à mão: é a mesma letra três vezes mais pesada, inteira, e a licença vem com nome genérico.
+- Fonte livre que não está no Google (a pessoa mandou o arquivo e a licença): use-a, guarde a licença como `OFL-<Família>.txt` e diga em uma frase que o site fica um pouco mais pesado se não for `.woff2`. Fonte paga ou sem licença clara: use uma livre parecida e diga isso em uma frase.
+- Sem fonte definida: a letra sai da direção da marca. Escolha pelo ramo e pelas três palavras da etapa 1 (uma clínica não pede a letra de uma oficina) e baixe com `./estudio fonte`. As letras de `kit/marca-exemplo/fontes/` foram escolhidas para um negócio de exemplo, não para o seu: use-as só como último recurso (sem internet para baixar) e diga isso à pessoa em uma frase.
 
 ### 3. Escrever `minha-marca/tokens.css`
 Abra `kit/marca-exemplo/tokens.css`, copie a estrutura e troque os valores. Mantenha **todos** os nomes de variável que estão lá, porque o molde e as partes das páginas usam esses nomes. Escreva um comentário curto no topo dizendo de onde veio cada cor.
@@ -60,7 +65,7 @@ Se algum par não passar, ajuste a cor (mais escura ou mais clara, mesmo tom) e 
 ### 6. Mostrar a amostra
 1. Rode `./estudio novo amostra-da-marca --titulo "<nome do negócio>"`. Se vier `SITE_JA_EXISTE`, use outro nome (`amostra-da-marca-2`).
 2. Rode `./estudio montar amostra-da-marca` e `./estudio prints amostra-da-marca`. A amostra é o molde com a sua marca: não rode `checar` nem `preflight` nela (eles reprovam de propósito, com `resto-do-molde` e `fonte-de-exemplo`, porque o texto ainda é do negócio fictício). Abra as fotos do computador e do celular e confira se as letras carregaram e se nada está apertado.
-3. Rode `./estudio abrir amostra-da-marca` (no Codex, fora da área protegida). Diga: "Abri uma página de exemplo com a sua marca. Olhe também no celular, se quiser: é só diminuir a janela."
+3. Rode `./estudio abrir amostra-da-marca` (no Codex, fora da área protegida). Diga: "Abri uma página de exemplo com a sua marca, no celular e no computador lado a lado."
 4. Pergunte: "Ficou com a cara da sua marca?" com "Ficou ★", "Mudar as cores" e "Mudar as letras".
 5. Ajuste e mostre de novo até a pessoa aprovar. A amostra pode ser apagada depois, a pedido dela.
 

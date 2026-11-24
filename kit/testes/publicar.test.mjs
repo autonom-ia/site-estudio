@@ -37,11 +37,14 @@ test('login pendente, continuação do mesmo pedido, aprovação e envio em part
   assert.ok(!r1.saida.includes(pedido.codigo_dispositivo), 'o código de dispositivo não sai');
   if (!NO_WINDOWS) assert.equal(modo(arquivoPedido(ctx.ferr)), 0o600);
 
+  const consultasAntes = servico.estado.consultas;
   const r2 = await ctx.publicar();
   assert.equal(r2.json.codigo, 'PUBLICAR_AGUARDANDO_LOGIN');
   assert.equal(r2.json.dados.pedido_novo, false);
   assert.equal(servico.estado.iniciados, 1, 'a segunda chamada continua o mesmo pedido');
-  assert.ok(servico.estado.consultas >= 2);
+  // Quantas consultas cabem no prazo de teste (300 ms) depende da carga da máquina. O que não depende:
+  // a segunda chamada consulta o pedido guardado em vez de abrir outro.
+  assert.ok(servico.estado.consultas > consultasAntes, 'a segunda chamada consultou o pedido guardado');
 
   servico.aprovar();
   const r3 = await ctx.publicar();
@@ -161,9 +164,14 @@ test('mensagens da publicação existem, para leigo, e .gitignore cobre .ferrame
   assert.ok(linhas.includes('.ferramentas/'));
 });
 
-// Os campos que cada comando realmente manda em `dados`. Um erro de digitação no mensagens.json
-// ({{enderco}}) quebra aqui, em vez de sumir em silêncio na frase.
+// Os campos que cada comando manda em `dados` (conferido no código de publicar, fonte e ler). Fixar a
+// lista faz um erro de digitação no mensagens.json ({{enderco}}) quebrar aqui, em vez de sumir na frase.
 const CAMPOS_ENVIADOS = Object.freeze({
+  FONTE_BAIXADA: ['familia'],
+  FONTE_NAO_ACHADA: ['familia'],
+  FONTE_SEM_LICENCA: ['familia'],
+  LER_INSTAGRAM_POUCOS: ['posts'],
+  LER_GOOGLE_PRIMEIRO_DA_LISTA: ['escolhido'],
   PUBLICADO: ['endereco'],
   PUBLICADO_CERTIFICADO_PENDENTE: ['endereco'],
   PUBLICAR_AGUARDANDO_LOGIN: ['codigo_curto', 'endereco'],

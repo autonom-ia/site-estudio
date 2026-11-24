@@ -12,7 +12,7 @@
     "acao": "Leia dados.detalhe. Se for defeito do kit, diga à pessoa que achou um erro do estúdio e mostre o comando que falhou. Não tente contornar editando o kit."
   },
   "COMANDO_DESCONHECIDO": {
-    "texto": "Esse comando não existe no estúdio.",
+    "texto": "Pedi ao estúdio algo que ele não sabe fazer. Vou corrigir.",
     "acao": "Veja dados.disponiveis e use um deles."
   },
   "NODE_ANTIGO": {
@@ -24,11 +24,11 @@
     "acao": "Rode a skill instalar-estudio."
   },
   "ARGUMENTO_FALTANDO": {
-    "texto": "Faltou uma informação no comando. Vou completar.",
+    "texto": "Faltou uma informação no meu pedido ao estúdio. Vou completar.",
     "acao": "Veja dados.argumento e rode o comando de novo com ele."
   },
   "ARGUMENTO_INVALIDO": {
-    "texto": "Passei uma informação errada no comando. Vou corrigir.",
+    "texto": "Passei uma informação errada ao estúdio. Vou corrigir.",
     "acao": "Veja dados.argumento, dados.valor e dados.opcoes e rode de novo."
   },
   "NOME_INVALIDO": {
@@ -52,8 +52,24 @@
     "acao": "Rode o mesmo comando fora da área protegida do assistente (no Claude Code, sem sandbox só neste comando; no Codex, com aprovação de acesso completo). Se continuar, rode ./estudio verificar."
   },
   "MARCA_DE_EXEMPLO": {
-    "texto": "Usei a marca de exemplo, porque a sua ainda não está em minha-marca/.",
+    "texto": "Usei cores e letras provisórias, porque a sua marca ainda não está guardada no estúdio.",
     "acao": "Ofereça a skill minha-marca. Depois de criar minha-marca/tokens.css, copie para site/assets/marca/ do site só tokens.css, a pasta fontes/ (arquivos .woff2, .woff ou .ttf e as licenças OFL) e o logo.svg ou logo.png. Nunca copie marca.md nem outro arquivo de minha-marca/: tudo em site/ vai para o ar."
+  },
+  "FONTE_BAIXADA": {
+    "texto": "Baixei a letra {{familia}} já leve, com a licença dela.",
+    "acao": "Cole dados.css no topo do tokens.css da mesma marca, no lugar das linhas @font-face antigas dessa família, e use dados.familia nas variáveis --fonte-titulo ou --fonte-texto. A licença fica ao lado, com o nome da família (dados.licenca): nunca apague nem renomeie para OFL.txt."
+  },
+  "FONTE_NAO_ACHADA": {
+    "texto": "Não achei a letra {{familia}} no catálogo livre do Google Fonts.",
+    "acao": "Confira o nome exato da família (com espaços e maiúsculas, como no site do Google Fonts) e os pesos pedidos. Se a letra não for livre, escolha uma livre parecida e diga isso à pessoa em uma frase."
+  },
+  "FONTE_SEM_LICENCA": {
+    "texto": "A letra {{familia}} não tem licença no repositório oficial, então não baixei.",
+    "acao": "Escolha outra letra livre parecida. Letra sem licença clara nunca entra no site."
+  },
+  "FONTE_DOWNLOAD_FALHOU": {
+    "texto": "Não consegui baixar a letra agora.",
+    "acao": "Veja dados.detalhe. Sem internet, tente de novo depois; no Codex, rode fora da área protegida. Nada foi escrito na pasta."
   },
   "SERVIDOR_NAO_SUBIU": {
     "texto": "Não consegui abrir o site no navegador.",
@@ -129,7 +145,7 @@
   },
   "_tipos_dos_achados": {
     "texto": "Tipos de achado em dados.vermelhos (RED, reprova) e dados.amarelos (WARN, avisa) de checar, medir, acessibilidade e fatos.",
-    "acao": "checar RED: endereco-externo (CDN ou arquivo de fora carregado pela página), vendor-ausente, arquivo-ausente, link-morto (inclusive âncora que não existe), fonte-quebrada, sem-titulo, sem-descricao, sem-idioma, h1 (precisa de exatamente um), select-nativo, travessao (troque por ponto, vírgula, dois-pontos ou parênteses), erro-de-script, resto-do-molde (seção, cabeçalho ou nota do rodapé com data-molde, ou molde: true em _gerador/ordem.mjs: o texto do negócio fictício ainda está na página; reescreva com o conteúdo do brief e só então tire o data-molde). checar WARN: og-image-relativa, json-ld-quebrado, fonte-nao-declarada. medir RED: rola-para-o-lado, colisao, texto-cortado, contraste, alvo-pequeno (celular). medir WARN: texto-pequeno-celular, contraste-nao-medido (texto sobre foto ou degradê: confira no print), texto-invisivel. acessibilidade: cada item traz regra, impacto, ajuda e nos (alvo). fatos RED: numero, arroba, telefone, email sem linha com fonte em fatos.md (motivo fora-de-fatos, linha-sem-fonte ou fonte-de-exemplo); fonte-de-exemplo (pagina fatos.md: linha que ainda tem a fonte do molde, \"Exemplo fictício do Site Estúdio\"; apague a linha ou troque pelo fato de verdade com a fonte real). Corrija pela causa (seção, CSS, conteúdo ou fatos.md com fonte de verdade) e rode de novo."
+    "acao": "checar RED: endereco-externo (CDN ou arquivo de fora carregado pela página), vendor-ausente, arquivo-ausente, link-morto (inclusive âncora que não existe), fonte-quebrada, sem-titulo, sem-descricao, sem-idioma, h1 (precisa de exatamente um), select-nativo, travessao (troque por ponto, vírgula, dois-pontos ou parênteses), erro-de-script, resto-do-molde (seção, cabeçalho ou nota do rodapé com data-molde, ou molde: true em _gerador/ordem.mjs: o texto do negócio fictício ainda está na página; reescreva com o conteúdo do brief e só então tire o data-molde). checar WARN: og-image-relativa, json-ld-quebrado, fonte-nao-declarada, fonte-pesada (letra que não é .woff2, ou letras somando mais de 100 KB: baixe de novo com ./estudio fonte). checar RED também: fonte-sem-licenca (letra sem a licença com o nome da família ao lado, OFL-<Família>.txt). medir RED: rola-para-o-lado, colisao, texto-cortado, contraste, alvo-pequeno (celular). medir WARN: texto-pequeno-celular, contraste-nao-medido (texto sobre foto ou degradê: confira no print), texto-invisivel. acessibilidade: cada item traz regra, impacto, ajuda e nos (alvo). fatos RED: numero, arroba, telefone, email sem linha com fonte em fatos.md (motivo fora-de-fatos, linha-sem-fonte ou fonte-de-exemplo); fonte-de-exemplo (pagina fatos.md: linha que ainda tem a fonte do molde, \"Exemplo fictício do Site Estúdio\"; apague a linha ou troque pelo fato de verdade com a fonte real). Corrija pela causa (seção, CSS, conteúdo ou fatos.md com fonte de verdade) e rode de novo."
   },
   "SITE_NAO_ACHADO": {
     "texto": "Não achei esse site.",
@@ -140,7 +156,7 @@
     "acao": "Pergunte se a pessoa quer continuar o existente ou começar outro com nome diferente. Nunca apague o existente."
   },
   "SITE_CRIADO": {
-    "texto": "Criei a pasta do site com o molde (home e uma página) e montei as páginas.",
+    "texto": "Comecei o seu site, com um modelo provisório que eu vou trocar pelo seu conteúdo.",
     "acao": "Escreva o brief.md e o fatos.md com a pessoa e peça aprovação do brief antes de desenhar. O molde é de um negócio fictício: todo texto dele será trocado. O checar reprova (resto-do-molde) enquanto sobrar data-molde em alguma seção ou molde: true em _gerador/ordem.mjs, e o fatos reprova (fonte-de-exemplo) enquanto sobrar linha do exemplo em fatos.md."
   },
   "SITE_SEM_INDEX": {
@@ -148,7 +164,7 @@
     "acao": "Rode ./estudio montar <nome>. Se continuar, confira se _gerador/ordem.mjs tem uma página com rota vazia (a home)."
   },
   "SITE_SEM_PAGINAS": {
-    "texto": "A pasta site/ está sem nenhuma página.",
+    "texto": "O site está sem nenhuma página montada. Vou montar.",
     "acao": "Rode ./estudio montar <nome>."
   },
   "GERADOR_AUSENTE": {
@@ -169,7 +185,7 @@
   },
   "CHECAGEM_COM_AVISOS": {
     "texto": "Conferi as páginas: nada reprova, mas há avisos.",
-    "acao": "Leia dados.amarelos. Corrija o que for de verdade e explique à pessoa o que ficou."
+    "acao": "Leia dados.amarelos. Corrija o que for de verdade e explique à pessoa o que ficou. link-repetido e frase-repetida: deixe cada ação e cada frase aparecer só onde ela ajuda; o revisor cobra repetição."
   },
   "CHECAGEM_REPROVADA": {
     "texto": "A conferência achou problemas nas páginas. Vou corrigir antes de mostrar.",
@@ -181,7 +197,7 @@
   },
   "MEDIDAS_COM_AVISOS": {
     "texto": "Medi as páginas: nada reprova, mas há avisos.",
-    "acao": "Leia dados.amarelos. Contraste não medido pede olhar o print daquele trecho. Texto pequeno no celular: aumente se for texto de leitura."
+    "acao": "Leia dados.amarelos. Contraste não medido pede olhar o print daquele trecho. Texto pequeno no celular: aumente se for texto de leitura. foto-esticada: use um arquivo maior, mostre a foto menor ou acerte o sizes. linha-longa: limite a largura do texto (no tablet, é o celular esticado). Texto só para leitor de tela e faixa com aria-hidden já não são medidos; data-medir-nao só para o que não é texto de ler, e anote no andamento.md."
   },
   "MEDIDAS_REPROVADAS": {
     "texto": "A medição achou problemas de leitura ou de layout. Vou corrigir antes de mostrar.",
@@ -197,7 +213,7 @@
   },
   "ACESSIBILIDADE_REPROVADA": {
     "texto": "A conferência de acessibilidade achou problemas sérios. Vou corrigir.",
-    "acao": "Leia dados.vermelhos (regra, ajuda, nos.alvo). Corrija na seção e rode de novo."
+    "acao": "Leia dados.vermelhos (regra, ajuda, nos.alvo). Corrija na seção e rode de novo. foco-perdido: o script que rola até a parte precisa mover o foco para ela no fim da rolagem (tabindex=\"-1\" na parte e focus com preventScroll)."
   },
   "AXE_AUSENTE": {
     "texto": "Falta a peça que confere acessibilidade.",
@@ -205,22 +221,22 @@
   },
   "DESEMPENHO_MEDIDO": {
     "texto": "Medi o peso e a velocidade de cada página.",
-    "acao": "Resuma dados.medidas para a pessoa (peso, LCP, CLS no celular com 4G). Não é reprovação: são números para decidir."
+    "acao": "Use dados.medidas (peso, LCP e CLS no celular com 4G) para achar ganho fácil: foto grande demais, letra que não precisa. Não é reprovação. À pessoa, só palavras simples, como \"abre rápido no celular\" ou \"a página inicial ainda demora um pouco no celular\": nunca número, sigla ou nome de medida."
   },
   "ARQUIVO_PESADO": {
     "texto": "Um arquivo do site está pesado.",
     "acao": "Veja dados.url. Se for foto, exporte menor (WebP ou AVIF, largura de até 2000 px). Se for vídeo, encurte ou comprima."
   },
   "FATOS_OK": {
-    "texto": "Todo número, contato e @ das páginas está em fatos.md, com fonte.",
+    "texto": "Todo número, contato e @ das páginas tem a fonte guardada.",
     "acao": "Siga em frente. O revisor de fatos ainda confere nomes e logradouros."
   },
   "FATOS_SEM_FONTE": {
-    "texto": "Há números, contatos ou @ nas páginas que não estão em fatos.md com fonte.",
+    "texto": "Há números, contatos ou @ nas páginas sem fonte guardada. Vou conferir antes de seguir.",
     "acao": "Leia dados.vermelhos (pagina, tipo, trecho, motivo). Para cada um: confirme com a pessoa e registre em fatos.md com a fonte, ou tire da página. Nunca invente fonte."
   },
   "FATOS_SEM_ARQUIVO": {
-    "texto": "O site ainda não tem fatos.md.",
+    "texto": "O site ainda não tem a lista de fatos com a fonte de cada um. Vou montar.",
     "acao": "Crie fatos.md com a tabela Fato | Fonte | Data, a partir do que a pessoa informou."
   },
   "PREFLIGHT_OK": {
@@ -237,7 +253,23 @@
   },
   "PRINTS_PRONTOS": {
     "texto": "Fotografei todas as páginas, inteiras e por seção, nos tamanhos de tela pedidos.",
-    "acao": "Abra e olhe cada arquivo de dados.fotos, um por um (comece pelo celular, 390), antes de mostrar à pessoa."
+    "acao": "Abra e olhe cada arquivo de dados.fotos, um por um (comece pelo celular, 390, e depois o tablet, 768), antes de mostrar à pessoa."
+  },
+  "PAGINA_FORA_DO_TOPO": {
+    "texto": "Uma página não ficou parada no topo para as fotos.",
+    "acao": "Algum script do site rola a página sozinho depois que ela assenta. Abra as fotos de dados.pagina em dados.largura: parte presa pode ter saído no meio. Procure no site.js o que rola a página (refresh, scrollTo, foco) e rode prints de novo."
+  },
+  "PRINTS_EM_ANDAMENTO": {
+    "texto": "Já estou fotografando este site agora. Espero terminar antes de tirar outras.",
+    "acao": "Não rode prints duas vezes ao mesmo tempo para a mesma rodada. Espere o outro terminar e use as fotos dele. Não apague o arquivo dados.pasta + .trava: ele sai sozinho quando o outro termina ou quando o processo dele não existe mais."
+  },
+  "REVISAO_PRONTA": {
+    "texto": "Preparei o que os especialistas vão ler antes de olhar o site.",
+    "acao": "Não diga este texto à pessoa: durante a revisão, só as frases ANDAMENTO_* vão a ela. Inclua arquivos.contexto no pacote de cada revisor, como primeira leitura. dados.notas mostra cada rodada (alertas incluídos). dados.metas é indicador interno do estúdio: \"em_ate_2_rodadas\" mede se passou em até 2 rodadas e \"estabilidade\" se a reavaliação ficou estável (null = não medida). A regra da revisão continua sendo até 3 rodadas: não pare nem entregue antes por causa desse indicador."
+  },
+  "RODADA_ILEGIVEL": {
+    "texto": "Não consegui ler as anotações da conferência anterior. Vou arrumar antes de seguir.",
+    "acao": "Leia dados.erro, corrija dados.arquivo no formato da skill revisar (rodada-N.json) e rode revisao de novo antes de chamar os revisores."
   },
   "FOTO_LISA": {
     "texto": "Uma foto saiu quase toda de uma cor só.",
@@ -248,19 +280,91 @@
     "acao": "Veja dados.altura. As fotos por seção cobrem o resto; considere se a página precisa ser tão longa."
   },
   "SITE_ABERTO": {
-    "texto": "Abri o site no seu navegador.",
-    "acao": "Diga dados.endereco. Explique que o endereço só funciona neste computador."
+    "texto": "Abri o site para você ver no celular e no computador, lado a lado, na mesma tela.",
+    "acao": "O navegador abriu dados.previa (a prévia lado a lado). Não peça para a pessoa mexer na janela. dados.endereco é o site sozinho: é o que vai para os olhares independentes. Os dois só funcionam neste computador; se você roda noutra máquina, diga que o site abriu lá."
   },
   "SERVIDOR_NO_AR": {
-    "texto": "O site está no ar neste computador, sem abrir o navegador.",
-    "acao": "Use dados.endereco (só funciona neste computador). O navegador não foi aberto: abra você, se precisar."
+    "texto": "O site está aberto neste computador, sem abrir o navegador.",
+    "acao": "Use dados.endereco (o site sozinho) ou dados.previa (celular e computador lado a lado). Só funcionam neste computador. O navegador não foi aberto: abra você, se precisar."
+  },
+  "ANTES_GUARDADO": {
+    "texto": "Guardei como o site está agora, para mostrar o antes e o depois.",
+    "acao": "Faça as 2 ou 3 mudanças concretas, rode montar e escreva arquivos.mudancas com {\"pedido\": \"as palavras da pessoa\", \"mudancas\": [{\"titulo\": \"o que mudou, em palavras do dia a dia\", \"porque\": \"como isso atende o pedido\"}]}. Depois rode ./estudio comparar <nome>. O antes fica em aberto até ./estudio escolher <nome> depois|antes|outro."
+  },
+  "ANTES_NAO_GUARDADO": {
+    "texto": "Esqueci de guardar como o site estava antes. Vou refazer do jeito certo.",
+    "acao": "Desfaça a mudança, rode ./estudio antes <nome>, refaça a mudança, monte e rode comparar de novo."
+  },
+  "POUCAS_MUDANCAS": {
+    "texto": "Ainda falta mostrar pelo menos duas mudanças concretas.",
+    "acao": "Pedido vago vira 2 ou 3 mudanças que se veem (letra, cor, foto, espaço, movimento, texto). Faça as que faltam, monte e preencha dados.arquivo com cada uma (titulo e porque). Rode comparar de novo."
+  },
+  "NADA_MUDOU": {
+    "texto": "O site ainda está igual ao de antes. Vou aplicar as mudanças.",
+    "acao": "Faltou montar o site depois de mudar o _gerador/, ou a mudança não saiu do lugar. Rode montar e comparar de novo."
+  },
+  "MUDANCAS_DEMAIS": {
+    "texto": "Mudei mais coisas do que dá para comparar de uma vez.",
+    "acao": "Mostre no máximo 3 mudanças por vez (dados.maximo). Junte as pequenas numa só ou deixe as outras para a próxima comparação."
+  },
+  "MUDANCA_SEM_TITULO": {
+    "texto": "Uma das mudanças ficou sem nome. Vou completar.",
+    "acao": "Cada item de mudancas precisa de titulo. dados.ignoradas diz quantos ficaram de fora."
+  },
+  "ANTES_EM_ABERTO": {
+    "texto": "Ainda falta você escolher entre o antes e o depois da última mudança.",
+    "acao": "A pessoa ainda não respondeu o \"Qual fica?\". Não guarde um antes novo por cima: rode ./estudio escolher <nome> com depois, antes ou outro, conforme a resposta. Só use --de-novo se a pessoa pediu para partir do site como está agora."
+  },
+  "ANTES_JA_RESOLVIDO": {
+    "texto": "Essa comparação já foi resolvida. Vou guardar o site de agora antes de mudar de novo.",
+    "acao": "A pessoa já escolheu (dados.escolha). Para outra mudança, rode ./estudio antes <nome> primeiro. Para desfazer algo depois da escolha, mude as fontes à mão e monte."
+  },
+  "FICOU_O_DEPOIS": {
+    "texto": "Combinado, fica o depois.",
+    "acao": "Grave no andamento.md o pedido e as mudanças que ficaram. O próximo pedido vago começa com ./estudio antes <nome>."
+  },
+  "VOLTOU_COMO_ESTAVA": {
+    "texto": "Voltei o site para como estava antes.",
+    "acao": "O site e o _gerador/ voltaram ao que o antes guardou (dados.gerador_restaurado diz se o _gerador/ tinha cópia). Rode ./estudio abrir <nome> para a pessoa ver."
+  },
+  "PRONTO_PARA_OUTRO_CAMINHO": {
+    "texto": "Voltei para o ponto de partida. Vou tentar outro caminho.",
+    "acao": "O site e o _gerador/ voltaram ao original e o antes continua guardado. Não rode ./estudio antes: faça 2 ou 3 mudanças diferentes, monte, preencha arquivos.mudancas e rode ./estudio comparar <nome>."
+  },
+  "COMPARACAO_PRONTA": {
+    "texto": "Abri o antes e o depois lado a lado, com cada mudança numerada.",
+    "acao": "Diga em uma frase cada mudança de dados.mudancas, na ordem, e pergunte qual fica: \"O depois ★\", \"Voltar como estava\", \"Outro caminho\". Com a resposta, rode ./estudio escolher <nome> depois, antes ou outro. Endereço em dados.endereco (só neste computador)."
+  },
+  "ANDAMENTO_ABRI": {
+    "texto": "Abri o site para você olhar, no celular e no computador lado a lado. Enquanto você olha, eu confiro cada detalhe e vou te contando.",
+    "acao": "Diga logo depois do abrir que começa a conferência (antes do preflight da revisão). Não espere resposta."
+  },
+  "ANDAMENTO_CONFERENCIA": {
+    "texto": "Conferindo se nada vaza da tela, se as letras têm contraste e se todo número tem fonte.",
+    "acao": "Diga antes do preflight e do desempenho."
+  },
+  "ANDAMENTO_FOTOS": {
+    "texto": "Fotografando cada página em quatro tamanhos de tela, do celular à tela grande.",
+    "acao": "Diga antes do prints."
+  },
+  "ANDAMENTO_OLHARES": {
+    "texto": "Quatro olhares independentes estão avaliando o site: a arte, a mensagem, os fatos e o funcionamento.",
+    "acao": "Diga quando abrir as 4 lentes da skill revisar, a partir da segunda vez. Na primeira, não diga este texto: o aviso da skill revisar (seção 4, com os quatro olhares, o tempo e o consumo) vai no lugar dele, para a pessoa não ouvir a mesma coisa duas vezes."
+  },
+  "ANDAMENTO_AJUSTES": {
+    "texto": "Eles acharam pontos para melhorar. Estou ajustando e já confiro de novo.",
+    "acao": "Diga quando a revisão não bateu a meta e você vai corrigir. Não fale número nem quantas vezes."
+  },
+  "ANDAMENTO_PRONTO": {
+    "texto": "Terminei de conferir. Recarregue a prévia para ver como ficou.",
+    "acao": "Diga quando a revisão passou, antes da entrega."
   },
   "PACOTE_PRONTO": {
-    "texto": "O site está empacotado num .zip pronto para hospedar.",
-    "acao": "Diga arquivos.zip e ofereça a skill hospedar (GitHub Pages, Netlify ou Cloudflare Pages). Anotações (.md) e arquivos-fonte de desenho ficam fora do zip (dados.fora_do_pacote). O arquivo .nojekyll e a pasta .well-known/, se existirem, vão no zip de propósito."
+    "texto": "O site está pronto para pôr no ar, guardado num arquivo só.",
+    "acao": "Diga arquivos.zip e ofereça a skill hospedar. Anotações (.md) e arquivos-fonte de desenho ficam fora do zip (dados.fora_do_pacote). O arquivo .nojekyll e a pasta .well-known/, se existirem, vão no zip de propósito."
   },
   "PACOTE_ARQUIVO_PRIVADO": {
-    "texto": "Não empacotei: há na pasta site/ arquivos que não podem ir para a internet (senha, chave, configuração, cópia de segurança ou rascunho, arquivo oculto ou link).",
+    "texto": "Ainda não preparei o arquivo para pôr no ar: há no site arquivos que não podem ir para a internet (senha, chave, configuração, cópia de segurança ou rascunho, arquivo oculto ou atalho).",
     "acao": "Mostre dados.arquivos à pessoa. Tire cada um de site/ (guarde em material/ do site, se for dela) e rode o pacote de novo. Cópia de segurança é nome terminado em .old, .backup, .bak, .orig, .tmp, .swp ou ~, ou pasta backup, backups, old, _old ou tmp. Só dois ocultos passam, de propósito: o arquivo .nojekyll e a pasta .well-known/. Nunca apague sem perguntar e nunca contorne a conferência."
   },
   "ARQUIVO_NAO_USADO": {
@@ -309,7 +413,7 @@
   },
   "PUBLICAR_NOME_RECUSADO": {
     "texto": "Esse nome não pode virar endereço de site. Ele precisa ter de 2 a 40 letras, números ou hífen, e não pode ser um nome reservado.",
-    "acao": "Veja dados.detalhe. Proponha à pessoa outro nome curto para o site, crie o site com esse nome (ou copie site/ para ele) e publique de novo."
+    "acao": "Veja dados.detalhe. Proponha à pessoa um nome curto e livre para o endereço. Com o sim dela para o endereço novo, siga \"Nome recusado ou endereço de outra pessoa\" na skill hospedar: copie sites/<nome>/ inteiro para sites/<novo>/ (nunca só site/), rode ./estudio montar <novo> e a conferência completa do passo 1 da skill hospedar em <novo>, e só então publique <novo>. O sim para o endereço novo vale como a confirmação desta publicação."
   },
   "PUBLICAR_CHAVE_RECUSADA": {
     "texto": "O acesso deste computador deixou de valer. Preciso que você autorize de novo.",
@@ -317,7 +421,7 @@
   },
   "PUBLICAR_SITE_DE_OUTRA_PESSOA": {
     "texto": "Esse endereço já é de outra pessoa. Vamos escolher outro nome para o seu site.",
-    "acao": "Proponha à pessoa um nome parecido e livre, crie o site com esse nome e publique de novo. Nunca tente publicar por cima do site de outra pessoa."
+    "acao": "Proponha à pessoa um nome curto, parecido e livre para o endereço. Com o sim dela para o endereço novo, siga \"Nome recusado ou endereço de outra pessoa\" na skill hospedar: copie sites/<nome>/ inteiro para sites/<novo>/ (nunca só site/), rode ./estudio montar <novo> e a conferência completa do passo 1 da skill hospedar em <novo>, e só então publique <novo>. O sim para o endereço novo vale como a confirmação desta publicação. Nunca tente publicar por cima do site de outra pessoa."
   },
   "PUBLICAR_LIMITE_DE_SITES": {
     "texto": "Você chegou ao número máximo de sites no ar.",
@@ -325,7 +429,7 @@
   },
   "PUBLICAR_SITE_GRANDE_DEMAIS": {
     "texto": "O site ficou grande demais para publicar aqui.",
-    "acao": "Veja dados.detalhe. Reduza fotos e vídeos (o desempenho mostra os arquivos mais pesados), tire de site/ o que nenhuma página usa e publique de novo."
+    "acao": "Veja dados.detalhe. Reduza fotos e vídeos (o desempenho mostra os arquivos mais pesados) e tire de site/ o que nenhuma página usa. Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
   },
   "PUBLICAR_LIMITE_DO_DIA": {
     "texto": "Você já publicou muitas vezes hoje. Amanhã dá para publicar de novo.",
@@ -357,7 +461,7 @@
   },
   "PUBLICAR_PACOTE_RECUSADO": {
     "texto": "O serviço recusou o site por causa de um arquivo que não pode ir para a internet.",
-    "acao": "Veja dados.detalhe e dados.codigo_do_servico, mostre à pessoa o arquivo citado, tire-o de site/ (guarde em material/, se for dela), confira de novo e publique."
+    "acao": "Veja dados.detalhe e dados.codigo_do_servico, mostre à pessoa o arquivo citado e tire-o de site/ (guarde em material/, se for dela). Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
   },
   "PUBLICAR_RECUSADO": {
     "texto": "O serviço de publicação não aceitou o pedido agora.",
@@ -390,5 +494,57 @@
   "PUBLICAR_VERSAO_RUIM": {
     "texto": "Essa versão guardada do site não tem uma página inicial que funcione. Nada mudou no ar.",
     "acao": "Pergunte à pessoa qual outra versão ela quer, ou volte sem número, para a anterior."
+  },
+  "LER_OK": {
+    "texto": "Li o Instagram, o perfil do Google e o site atual. Cada informação ficou anotada com de onde veio e quando.",
+    "acao": "Leia arquivos.coleta (instagram/posts.md, google/lugar.json, site/texto.md) e a parte \"Lido pelo estúdio\" de fatos.md. Não pergunte nada agora: o endereço, o horário e o telefone lidos e as fotos lidas que servem ao site vão para o portão 1 da skill novo-site (o brief), na mesma pergunta: \"Está certo, e posso usar estas fotos?\". Foto lida só vai para material/fotos/ com o sim dela ali."
+  },
+  "LER_COM_AVISOS": {
+    "texto": "Li o que deu. Uma parte faltou, e eu explico qual.",
+    "acao": "Traduza cada aviso pelo código dele. O que foi lido está em arquivos.coleta e na parte \"Lido pelo estúdio\" de fatos.md."
+  },
+  "LER_NADA": {
+    "texto": "Não consegui ler nenhuma página do negócio agora.",
+    "acao": "Traduza os avisos. Confira com a pessoa o @ e o nome com a cidade e rode de novo. Se o Instagram não abriu, siga a ação de LER_INSTAGRAM_FALHOU."
+  },
+  "LER_SEM_ENDERECO": {
+    "texto": "Preciso do @ do Instagram ou do nome do negócio para começar a ler.",
+    "acao": "Pergunte o @ e o nome com a cidade e rode ./estudio ler <nome> --instagram perfil --negocio \"Nome, cidade\" (o @ sem a arroba)."
+  },
+  "LER_INSTAGRAM_POUCOS": {
+    "texto": "Do Instagram, sem entrar na conta, consegui ler {{posts}} publicações. Se faltar alguma, dá para ler o resto pela extensão do Claude no Chrome.",
+    "acao": "Diga o texto. Se a pessoa quiser mais publicações: Com a extensão do Claude no Chrome conectada (Claude Code): peça licença à pessoa, abra o perfil numa aba nova do Chrome dela (que já está na conta dela), role a grade e abra cada publicação que falta; anote legenda, data e endereço em coleta/instagram/posts.md (a fonte é o endereço da publicação). Nunca peça senha nem entre na conta por ela. Sem a extensão, ou no Codex: peça à pessoa, em referencias/, as fotos e os textos que faltam. O desenho da leitura com login está em docs/ler-instagram-com-login.md."
+  },
+  "LER_INSTAGRAM_FALHOU": {
+    "texto": "Não consegui ler o Instagram sem entrar na conta. Dá para ler pela extensão do Claude no Chrome.",
+    "acao": "Confira o @ com a pessoa (dados.instagram); se estava errado, rode de novo. Se estava certo: Com a extensão do Claude no Chrome conectada (Claude Code): peça licença à pessoa, abra o perfil numa aba nova do Chrome dela (que já está na conta dela), role a grade e abra cada publicação que falta; anote legenda, data e endereço em coleta/instagram/posts.md (a fonte é o endereço da publicação). Nunca peça senha nem entre na conta por ela. Sem a extensão, ou no Codex: peça à pessoa, em referencias/, as fotos e os textos que faltam. O desenho da leitura com login está em docs/ler-instagram-com-login.md."
+  },
+  "LER_FOTOS_PEQUENAS": {
+    "texto": "As fotos do Instagram chegam pequenas. Para foto grande no site, as originais ficam bem melhores.",
+    "acao": "Peça à pessoa as fotos originais (as do celular dela). Se ela puser em referencias/, copie para material/fotos/ do site com a legenda e a data. Use as do Instagram só em tamanho pequeno, nunca esticadas (dados.maior_largura é a maior largura lida)."
+  },
+  "LER_GOOGLE_NAO_ACHOU": {
+    "texto": "Não achei o negócio no Google pelo nome.",
+    "acao": "Se dados.motivo for \"bloqueado\", o Google pediu para confirmar que é uma pessoa: peça o link de compartilhar do perfil no Google Maps e rode de novo com --google <link>. Se for \"nao-achou\", pergunte o nome como aparece no Google e a cidade, e rode de novo com --negocio."
+  },
+  "LER_GOOGLE_PRIMEIRO_DA_LISTA": {
+    "texto": "Achei mais de um lugar com esse nome no Google e fiquei com {{escolhido}}. É esse mesmo?",
+    "acao": "Confirme com a pessoa (os outros nomes estão em dados.outros). Se for outro, rode de novo com --google e o link certo do Google Maps, ou com --negocio e a cidade."
+  },
+  "LER_GOOGLE_SEM_HORARIO": {
+    "texto": "O perfil do Google não mostra o horário de funcionamento.",
+    "acao": "Pergunte o horário à pessoa e anote em fatos.md com a fonte \"a própria pessoa disse em <data>\". Nunca use horário de trecho de resultado de busca."
+  },
+  "LER_GOOGLE_FALHOU": {
+    "texto": "Não consegui abrir o perfil do Google agora.",
+    "acao": "Leia dados.detalhe. Rode de novo uma vez; se repetir, peça à pessoa o link do perfil no Google Maps e rode com --google <link>."
+  },
+  "LER_SITE_OUTRO_ENDERECO": {
+    "texto": "O endereço do site leva para outra página, que não parece ser do negócio. Não li essa página.",
+    "acao": "Confira com a pessoa se dados.final é o site do próprio negócio. Se for, rode de novo com --site <dados.final>. Se não for (loja de pedidos, link curto, página de links ou rede social), siga sem o site e não use nada dessa página."
+  },
+  "LER_SITE_FALHOU": {
+    "texto": "Não consegui abrir o site atual.",
+    "acao": "Confira o endereço com a pessoa (dados.endereco) e rode de novo com --site. Se o site não existe mais, siga sem ele."
   }
 }

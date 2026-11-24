@@ -1,6 +1,6 @@
 # Site Estúdio
 
-> **Assistente (Claude Code ou Codex): se você chegou aqui porque alguém pediu para instalar,** leia o `AGENTS.md` inteiro e siga a skill `instalar-estudio` (em `.agents/skills/instalar-estudio/SKILL.md`). Antes do primeiro comando, diga à pessoa em uma frase como aprovar as caixinhas de licença. Fale simples, um passo por vez.
+> **Assistente (Claude Code ou Codex): se você chegou aqui porque alguém pediu para instalar,** leia o `AGENTS.md` inteiro e siga a skill `instalar-estudio` (em `.agents/skills/instalar-estudio/SKILL.md`). A instalação é uma entrada só, numa caixinha de licença: `bash instalar/instalar.sh tudo --agente <claude|codex>` (no Windows, `instalar/instalar.ps1 tudo`), rodada com o tempo máximo da ferramenta (no Claude Code, `timeout: 600000`) ou em segundo plano: com internet lenta ela passa dos 2 minutos padrão. Antes dela, diga o I-01, que já explica a caixinha. Nenhuma pergunta técnica.
 
 Sites de primeira linha, feitos por conversa, no seu computador.
 
@@ -13,25 +13,31 @@ Você conta para o assistente (Claude Code ou Codex) o que é o seu negócio e o
 - **Com a sua marca.** Cores, letras e logo ficam guardados uma vez e valem para todos os sites.
 - **Mac; Windows em teste.** No Mac o estúdio roda de ponta a ponta. No Windows o instalador e os comandos existem, mas ainda não passaram na conferência numa máquina limpa: até lá, trate como versão de teste.
 
-## Como instalar
+<!-- porta-de-entrada: texto para quem nunca usou o Claude. Sem palavra técnica (o teste confere). -->
+## Comece aqui
 
-1. Instale o **Claude Code** ou o **Codex** (no app ou no Terminal) e entre com a sua conta.
-2. Abra o programa e cole este texto:
+Você vai conversar com um assistente, do mesmo jeito que conversa no WhatsApp. Ele faz o site. Você só responde e aprova.
+
+1. **Baixe o app do Claude** no site **claude.ai/download** e entre com a sua conta. (Já usa o Codex? Pode ser ele também.)
+2. **Abra o app e entre na parte Code.** Quando ele pedir um lugar para trabalhar, escolha o que tem o seu nome (no Mac, ao lado do desenho de uma casinha). Não escolha a Mesa nem Documentos.
+3. **Copie o texto do quadro abaixo, cole na conversa e aperte Enter.**
+4. **Aprove as caixinhas.** O app pede licença antes de mexer no computador. Costumam ser três: uma para baixar o estúdio, uma para instalar e uma para confiar nele quando você abrir de novo. É só clicar em aprovar.
+5. **Espere uns 3 minutos.** Quando aparecer *Tudo pronto*, faça o que ele mostrar para abrir o estúdio e escreva: **quero fazer um site**.
 
 ```
 instale: https://github.com/autonom-ia/site-estudio/releases/latest/download/site-estudio.zip
 ```
 
-3. Responda ao assistente. Ele olha o computador, pede licença antes de cada coisa e instala tudo numa pasta só, `site-estudio`, dentro da sua pasta pessoal. Leva uns 5 minutos e ocupa menos de 500 MB.
-4. No fim, abra o programa direto na pasta `site-estudio` (o assistente mostra como). É lá que ele sabe fazer os seus sites.
+Daí em diante, ele faz só duas perguntas: o que é o seu negócio e onde ele aparece hoje (Instagram, site ou o nome no Google). Gosto, cores e sites de que você gosta são opcionais: se preferir, diga "pode decidir por mim". Você vê o começo do site no celular e no computador, lado a lado, aprova, e ele faz o resto.
 
-Se o seu programa não conseguir baixar pelo link, veja as alternativas em [`instalar/comandos-unicos.md`](instalar/comandos-unicos.md).
+Se o app não conseguir baixar pelo link, veja [outros jeitos de instalar](instalar/comandos-unicos.md).
+<!-- /porta-de-entrada -->
 
 ## Como usar
 
 Escreva do seu jeito. Por exemplo:
 
-- "Quero um site para o Café Aurora. A ideia é a pessoa ver o cardápio e chamar no WhatsApp para encomendar."
+- "Quero um site para a Oficina Raio, de conserto de bicicletas. A ideia é a pessoa ver os preços e chamar no WhatsApp para agendar."
 - "A Clínica Horizonte já tem site, mas está velho. Quero refazer, com uma página para cada especialidade."
 - "Ajusta a minha marca: as cores estão no logo que coloquei na pasta referencias."
 - "Dá uma nota para o meu site."
@@ -39,11 +45,11 @@ Escreva do seu jeito. Por exemplo:
 
 O caminho é sempre o mesmo:
 
-1. **Conversa rápida**: o que é o negócio, para quem, o que a pessoa deve fazer no site, de onde vêm os dados.
+1. **Conversa rápida**: duas perguntas, o que é o negócio e onde ele aparece hoje. O resto o assistente lê e propõe.
 2. **Brief**: o objetivo, a ação principal e o mapa das páginas. Você aprova.
 3. **Referências**: sites reais do mesmo tipo, estudados pelo que fazem bem (para aprender, nunca para copiar).
 4. **Direção**: a ideia visual em uma frase, as letras, as fotos, as cores e o movimento.
-5. **Piloto**: o topo da página inicial, uma parte comum e o momento mais forte, no computador e no celular. Você aprova o visual.
+5. **Piloto**: o topo da página inicial, uma parte comum e o momento mais forte, no celular e no computador lado a lado. Você aprova o visual.
 6. **O resto do site**, no mesmo visual.
 7. **Conferência** automática e fotos de cada página em quatro tamanhos, lidas uma a uma.
 8. **Revisão** por quatro revisores independentes, até nota 8,5.
@@ -78,7 +84,7 @@ Essas pastas são suas: a atualização do estúdio nunca mexe nelas.
 
 ## Para quem quer mexer no estúdio
 
-- Comandos: `./estudio <comando>` (no Windows, `.\estudio.cmd`). Por site: `novo`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `abrir`, `pacote`, `publicar`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`. A última linha de cada comando é um JSON numa linha só: `{"ok","comando","codigo","resumo","arquivos","avisos","dados"}`. Saída 0 é ok, 1 é erro, 2 é reprovado na conferência.
+- Comandos: `./estudio <comando>` (no Windows, `.\estudio.cmd`). Por site: `novo`, `ler`, `montar`, `checar`, `prints`, `medir`, `acessibilidade`, `desempenho`, `fatos`, `preflight`, `revisao`, `abrir`, `antes`, `comparar`, `escolher`, `pacote`, `publicar`. Do estúdio: `verificar`, `espelhar`, `versao`, `atualizar`. Da marca: `fonte`. A última linha de cada comando é um JSON numa linha só: `{"ok","comando","codigo","resumo","arquivos","avisos","dados"}`. Saída 0 é ok, 1 é erro, 2 é reprovado na conferência.
 - Testes: `npm test` (Node 22 ou mais novo). Os testes que precisam de navegador são pulados quando não há Chrome.
 - Instruções do assistente: a fonte é o `AGENTS.md` e `.claude/skills/`. O `CLAUDE.md` e `.agents/skills/` são gerados por `./estudio espelhar`; `./estudio espelhar --conferir` reprova se estiverem diferentes.
 - Regras do código: Node sem dependência em tempo de execução, versões fixas em `instalar/versoes.env`, sem expressão regular, página lida pelo próprio navegador (DOM via protocolo de depuração do Chrome), nunca como texto.

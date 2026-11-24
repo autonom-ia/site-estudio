@@ -1,8 +1,11 @@
 # Referências
 
-> De 6 a 10 sites reais do mesmo tipo de negócio e objetivo. Para cada um: o endereço, um print em
-> material/referencias/ e o PRINCÍPIO que vale levar (não o layout para copiar).
+> De 2 a 3 fichas do repertório do estúdio (kit/repertorio/), escolhidas pela ação de quem visita e
+> pela dúvida que a página resolve, mais as que a pessoa indicou. Pelo menos 2 de outro ramo. Só o
+> endereço: nenhuma imagem de outra marca entra aqui nem no site. O PRINCÍPIO, nunca o layout.
 
-| Site | Print | Princípio que vale levar |
-|---|---|---|
-|  |  |  |
+| Endereço | Ramo | Motivo (a dúvida que resolve) | Princípio | Como fazemos aqui | No celular | Conferida ao vivo em | Observação |
+|---|---|---|---|---|---|---|---|
+|  |  |  |  |  |  |  |  |
+
+> Observação: a troca de ficha e o porquê, como "trocada: o site recusa leitura automática". Vazia quando não houve.

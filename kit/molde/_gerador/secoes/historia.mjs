@@ -2,9 +2,9 @@
 // Cada ano também está em fatos.md, com a fonte.
 export default function historia({ esc }) {
   const marcos = [
-    ['2019', 'A garagem', 'Um forno a lenha emprestado, duas mesas na calçada e o pão de fermentação natural que ainda é o mais pedido.'],
-    ['2021', 'A loja da esquina', 'A fila da manhã dobrou o quarteirão e a casa mudou para a esquina, com balcão de madeira e janela para a rua.'],
-    ['2024', 'O café de verdade', 'Chegou o moedor e o café passou a ser coado na hora, com grão de pequenos produtores da serra.'],
+    ['2016', 'O box de garagem', 'Uma bancada, um suporte de parede e as bicicletas da vizinhança.'],
+    ['2020', 'A loja da rua de cima', 'A fila de bicicletas na calçada pediu porta de enrolar e bancada dupla.'],
+    ['2023', 'Busca em casa', 'A oficina passou a buscar e levar a bicicleta de quem não pode vir.'],
   ];
   return `<section class="historia" data-secao="historia" data-molde="historia" aria-labelledby="historia-titulo">
   <div class="envelope">
