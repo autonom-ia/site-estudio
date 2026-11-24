@@ -6,6 +6,7 @@
 // WARN: og:image relativa, JSON-LD que não abre, fonte usada que não foi declarada, link com o
 // mesmo texto 4 vezes ou mais (link-repetido) e a mesma frase 3 vezes ou mais (frase-repetida).
 // Letras (lib/letras.mjs): RED fonte-sem-licenca; WARN fonte-pesada (não .woff2, ou soma alta).
+// 3D (lib/peso-3d.mjs): RED 3d-pesado (código de assets/3d acima de 200 KB comprimido, ou modelo acima de 1,5 MB).
 import fs from 'node:fs';
 import path from 'node:path';
 import { nomeDoSite } from '../lib/args.mjs';
@@ -16,6 +17,7 @@ import { repeticoes } from '../lib/pagina-leitura.mjs';
 import { progresso } from '../lib/executar.mjs';
 import { esperar } from '../lib/cdp.mjs';
 import { anotarLetras } from '../lib/letras.mjs';
+import { anotar3d } from '../lib/peso-3d.mjs';
 
 export const VENDOR_OBRIGATORIO = Object.freeze([
   ['assets', 'vendor', 'gsap', 'gsap.min.js'],
@@ -76,6 +78,7 @@ export default async function checar(args) {
     if (!fs.existsSync(path.join(c.site, ...partes))) red.push({ pagina: '-', tipo: 'vendor-ausente', detalhe: `site/${partes.join('/')}` });
   }
   anotarLetras(c.site, red, warn);
+  anotar3d(c.site, red);
   const paginas = paginasDoSite(c);
   const notebook = TAMANHOS.find((t) => t.nome === 'notebook');
   const sessao = await abrirSessao(c.site);
