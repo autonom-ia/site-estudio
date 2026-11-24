@@ -339,7 +339,11 @@ test('a caramanhola gira sozinha só nos primeiros segundos; o mouse só pega a 
     await s.tab.evaluate(`(() => { const i = document.querySelector('input[name="cor"][value="concreto"]'); i.checked = true; i.dispatchEvent(new Event('change', { bubbles: true })); window.dispatchEvent(new Event('resize')); })()`);
     await esperar(800); // e a reserva termina de aparecer (transição de 0,5 s)
     assert.equal(await quadros(s), d, 'a cena parada ainda responde a escolhas');
-    assert.equal(await s.tab.evaluate(`getComputedStyle(document.querySelector('#caramanhola .palco-3d__reserva')).opacity`), '1');
+    // a reserva volta inteira (a troca leva 0,5 s; com a máquina ocupada, pode levar mais)
+    const opacidade = `getComputedStyle(document.querySelector('#caramanhola .palco-3d__reserva')).opacity`;
+    const prazo = Date.now() + 5000;
+    while (Date.now() < prazo && (await s.tab.evaluate(opacidade)) !== '1') await esperar(100);
+    assert.equal(await s.tab.evaluate(opacidade), '1');
     assert.deepEqual(s.errosJs(), []);
   } finally {
     await s.fechar();

@@ -5,6 +5,9 @@
 // - estabilidade: a mesma lente, no mesmo estado do site, avaliada por dois revisores novos
 //   (notas e reavaliacao.notas, sem conserto no meio), varia no máximo 0,3. Entre rodadas há
 //   conserto, então a diferença ali é progresso, não ruído, e não entra nessa medida.
+//   A reavaliação pode ser parcial: só as lentes reavaliadas (por exemplo, só a de arte) entram na
+//   conta; a lente que não foi reavaliada fica null, e a média só sai com as 4. A meta das 4 lentes
+//   (metas.estabilidade) só vira true com as 4 medidas; a de uma lente se lê no campo dela.
 //
 // revisao/rodada-N.json (escrito pela skill revisar, junto do rodada-N.md):
 // { "rodada": N,
@@ -14,6 +17,7 @@
 //   "aceitos": [{ "lente": "arte", "pagina": "index.html", "problema": "…", "conserto": "…" }],
 //   "recusados": [{ "lente": "fatos", "problema": "…", "porque": "…" }],
 //   "reavaliacao": { "notas": { "arte": 7.9, "geral": 8.1, "fatos": 8.5, "qa": 8.8 } } }  ← opcional
+//   (parcial vale: { "notas": { "arte": 7.9 } } reavalia só a lente de arte)
 import fs from 'node:fs';
 import path from 'node:path';
 import { lerTexto } from './json.mjs';
@@ -34,6 +38,18 @@ function errosDeNotas(notas, prefixo) {
   return LENTES.filter((l) => !ehNota(notas ? notas[l] : undefined)).map((l) => `${prefixo} "${l}" precisa ser um número de 0 a 10`);
 }
 
+// A reavaliação traz uma ou mais lentes (todas, ou só a que se quer medir), cada uma com nota válida.
+function errosDaReavaliacao(reavaliacao) {
+  const notas = reavaliacao && typeof reavaliacao === 'object' ? reavaliacao.notas : null;
+  if (!notas || typeof notas !== 'object' || Array.isArray(notas)) return ['falta "reavaliacao.notas"'];
+  const chaves = Object.keys(notas);
+  if (!chaves.length) return ['"reavaliacao.notas" precisa de pelo menos uma lente (arte, geral, fatos ou qa)'];
+  return chaves.map((l) => {
+    if (!LENTES.includes(l)) return `reavaliacao: "${l}" não é uma lente (arte, geral, fatos ou qa)`;
+    return ehNota(notas[l]) ? null : `reavaliacao: nota "${l}" precisa ser um número de 0 a 10`;
+  }).filter(Boolean);
+}
+
 function errosDoVisitante(v) {
   if (!v || typeof v !== 'object' || Array.isArray(v)) return ['falta "visitante" (o teste do visitante do diretor geral)'];
   const erros = [];
@@ -52,10 +68,7 @@ export function validarRodada(obj, n) {
   if (!notas) erros.push('falta "notas"');
   erros.push(...errosDeNotas(notas, 'nota'));
   erros.push(...errosDoVisitante(obj.visitante));
-  if (obj.reavaliacao !== undefined) {
-    const reav = obj.reavaliacao && typeof obj.reavaliacao === 'object' ? obj.reavaliacao.notas : null;
-    erros.push(...errosDeNotas(reav && typeof reav === 'object' ? reav : null, 'reavaliacao: nota'));
-  }
+  if (obj.reavaliacao !== undefined) erros.push(...errosDaReavaliacao(obj.reavaliacao));
   for (const campo of ['aceitos', 'recusados']) {
     if (!Array.isArray(obj[campo])) {
       erros.push(`"${campo}" precisa ser uma lista`);
@@ -114,15 +127,33 @@ function resumoDaRodada(r) {
   return { rodada: r.rodada, ...lentes, media: umaCasa(mediaExata(r.notas)), bloqueios, alertas, passou };
 }
 
+const reavaliou = (r, l) => ehNota(r.reavaliacao.notas[l]);
+
 // Maior diferença de cada lente entre a avaliação e a reavaliação do mesmo estado; null se não houve.
+// Lente que nenhuma reavaliação mediu fica null; a média só compara rodadas reavaliadas nas 4 lentes.
 function estabilidade(rodadas) {
   const medidas = rodadas.filter((r) => r.reavaliacao && r.reavaliacao.notas);
   if (!medidas.length) return null;
-  const maior = (f) => umaCasa(Math.max(...medidas.map(f)));
-  const resultado = Object.fromEntries(LENTES.map((l) => [l, maior((r) => Math.abs(r.notas[l] - r.reavaliacao.notas[l]))]));
-  resultado.media = maior((r) => Math.abs(mediaExata(r.notas) - mediaExata(r.reavaliacao.notas)));
+  const maior = (lista, f) => (lista.length ? umaCasa(Math.max(...lista.map(f))) : null);
+  const resultado = Object.fromEntries(LENTES.map((l) => [
+    l,
+    maior(medidas.filter((r) => reavaliou(r, l)), (r) => Math.abs(r.notas[l] - r.reavaliacao.notas[l])),
+  ]));
+  const completas = medidas.filter((r) => LENTES.every((l) => reavaliou(r, l)));
+  resultado.media = maior(completas, (r) => Math.abs(mediaExata(r.notas) - mediaExata(r.reavaliacao.notas)));
   resultado.rodadas = medidas.map((r) => r.rodada);
+  resultado.lentes_medidas = LENTES.filter((l) => resultado[l] !== null).length;
   return resultado;
+}
+
+// A meta de estabilidade é das 4 lentes: true só com as 4 medidas e nenhuma acima de 0,3; false se
+// alguma lente medida já passou de 0,3 (a meta não tem mais como ser cumprida); null enquanto faltar
+// lente. A meta de uma lente só (como a da arte) se lê no campo dela em estabilidade.
+function metaDeEstabilidade(est) {
+  if (!est) return null;
+  const dentro = (l) => centesimos(est[l]) <= centesimos(META.estabilidade_lente);
+  if (LENTES.some((l) => est[l] !== null && !dentro(l))) return false;
+  return est.lentes_medidas === LENTES.length ? true : null;
 }
 
 // Nota de cada rodada, se passou, e as duas metas (rodadas e estabilidade) medidas em separado.
@@ -133,7 +164,7 @@ export function trajetoria(rodadas) {
   const est = estabilidade(rodadas);
   const metas = {
     em_ate_2_rodadas: passouNaRodada !== null && passouNaRodada <= META.rodadas,
-    estabilidade: est ? LENTES.every((l) => centesimos(est[l]) <= centesimos(META.estabilidade_lente)) : null,
+    estabilidade: metaDeEstabilidade(est),
   };
   return { notas, passou_na_rodada: passouNaRodada, estabilidade: est, metas };
 }

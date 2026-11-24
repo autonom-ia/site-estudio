@@ -22,6 +22,7 @@ export const LIMITES = Object.freeze({
   foto_escala: 1.1, // foto exibida mais de 10% maior que o arquivo (aviso)
   linha_maxima: 90, // letras por linha de leitura (aviso)
   linha_texto_minimo: 160, // só mede linha de parágrafo com pelo menos este tanto de letras
+  borda_da_tela: 1, // px: centro de texto mais perto que isto da borda da tela é medido noutra posição
 });
 
 export default async function medir(args) {

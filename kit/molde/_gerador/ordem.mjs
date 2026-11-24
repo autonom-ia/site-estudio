@@ -15,6 +15,9 @@ export const site = {
   endereco: '',
   imagemSocial: '', // caminho dentro de site/, ex.: 'assets/img/social.jpg' (só usado com endereco)
   corDoNavegador: '#111417',
+  // rolagem suave (Lenis): false quando a direção dispensa. A página deixa de carregar o Lenis e a
+  // pasta site/assets/vendor/lenis/ pode sair (o pacote avisa enquanto ela ficar sem uso).
+  lenis: true,
   cabecalho: 'cabecalho',
   rodape: 'rodape',
   // dados estruturados (JSON-LD) do negócio. Tudo aqui também precisa estar em fatos.md.
