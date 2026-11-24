@@ -1,5 +1,5 @@
 // Navegador sem janela + DevTools Protocol, sem dependência (WebSocket nativo do Node 22+).
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -14,6 +14,7 @@ const TETO_SUBIDA_MS = 20000;
 // Prazo de cada pergunta ao DevTools durante a subida e da aba nova (endereço e WebSocket).
 const TETO_PEDIDO_MS = 2000;
 const TETO_ABA_MS = 10000;
+const TETO_FECHAR_MS = 5000;
 
 // Prazo de um pedido sem passar do prazo total que ainda resta.
 const prazo = (fim, teto) => AbortSignal.timeout(Math.max(1, Math.min(teto, fim - Date.now())));
@@ -36,63 +37,122 @@ function portaLivre() {
 // sem WebGL e a parte 3D sai vazia (ou na imagem de reserva). O "unsafe" é sobre página de fora
 // rodando no desenhista por software. Por isso as chaves vêm desligadas (com3d: false) e só a
 // sessão das conferências liga (lib/sessao.mjs): ela abre só o site da pasta, servido no próprio
-// computador, e recusa todo pedido para fora dele. O leitor, que abre sites da internet, e o
-// "verificar" abrem sem.
+// computador, e recusa todo pedido para fora dele. O leitor, que abre sites da internet (inclusive
+// o Instagram com login), e o "verificar" abrem sem.
 export const ARGS_3D = Object.freeze(['--use-angle=swiftshader', '--enable-unsafe-swiftshader']);
 
-// Os argumentos do navegador sem janela (separados para o teste conferir as chaves do 3D).
-export function argumentos({ caminho, porta, perfil, largura, altura, com3d = false }) {
-  const args = [
-    ehShell(caminho) ? '--headless' : '--headless=new',
+// Argumentos de cada jeito de abrir. Sem janela: o mesmo navegador escondido de sempre. Com
+// janela: um Chrome normal, para a pessoa usar. Perfil guardado (login do Instagram): a chave dos
+// cookies não vem do chaveiro do sistema (no Mac, a janela e o modo sem janela usam chaves diferentes
+// e um não leria o login do outro; e o chaveiro pediria a senha do computador à pessoa).
+// com3d: ver ARGS_3D.
+export function argumentosDoNavegador({ caminho, porta, perfil, comJanela = false, guardado = false, largura, altura, com3d = false }) {
+  const args = [];
+  if (!comJanela) args.push(ehShell(caminho) ? '--headless' : '--headless=new', '--hide-scrollbars', '--mute-audio', '--force-device-scale-factor=1');
+  args.push(
     `--remote-debugging-port=${porta}`,
     `--user-data-dir=${perfil}`,
     '--no-first-run',
     '--no-default-browser-check',
-    '--hide-scrollbars',
-    '--mute-audio',
     '--disable-extensions',
     '--disable-background-networking',
     '--autoplay-policy=no-user-gesture-required',
-    '--force-device-scale-factor=1',
     `--window-size=${largura},${altura}`,
-    ...(com3d ? ARGS_3D : []),
-  ];
-  if (!EH_MAC && !EH_WINDOWS) args.push('--no-sandbox');
+  );
+  if (com3d) args.push(...ARGS_3D);
+  if (guardado) {
+    if (EH_MAC) args.push('--use-mock-keychain');
+    else if (!EH_WINDOWS) args.push('--password-store=basic');
+    args.push('--hide-crash-restore-bubble');
+  }
+  if (!EH_MAC && !EH_WINDOWS && !comJanela) args.push('--no-sandbox');
   return args;
 }
 
-// Abre o navegador. largura/altura = tamanho da janela (viewport inicial). com3d: ver ARGS_3D.
-export async function launch({ largura = 1920, altura = 1080, com3d = false } = {}) {
-  const achado = acharNavegador();
+// Abre o navegador. largura/altura = tamanho da janela (viewport inicial).
+// perfil: pasta de perfil guardada (não é apagada ao fechar); sem ela, um perfil temporário.
+// comJanela: Chrome normal, visível. navegador: { caminho } já escolhido. endereco: a primeira página.
+// com3d: liga o desenho 3D por software (ver ARGS_3D); só a sessão das conferências usa.
+export async function launch({ largura = 1920, altura = 1080, perfil = '', comJanela = false, navegador = null, endereco = 'about:blank', com3d = false } = {}) {
+  const achado = navegador || acharNavegador();
   if (!achado) falha('CHROME_NAO_ACHADO', {});
   const porta = await portaLivre();
-  const perfil = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-cdp-'));
-  const args = argumentos({ caminho: achado.caminho, porta, perfil, largura, altura, com3d });
-  const proc = spawn(achado.caminho, [...args, 'about:blank'], { stdio: 'ignore', windowsHide: true });
+  const guardado = Boolean(perfil);
+  const pastaPerfil = guardado ? perfil : fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-cdp-'));
+  const args = argumentosDoNavegador({ caminho: achado.caminho, porta, perfil: pastaPerfil, comJanela, guardado, largura, altura, com3d });
+  const proc = spawn(achado.caminho, [...args, endereco], { stdio: 'ignore', windowsHide: !comJanela });
   let morreu = false;
-  proc.on('error', () => {
-    morreu = true;
+  const saiu = new Promise((res) => {
+    proc.on('error', () => {
+      morreu = true;
+      res();
+    });
+    proc.on('exit', () => {
+      morreu = true;
+      res();
+    });
   });
-  proc.on('exit', () => {
-    morreu = true;
-  });
-  const close = () => {
+  // No Windows, o Chrome abre vários processos: encerra a árvore inteira.
+  const matar = () => {
+    if (morreu) return;
+    if (EH_WINDOWS && proc.pid) {
+      try {
+        spawnSync('taskkill', ['/T', '/F', '/PID', String(proc.pid)], { stdio: 'ignore', windowsHide: true });
+      } catch {}
+    }
     try {
       proc.kill('SIGKILL');
     } catch {}
+  };
+  // Perfil guardado: se o processo do estúdio acabar ou for interrompido, o Chrome não fica para trás
+  // (aberto e escondido, segurando o login).
+  const aoSair = () => matar();
+  const aoInterromper = () => {
+    matar();
+    process.exit(130);
+  };
+  if (guardado) {
+    process.on('exit', aoSair);
+    process.once('SIGINT', aoInterromper);
+    process.once('SIGTERM', aoInterromper);
+  }
+  const soltar = () => {
+    process.off('exit', aoSair);
+    process.off('SIGINT', aoInterromper);
+    process.off('SIGTERM', aoInterromper);
+  };
+  const close = () => {
+    matar();
+    soltar();
+    if (guardado) return;
     // o Windows segura o perfil por um instante depois de matar o processo
     setTimeout(() => {
       try {
-        fs.rmSync(perfil, { recursive: true, force: true });
+        fs.rmSync(pastaPerfil, { recursive: true, force: true });
       } catch {}
     }, 300);
+  };
+  // Fecha pedindo ao navegador (ele grava os cookies no disco antes de sair). Sem resposta no
+  // prazo, mata o processo.
+  const fecharComCalma = async (prazoMs = TETO_FECHAR_MS) => {
+    if (!morreu) {
+      try {
+        const nav = await conectarNavegador(porta, { prazoMs: TETO_ABA_MS });
+        nav.send('Browser.close', {}, prazoMs).catch(() => {});
+        await Promise.race([saiu, esperar(prazoMs)]);
+        nav.close();
+      } catch {
+        /* sem conexão: vai à força */
+      }
+    }
+    close();
   };
   const fim = Date.now() + TETO_SUBIDA_MS;
   while (Date.now() < fim && !morreu) {
     try {
       // sem prazo, um navegador que aceita a conexão e não responde prenderia o laço para sempre
       const r = await fetch(`http://127.0.0.1:${porta}/json/version`, { signal: prazo(fim, TETO_PEDIDO_MS) });
-      if (r.ok) return { porta, close, navegador: achado };
+      if (r.ok) return { porta, close, fecharComCalma, vivo: () => !morreu, navegador: achado };
     } catch {
       /* subindo */
     }
@@ -138,9 +198,28 @@ export async function openTab(porta, { prazoMs = TETO_ABA_MS } = {}) {
     }
   }
   if (!info || typeof info.webSocketDebuggerUrl !== 'string') falha('CHROME_NAO_ABRIU', { detalhe: 'aba nova' });
+  return conectar(info.webSocketDebuggerUrl, fim);
+}
+
+// Conexão com o navegador inteiro (não com uma aba): cookies, abas abertas e fechar.
+export async function conectarNavegador(porta, { prazoMs = TETO_ABA_MS } = {}) {
+  const fim = Date.now() + prazoMs;
+  let info = null;
+  try {
+    const r = await fetch(`http://127.0.0.1:${porta}/json/version`, { signal: prazo(fim, prazoMs) });
+    if (r.ok) info = await r.json();
+  } catch {
+    /* sem resposta */
+  }
+  if (!info || typeof info.webSocketDebuggerUrl !== 'string') falha('CHROME_NAO_ABRIU', { detalhe: 'conexão com o navegador' });
+  return conectar(info.webSocketDebuggerUrl, fim);
+}
+
+// Abre o WebSocket do DevTools e devolve { send, evaluate, on, off, close, aberta }.
+async function conectar(endereco, fim) {
   let ws;
   try {
-    ws = new WebSocket(info.webSocketDebuggerUrl);
+    ws = new WebSocket(endereco);
   } catch (e) {
     falha('CHROME_NAO_ABRIU', { detalhe: String(e.message) });
   }
@@ -157,7 +236,9 @@ export async function openTab(porta, { prazoMs = TETO_ABA_MS } = {}) {
       else res(m.result);
     } else if (m.method) ouvintes.forEach((f) => f(m));
   };
+  let aberta = true;
   ws.onclose = () => {
+    aberta = false;
     for (const { rej } of pend.values()) rej(new Error('DevTools fechou a conexão'));
     pend.clear();
   };
@@ -198,6 +279,7 @@ export async function openTab(porta, { prazoMs = TETO_ABA_MS } = {}) {
       if (k !== -1) ouvintes.splice(k, 1);
     },
     close: () => ws.close(),
+    aberta: () => aberta,
   };
 }
 

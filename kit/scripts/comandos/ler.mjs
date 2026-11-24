@@ -1,15 +1,20 @@
 // ./estudio ler <nome> --instagram perfil --negocio "Nome do negócio, cidade" [--google <endereço>]
-//   [--site <endereço>] [--posts 24]
-// Lê sozinho, sem login, as páginas públicas do negócio: o Instagram (legenda, data e foto de cada
+//   [--site <endereço>] [--posts 24] [--sem-login]
+// Lê sozinho as páginas públicas do negócio: o Instagram (legenda, data e foto de cada
 // publicação), o perfil do Google (endereço, telefone, horário, nota e avaliações sem o nome de quem
 // escreveu) e o site atual inteiro. Salva tudo em sites/<nome>/coleta/ e põe cada fato, com a fonte e
 // a data, numa parte própria de fatos.md. Basta o @ e o nome: o site atual vem do Google ou da bio.
+// Se a pessoa entrou no Instagram pela janela do estúdio (./estudio instagram entrar), o Instagram é
+// lido com esse login (até 40 publicações); o Google e o site, sempre sem login. Se o Instagram pedir
+// verificação, a leitura para e o login fica de lado até o dia seguinte. --sem-login ignora o login.
 import path from 'node:path';
 import { nomeDoSite, inteiro } from '../lib/args.mjs';
 import { abrirPastaDoSite } from '../lib/site.mjs';
 import { abrirLeitor } from '../lib/leitor.mjs';
+import { abrirLeitorComLogin, lugarPadrao, registrarParada } from '../lib/instagram-conta.mjs';
+import { limiteDePosts } from '../lib/ler-instagram-login.mjs';
 import { lerFontes } from '../lib/ler.mjs';
-import { falha } from '../lib/saida.mjs';
+import { falha, aviso } from '../lib/saida.mjs';
 import { progresso } from '../lib/executar.mjs';
 
 // Opção dada sem valor (ou só com espaço) é erro, nunca fonte pulada em silêncio. No PowerShell,
@@ -22,27 +27,47 @@ function texto(opcoes, nome) {
   return limpo;
 }
 
+// Motivos que viram aviso: quem nunca entrou não precisa saber de login.
+const MOTIVOS_DE_AVISO = Object.freeze(['vencido', 'nao-abriu', 'em-uso', 'pausado']);
+
+// O leitor com login, se a pessoa entrou pela janela do estúdio. Devolve { leitor } ou { avisos }.
+async function loginGuardado(pedido, opcoes, lugar) {
+  if (!pedido.instagram || opcoes['sem-login'] === true) return { avisos: [] };
+  const r = await abrirLeitorComLogin({ lugar });
+  if (r.leitor) return { leitor: r.leitor, avisos: [] };
+  return { avisos: MOTIVOS_DE_AVISO.includes(r.motivo) ? [aviso('LER_INSTAGRAM_LOGIN_INDISPONIVEL', { motivo: r.motivo })] : [] };
+}
+
 export default async function ler(args) {
   const nome = nomeDoSite(args);
   const c = abrirPastaDoSite(nome);
   const o = args.opcoes;
-  const pedido = {
+  const fontes = {
     instagram: texto(o, 'instagram'),
     negocio: texto(o, 'negocio'),
     google: texto(o, 'google'),
     site: texto(o, 'site'),
-    posts: inteiro(o, 'posts', 24, 1, 60),
   };
-  if (!pedido.instagram && !pedido.negocio && !pedido.google && !pedido.site) falha('LER_SEM_ENDERECO', { opcoes: ['--instagram', '--negocio', '--google', '--site'] });
+  if (!fontes.instagram && !fontes.negocio && !fontes.google && !fontes.site) falha('LER_SEM_ENDERECO', { opcoes: ['--instagram', '--negocio', '--google', '--site'] });
+  // Conferido antes de abrir o navegador do login, para um número errado não deixar nada aberto.
+  const postsPedidos = o.posts === undefined ? 0 : inteiro(o, 'posts', 0, 1, 60);
   const pasta = path.join(c.pasta, 'coleta');
-  progresso('Lendo as páginas públicas do negócio (sem entrar em conta nenhuma)...');
-  const leitor = await abrirLeitor();
+  const lugar = lugarPadrao();
+  const login = await loginGuardado(fontes, o, lugar);
+  const pedido = { ...fontes, posts: limiteDePosts(postsPedidos, Boolean(login.leitor)) };
+  progresso(login.leitor ? 'Lendo o Instagram com o seu login, e o resto sem entrar em conta nenhuma...' : 'Lendo as páginas públicas do negócio (sem entrar em conta nenhuma)...');
+  let leitor = null;
   let r;
   try {
-    r = await lerFontes(pedido, { pasta, fatos: c.fatos, leitor, aoAvancar: progresso });
+    leitor = await abrirLeitor();
+    r = await lerFontes(pedido, { pasta, fatos: c.fatos, leitor, leitorInstagram: login.leitor, aoAvancar: progresso });
   } finally {
-    leitor.fechar();
+    leitor?.fechar();
+    await login.leitor?.fecharComCalma();
   }
+  // Verificação com login: o login fica de lado até amanhã, sem insistir.
+  if (login.leitor) registrarParada(r.avisos, lugar);
+  r.avisos.unshift(...login.avisos);
   const leu = Boolean(r.dados.instagram || r.dados.google || r.dados.site);
   if (!leu) return { ok: false, codigo: 'LER_NADA', avisos: r.avisos, dados: r.dados, sair: 1 };
   return {

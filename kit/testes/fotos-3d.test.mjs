@@ -10,7 +10,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { acharNavegador } from '../scripts/lib/chrome.mjs';
-import { argumentos, ARGS_3D, esperar } from '../scripts/lib/cdp.mjs';
+import { argumentosDoNavegador, ARGS_3D, esperar } from '../scripts/lib/cdp.mjs';
 import { abrirLeitor } from '../scripts/lib/leitor.mjs';
 import { abrirSessao, ehLocal } from '../scripts/lib/sessao.mjs';
 import { fotografarPng } from '../scripts/comandos/prints.mjs';
@@ -66,10 +66,13 @@ after(() => {
 test('o desenho 3D por software vem desligado; só a sessão das conferências liga, e o leitor de sites de fora nunca', async () => {
   const comum = { caminho: path.join('x', 'chrome'), porta: 9, perfil: 'p', largura: 10, altura: 10 };
   assert.deepEqual(ARGS_3D, ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']);
-  const padrao = argumentos(comum);
+  const padrao = argumentosDoNavegador(comum);
   for (const a of ARGS_3D) assert.equal(padrao.includes(a), false, `ligado sem pedir: ${a}`);
-  const com = argumentos({ ...comum, com3d: true });
+  const com = argumentosDoNavegador({ ...comum, com3d: true });
   for (const a of ARGS_3D) assert.ok(com.includes(a), a);
+  // o perfil guardado do login (Instagram) nunca leva o 3D por software junto
+  const guardado = argumentosDoNavegador({ ...comum, guardado: true });
+  for (const a of ARGS_3D) assert.equal(guardado.includes(a), false, `perfil guardado com ${a}`);
   // a sessão das conferências pede o desenho 3D
   const pedidosSessao = [];
   await assert.rejects(abrirSessao('/nao-importa', {}, {
@@ -91,8 +94,10 @@ test('o desenho 3D por software vem desligado; só a sessão das conferências l
     openTab: async () => {
       throw new Error('parou aqui');
     },
-  }), { message: 'parou aqui' });
+  }, { perfil: path.join('x', 'perfil'), com3d: true }), { message: 'parou aqui' });
+  // nem se pedirem: o leitor com o login do Instagram abre o perfil guardado, sem o 3D
   assert.equal(pedidos[0].com3d, false);
+  assert.equal(pedidos[0].perfil, path.join('x', 'perfil'));
 });
 
 test('a sessão das conferências só deixa passar pedido para o próprio computador', () => {

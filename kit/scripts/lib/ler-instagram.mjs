@@ -9,7 +9,7 @@ import { esperar } from './cdp.mjs';
 
 export const BASE_INSTAGRAM = 'https://www.instagram.com';
 export const MINIMO_DE_POSTS = 12;
-const PRAZO_DA_PAGINA_MS = 15000;
+export const PRAZO_DA_PAGINA_MS = 15000;
 const ROLAGENS = 3;
 
 // "@nome", "nome" ou o endereço do perfil viram só "nome".
@@ -39,29 +39,37 @@ export function codigoDoPost(href) {
   return '';
 }
 
-// Roda dentro da página do perfil.
-function lerPerfilNaPagina() {
+// Roda dentro da página do perfil. Com login, a página também traz publicações no JSON embutido.
+export function lerPerfilNaPagina() {
   const links = [...document.querySelectorAll('a[href]')]
     .map((a) => a.href)
     .filter((h) => h.includes('/p/') || h.includes('/reel/'));
   const jsons = [...document.querySelectorAll('script[type="application/json"]')]
     .map((s) => s.textContent || '')
     .filter((t) => t.includes('"biography"'));
+  const jsonsDePosts = [...document.querySelectorAll('script[type="application/json"]')]
+    .map((s) => s.textContent || '')
+    .filter((t) => t.includes('"taken_at"'));
   const meta = (p) => document.querySelector(`meta[property="${p}"]`)?.getAttribute('content') || '';
-  return { links, jsons, descricao: meta('og:description'), foto: meta('og:image'), titulo: document.title };
+  return { links, jsons, jsonsDePosts, descricao: meta('og:description'), foto: meta('og:image'), titulo: document.title };
 }
 
-function contarLinks() {
+export function contarLinks() {
   return [...document.querySelectorAll('a[href]')].filter((a) => a.href.includes('/p/') || a.href.includes('/reel/')).length;
 }
 
-function rolar() {
+// Rola e espera dois quadros: o evento de rolagem da página já rodou quando volta (com teto, para uma
+// aba sem quadros não prender a leitura).
+export function rolar() {
   window.scrollBy(0, window.innerHeight * 3);
-  return true;
+  return new Promise((pronto) => {
+    setTimeout(() => pronto(true), 1000);
+    requestAnimationFrame(() => requestAnimationFrame(() => pronto(true)));
+  });
 }
 
 // Roda dentro da página de uma publicação.
-function lerPostNaPagina() {
+export function lerPostNaPagina() {
   const meta = (p) =>
     document.querySelector(`meta[property="${p}"]`)?.getAttribute('content') ||
     document.querySelector(`meta[name="${p}"]`)?.getAttribute('content') ||
@@ -74,25 +82,49 @@ function lerPostNaPagina() {
   return pronto ? { jsons, datas, descricao: meta('og:description') || meta('description'), foto: meta('og:image') } : null;
 }
 
-// Nome, bio e links do perfil, do JSON embutido.
-export function dadosDoPerfil(lido, usuario) {
-  let perfil = null;
-  for (const texto of lido.jsons || []) {
-    const achados = acharObjetos(jsonOuNada(texto), (o) => typeof o.biography === 'string' && 'full_name' in o, 20);
-    perfil = achados.find((o) => String(o.username || '').toLowerCase() === usuario) || achados[0] || perfil;
-    if (perfil) break;
+// O objeto de usuário do perfil pedido, e só dele: a página (sobretudo com login) também traz a conta
+// de quem entrou e contas sugeridas, e nenhum dado delas pode entrar. Entre os objetos com o mesmo
+// @, prefere o que tem a bio.
+export function usuarioDoPerfil(textos, usuario) {
+  const alvo = String(usuario || '').toLowerCase();
+  if (!alvo) return null;
+  const ehOPedido = (o) => typeof o.username === 'string' && o.username.toLowerCase() === alvo;
+  let achado = null;
+  for (const texto of textos || []) {
+    for (const o of acharObjetos(jsonOuNada(texto), ehOPedido, 50)) {
+      if (typeof o.biography === 'string') return o;
+      achado = achado || o;
+    }
   }
+  return achado;
+}
+
+// Sem o objeto do perfil no JSON: o nome sai do título da página, "Nome (@usuario) • Instagram",
+// e só se o título for desse @. Bio e links ficam vazios (as etiquetas não trazem).
+export function nomeDoTitulo(titulo, usuario) {
+  const t = String(titulo || '');
+  const marca = ` (@${String(usuario || '').toLowerCase()})`;
+  const fim = t.toLowerCase().indexOf(marca);
+  return usuario && fim > 0 ? t.slice(0, fim).trim() : '';
+}
+
+// Nome, bio e links do perfil pedido: do JSON embutido, só do objeto com o mesmo @; sem ele, das
+// etiquetas da página do perfil. Nunca de outra conta.
+export function dadosDoPerfil(lido, usuario) {
+  const perfil = usuarioDoPerfil(lido.jsons, usuario);
   const links = [];
   if (perfil) {
     for (const b of perfil.bio_links || []) if (b && typeof b.url === 'string' && b.url) links.push(b.url);
     if (typeof perfil.external_url === 'string' && perfil.external_url && !links.includes(perfil.external_url)) links.push(perfil.external_url);
   }
+  const nome = perfil && typeof perfil.full_name === 'string' ? perfil.full_name : nomeDoTitulo(lido.titulo, usuario);
   return {
     usuario,
-    nome: perfil ? String(perfil.full_name || '') : '',
-    bio: perfil ? perfil.biography : '',
+    nome,
+    bio: perfil && typeof perfil.biography === 'string' ? perfil.biography : '',
     links,
     resumo: lido.descricao || '',
+    de: perfil ? 'json' : 'etiquetas',
   };
 }
 
@@ -113,7 +145,21 @@ export function legendaDaDescricao(descricao) {
   return ini !== -1 && fim > ini + 2 ? t.slice(ini + 3, fim) : '';
 }
 
-const dataDoSegundo = (s) => new Date(Number(s) * 1000).toISOString().slice(0, 10);
+export const dataDoSegundo = (s) => new Date(Number(s) * 1000).toISOString().slice(0, 10);
+
+// Uma publicação a partir do item do JSON do Instagram: legenda, data e a maior foto de cada parte.
+export function postDoItem(item, codigo, url) {
+  const partes = Array.isArray(item.carousel_media) && item.carousel_media.length ? item.carousel_media : [item];
+  return {
+    codigo,
+    url,
+    data: dataDoSegundo(item.taken_at),
+    legenda: (item.caption && item.caption.text) || '',
+    video: item.media_type === 2,
+    fotos: partes.map(melhorFoto).filter(Boolean),
+    de: 'json',
+  };
+}
 
 // Legenda, data e fotos de uma publicação.
 export function dadosDoPost(lido, codigo, url) {
@@ -125,18 +171,7 @@ export function dadosDoPost(lido, codigo, url) {
       break;
     }
   }
-  if (item) {
-    const partes = Array.isArray(item.carousel_media) && item.carousel_media.length ? item.carousel_media : [item];
-    return {
-      codigo,
-      url,
-      data: dataDoSegundo(item.taken_at),
-      legenda: (item.caption && item.caption.text) || '',
-      video: item.media_type === 2,
-      fotos: partes.map(melhorFoto).filter(Boolean),
-      de: 'json',
-    };
-  }
+  if (item) return postDoItem(item, codigo, url);
   const data = (lido.datas || []).find(Boolean) || '';
   return {
     codigo,
@@ -187,7 +222,7 @@ export async function lerInstagram(leitor, entrada, { base = BASE_INSTAGRAM, max
 }
 
 // Cada foto vai para <pasta>/<código>-<n>.jpg; a publicação volta com o arquivo e o tamanho real.
-async function baixarFotos(posts, pasta) {
+export async function baixarFotos(posts, pasta) {
   const fotos = [];
   const novos = [];
   for (const post of posts) {
