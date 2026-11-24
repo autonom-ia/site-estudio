@@ -34,12 +34,14 @@ function portaLivre() {
 // de testes não tem nenhuma), e a mesma foto em toda máquina. Desde o Chrome 137 o Chrome não cai
 // mais sozinho no SwiftShader quando falta placa: sem "--enable-unsafe-swiftshader" a página fica
 // sem WebGL e a parte 3D sai vazia (ou na imagem de reserva). O "unsafe" é sobre página de fora
-// rodando no desenhista por software: só o navegador que abre as páginas do próprio site liga
-// (com3d). O leitor, que abre sites da internet, abre sem.
+// rodando no desenhista por software. Por isso as chaves vêm desligadas (com3d: false) e só a
+// sessão das conferências liga (lib/sessao.mjs): ela abre só o site da pasta, servido no próprio
+// computador, e recusa todo pedido para fora dele. O leitor, que abre sites da internet, e o
+// "verificar" abrem sem.
 export const ARGS_3D = Object.freeze(['--use-angle=swiftshader', '--enable-unsafe-swiftshader']);
 
 // Os argumentos do navegador sem janela (separados para o teste conferir as chaves do 3D).
-export function argumentos({ caminho, porta, perfil, largura, altura, com3d = true }) {
+export function argumentos({ caminho, porta, perfil, largura, altura, com3d = false }) {
   const args = [
     ehShell(caminho) ? '--headless' : '--headless=new',
     `--remote-debugging-port=${porta}`,
@@ -60,7 +62,7 @@ export function argumentos({ caminho, porta, perfil, largura, altura, com3d = tr
 }
 
 // Abre o navegador. largura/altura = tamanho da janela (viewport inicial). com3d: ver ARGS_3D.
-export async function launch({ largura = 1920, altura = 1080, com3d = true } = {}) {
+export async function launch({ largura = 1920, altura = 1080, com3d = false } = {}) {
   const achado = acharNavegador();
   if (!achado) falha('CHROME_NAO_ACHADO', {});
   const porta = await portaLivre();

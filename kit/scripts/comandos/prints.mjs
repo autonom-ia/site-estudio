@@ -8,7 +8,8 @@
 // estava gravando (ENOENT no rmSync) e as fotos se misturavam. Agora o segundo recebe
 // PRINTS_EM_ANDAMENTO e a limpeza não quebra com foto que já sumiu.
 // Partes em 3D (palco com data-3d): a foto espera a cena abrir e confere o palco. Cena que não
-// abriu (sem "reduzir movimento") dá CENA_3D_NAO_ABRIU; cena aberta mas lisa dá CENA_3D_VAZIA.
+// abriu (sem "reduzir movimento") dá CENA_3D_NAO_ABRIU; cena aberta mas lisa dá CENA_3D_VAZIA;
+// palco que ficou fora da foto (abaixo do limite de altura, ou sem tamanho) dá CENA_3D_FORA_DA_FOTO.
 import fs from 'node:fs';
 import path from 'node:path';
 import { nomeDoSite, inteiro } from '../lib/args.mjs';
@@ -26,7 +27,7 @@ const ALTURA_MAXIMA = 16000; // px: acima disso o navegador não fotografa de um
 const LIMITE_LISA = 0.985;
 const AMOSTRA = 0.1;
 const AMOSTRA_3D = 0.25; // o palco 3D é menor que a página: amostra mais fina, para não perder raio fino
-const TETO_3D_MS = 15000; // tempo máximo para as cenas 3D abrirem (o desenhista por software é lento)
+const TETO_3D_MS = 15000; // tempo máximo para cada cena 3D abrir (o desenhista por software é lento)
 
 async function fotografar(tab, recorte, qualidade) {
   const r = await tab.send('Page.captureScreenshot', {
@@ -72,14 +73,15 @@ function limparNome(texto) {
 async function conferirCenas3d(sessao, alturaFoto, reduzido) {
   const saida = [];
   for (const p of await sessao.avaliar(cenas3d)) {
-    const dados = { cena: p.cena, estado: p.estado };
-    if (p.estado !== 'pronta') {
-      saida.push({ dados, aviso: reduzido ? null : 'CENA_3D_NAO_ABRIU' });
-      continue;
-    }
+    const dados = { cena: p.cena, estado: p.estado, motivo: p.motivo };
     const altura = Math.min(p.altura, alturaFoto - p.y);
     if (p.largura < 8 || altura < 8) {
-      saida.push({ dados, aviso: null });
+      dados.estado = 'fora-da-foto';
+      saida.push({ dados, aviso: 'CENA_3D_FORA_DA_FOTO' });
+      continue;
+    }
+    if (p.estado !== 'pronta') {
+      saida.push({ dados, aviso: reduzido ? null : 'CENA_3D_NAO_ABRIU' });
       continue;
     }
     const est = await lisa(sessao.tab, { x: p.x, y: p.y, width: p.largura, height: altura }, AMOSTRA_3D);

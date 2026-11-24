@@ -54,17 +54,32 @@ export function prenderParaFoto() {
   return { presos, altura: document.documentElement.scrollHeight };
 }
 
-// Espera as partes em 3D (palcos com data-3d) terminarem de abrir antes da foto. O "assentar" já
-// rolou a página inteira, então todo palco foi visto e começou a baixar a cena. Espera até nenhum
-// estar "carregando" (com teto), mais dois quadros, e termina a troca suave da reserva para a cena.
-// Lição: sem esperar, a foto saía com o palco vazio (a cena ainda baixando) ou no meio da troca.
-export async function esperarCenas3d(tetoMs) {
+// Espera as partes em 3D (palcos com data-3d) terminarem antes da foto: cada palco até ficar
+// "pronta" ou até a página dizer por que ficou na reserva (data-3d-motivo), com prazo por palco.
+// Palco que ainda nem começou (o vigia de rolagem não o viu) é trazido à tela para começar.
+// Lição: sem esperar, a foto saía com o palco vazio (a cena ainda baixando) ou no meio da troca;
+// e esperar só os "carregando" deixava passar o palco que ainda não tinha começado.
+export async function esperarCenas3d(tetoPorPalcoMs) {
   const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
   const quadro = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   const palcos = [...document.querySelectorAll('[data-3d]')];
   if (!palcos.length) return 0;
-  const inicio = Date.now();
-  while (Date.now() - inicio < tetoMs && palcos.some((p) => p.getAttribute('data-3d-estado') === 'carregando')) await dormir(100);
+  const terminou = (p) => p.getAttribute('data-3d-estado') === 'pronta' || p.hasAttribute('data-3d-motivo');
+  let rolou = false;
+  for (const p of palcos) {
+    const fim = Date.now() + tetoPorPalcoMs;
+    if (!terminou(p) && p.getAttribute('data-3d-estado') !== 'carregando') {
+      p.scrollIntoView({ block: 'center', behavior: 'instant' });
+      rolou = true;
+    }
+    while (Date.now() < fim && !terminou(p)) await dormir(100);
+  }
+  if (rolou) {
+    for (let k = 0; k < 10 && scrollY !== 0; k += 1) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      await quadro();
+    }
+  }
   await quadro();
   for (const a of document.getAnimations()) {
     try {
@@ -84,6 +99,7 @@ export function cenas3d() {
     return {
       cena: p.getAttribute('data-3d'),
       estado: p.getAttribute('data-3d-estado') || 'sem-estado',
+      motivo: p.getAttribute('data-3d-motivo') || '',
       x: Math.max(0, r.left + scrollX),
       y: Math.max(0, r.top + scrollY),
       largura: Math.min(r.width, innerWidth),

@@ -52,11 +52,38 @@ test('a conta do 3D passa abaixo do limite e reprova acima, no código e em cada
   escrever(path.join(pesado, 'assets', '3d', 'peca.gltf'), 10 * KB);
   escrever(path.join(pesado, 'img', 'carro.glb'), 1600 * KB);
   const r = conferir3d(pesado);
-  assert.deepEqual(r.acima.map((a) => a.arquivo).sort(), ['assets/3d', 'img/carro.glb']);
+  assert.deepEqual(r.acima.map((a) => a.arquivo).sort(), ['codigo-3d', 'img/carro.glb']);
   const red = [];
   anotar3d(pesado, red);
   assert.deepEqual(red.map((v) => v.tipo), ['3d-pesado', '3d-pesado']);
   assert.ok(red.every((v) => v.detalhe.includes('limite')), JSON.stringify(red));
+});
+
+test('conta toda biblioteca que fala com o WebGL, em qualquer pasta, e soma o .gltf com os .bin e texturas dele', () => {
+  const site = path.join(base, 'vendor');
+  // biblioteca 3D copiada para vendor: o texto dela cita webgl, então conta mesmo fora de assets/3d
+  const biblioteca = Buffer.concat([Buffer.from('/* getContext("webgl2") */'), crypto.randomBytes(205 * KB)]);
+  fs.mkdirSync(path.join(site, 'assets', 'vendor', 'tres'), { recursive: true });
+  fs.writeFileSync(path.join(site, 'assets', 'vendor', 'tres', 'tres.min.js'), biblioteca);
+  // movimento comum (sem WebGL) não conta
+  escrever(path.join(site, 'assets', 'vendor', 'gsap', 'gsap.min.js'), 300 * KB);
+  const r = conferir3d(site);
+  assert.deepEqual(r.codigo, ['assets/vendor/tres/tres.min.js']);
+  assert.deepEqual(r.acima.map((a) => a.arquivo), ['codigo-3d']);
+
+  const comModelo = path.join(base, 'gltf');
+  fs.mkdirSync(path.join(comModelo, 'modelos'), { recursive: true });
+  fs.writeFileSync(path.join(comModelo, 'modelos', 'peca.gltf'), JSON.stringify({ buffers: [{ uri: 'peca.bin' }, { uri: 'data:application/octet-stream;base64,AAAA' }], images: [{ uri: 'tex/cor.png' }] }));
+  escrever(path.join(comModelo, 'modelos', 'peca.bin'), 1000 * KB);
+  escrever(path.join(comModelo, 'modelos', 'tex', 'cor.png'), 600 * KB);
+  escrever(path.join(comModelo, 'modelos', 'solto.bin'), 10 * KB);
+  const m = conferir3d(comModelo);
+  // o .gltf sozinho é pequeno; com o .bin e a textura passa de 1,5 MB. O .bin citado não conta duas vezes.
+  assert.deepEqual(m.modelos.map((x) => x.arquivo).sort(), ['modelos/peca.gltf', 'modelos/solto.bin']);
+  assert.deepEqual(m.acima.map((x) => x.arquivo), ['modelos/peca.gltf']);
+  const red = [];
+  anotar3d(comModelo, red);
+  assert.ok(red[0].detalhe.includes('modelos/peca.bin') && red[0].detalhe.includes('modelos/tex/cor.png'), red[0].detalhe);
 });
 
 test('o checar reprova o site com 3D acima do limite (3d-pesado)', { skip: SEM_NAVEGADOR ? 'sem Chrome, Edge ou Chromium nesta máquina' : false, timeout: 200000 }, () => {
