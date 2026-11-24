@@ -35,7 +35,27 @@ export function processosVivos(pids) {
   });
 }
 
-function encerrar(pid) {
+// Nome do programa de um processo no Windows, pelo tasklist (CSV: "nome","pid",...). '' se não achar.
+export function nomeNoTasklist(saida) {
+  const linha = String(saida || '').trim().split('\n')[0] || '';
+  if (!linha.startsWith('"')) return '';
+  return linha.slice(1).split('"')[0].toLowerCase();
+}
+
+// No Windows, o número de um processo que saiu é reaproveitado logo: antes de encerrar, confere que
+// o número ainda é do mesmo programa do navegador (nunca encerrar o processo de outra pessoa).
+function aindaEhDoNavegador(pid, executavel) {
+  if (!EH_WINDOWS) return true;
+  try {
+    const r = spawnSync('tasklist', ['/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH'], { encoding: 'utf8', windowsHide: true });
+    return nomeNoTasklist(r.stdout) === path.basename(executavel).toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
+function encerrar(pid, executavel) {
+  if (!aindaEhDoNavegador(pid, executavel)) return;
   try {
     process.kill(pid, 'SIGKILL');
   } catch {
@@ -210,7 +230,7 @@ export async function launch({ largura = 1920, altura = 1080, perfil = '', comJa
     close();
     const vivos = processosVivos(processos.map((p) => p.pid));
     sobraram = processos.filter((p) => vivos.includes(p.pid)).map((p) => p.tipo);
-    for (const pid of vivos) encerrar(pid);
+    for (const pid of vivos) encerrar(pid, achado.caminho);
     // encerrar é um pedido ao sistema: espera os encerrados sumirem de fato
     await esperarSumirem(vivos, Date.now() + TETO_ENCERRAR_MS);
     return calmo;

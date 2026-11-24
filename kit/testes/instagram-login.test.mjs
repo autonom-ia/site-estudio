@@ -16,7 +16,7 @@ import { lugarPadrao, perfilEmUso, sairDaConta, criarPerfil, migrarPerfilAntigo,
 import { detalheDoErro, lerFontes } from '../scripts/lib/ler.mjs';
 import { acharNavegadorComJanela } from '../scripts/lib/chrome.mjs';
 import { KitErro } from '../scripts/lib/saida.mjs';
-import { argumentosDoNavegador, processosVivos, ehEscritor } from '../scripts/lib/cdp.mjs';
+import { argumentosDoNavegador, processosVivos, ehEscritor, nomeNoTasklist } from '../scripts/lib/cdp.mjs';
 import { EH_MAC, EH_WINDOWS } from '../scripts/lib/caminhos.mjs';
 import { respostaDaGrade, itemLogado, USUARIO_LOGADO, USUARIO_DESAFIO, TOTAL_LOGADO, LARGURA_MAIOR, PROTECAO, codigoLogado, codigoDesafio } from './fixtures/instagram-logado.mjs';
 
@@ -121,6 +121,14 @@ test('processos vivos: só pergunta, e separa o que existe do que já saiu', () 
   assert.deepEqual(processosVivos([process.pid, 2147483646]), [process.pid]);
   assert.deepEqual(processosVivos([]), []);
   assert.deepEqual(processosVivos(undefined), []);
+});
+
+test('Windows: o nome do programa sai da linha do tasklist, para não encerrar número reaproveitado', () => {
+  assert.equal(nomeNoTasklist('"chrome.exe","4242","Console","1","120.000 K"\r\n'), 'chrome.exe');
+  assert.equal(nomeNoTasklist('"Notepad.EXE","4242","Console","1","1 K"'), 'notepad.exe');
+  assert.equal(nomeNoTasklist('INFO: No tasks are running which match the specified criteria.'), '');
+  assert.equal(nomeNoTasklist(''), '');
+  assert.equal(nomeNoTasklist(undefined), '');
 });
 
 test('serviços que gravam no perfil: rede e armazenamento; páginas e GPU não', () => {
