@@ -331,6 +331,10 @@
     "texto": "Ainda falta você escolher entre o antes e o depois da última mudança.",
     "acao": "A pessoa ainda não respondeu o \"Qual fica?\". Não guarde um antes novo por cima: rode ./estudio escolher <nome> com depois, antes ou outro, conforme a resposta. Só use --de-novo se a pessoa pediu para partir do site como está agora. Se dados.restauracao_pendente for true, nem --de-novo serve: uma volta ao antes parou no meio e a versão vista inteira só está em tentativa/. Termine a volta com o mesmo ./estudio escolher <nome> que parou (ou escolher depois, para ficar com a versão vista) antes de guardar outro antes."
   },
+  "ANTES_NAO_TROCADO": {
+    "texto": "Não consegui guardar a versão de antes agora. O site não mudou.",
+    "acao": "dados.erro diz por quê (no Windows, quase sempre um arquivo da comparação anterior aberto em outro programa, como a página do antes e depois no navegador ou uma foto num editor). A comparação anterior foi fechada e não serve mais para o escolher. Peça para fechar o que estiver usando esses arquivos e rode ./estudio antes <nome> de novo antes de mudar qualquer coisa no site. Não apague nada com final .guardando, .trocando ou .descartando."
+  },
   "ANTES_JA_RESOLVIDO": {
     "texto": "Essa comparação já foi resolvida. Vou guardar o site de agora antes de mudar de novo.",
     "acao": "A pessoa já escolheu (dados.escolha). Para outra mudança, rode ./estudio antes <nome> primeiro. Para desfazer algo depois da escolha, mude as fontes à mão e monte."

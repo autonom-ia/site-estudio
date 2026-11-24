@@ -407,18 +407,21 @@ test('teto de tempo também no Instagram: sem tempo, nem abre; fotos que faltam 
   assert.equal(fs.existsSync(path.join(pasta, 'fotos')), false, 'nenhuma foto pedida');
 }));
 
-test('teto de tempo no Instagram é duro: uma página que nunca abre não segura a leitura, e o que já foi lido fica', async () => {
-  const lerPerfil = { links: ['https://ig.example/p/AAA/', 'https://ig.example/p/BBB/'], jsons: [], jsonsDePosts: [], descricao: '', foto: '', titulo: 'Casa (@casa)' };
+test('teto de tempo no Instagram é duro: uma página que nunca abre não segura a leitura, e o que já foi lido fica; publicação com erro é pulada', async () => {
+  const lerPerfil = { links: ['https://ig.example/p/AAA/', 'https://ig.example/p/ERR/', 'https://ig.example/p/BBB/'], jsons: [], jsonsDePosts: [], descricao: '', foto: '', titulo: 'Casa (@casa)' };
   const leitor = {
-    ir: (url) => (url.includes('/p/BBB/') ? new Promise(() => {}) : Promise.resolve()),
+    ir: (url) => {
+      if (url.includes('/p/ERR/')) return Promise.reject(new Error('a página não terminou de carregar'));
+      return url.includes('/p/BBB/') ? new Promise(() => {}) : Promise.resolve();
+    },
     avaliar: async (fn) => (fn.name === 'lerPerfilNaPagina' ? lerPerfil : true),
     esperarAte: async (fn) => (fn.name === 'lerPostNaPagina' ? { jsons: [], descricao: '', datas: ['2026-11-01T10:00:00'], foto: '' } : 2),
   };
   const inicio = Date.now();
-  const r = await lerInstagram(leitor, 'casa', { base: 'https://ig.example', maximo: 2, pausa: 0, prazo: Date.now() + 500 });
+  const r = await lerInstagram(leitor, 'casa', { base: 'https://ig.example', maximo: 3, pausa: 0, prazo: Date.now() + 500 });
   assert.ok(Date.now() - inicio < 3000, `parou em ${Date.now() - inicio} ms`);
   assert.equal(r.esgotou, true);
-  assert.deepEqual(r.posts.map((p) => p.codigo), ['AAA']);
+  assert.deepEqual(r.posts.map((p) => p.codigo), ['AAA'], 'a que não abriu fica de fora e a leitura segue');
   const nada = { ...leitor, ir: () => new Promise(() => {}) };
   await assert.rejects(lerInstagram(nada, 'casa', { base: 'https://ig.example', prazo: Date.now() + 200 }), (e) => e instanceof TempoEsgotado);
 });

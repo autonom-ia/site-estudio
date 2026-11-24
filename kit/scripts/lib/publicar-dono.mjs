@@ -83,16 +83,19 @@ export function anotarDono(c, endereco, registro, ferr = FERR) {
 }
 
 // O que está no ar é o que esta pasta pôs? Com envio pendente (o processo pode ter caído no meio),
-// vale a versão que ela tinha ou a ÚNICA versão nova desde que o envio começou (a deste envio). Duas
-// ou mais novas: alguém mais publicou ali, e não dá para saber qual é desta pasta. Sem a lista de
-// antes do envio, só vale a versão que ela tinha.
+// vale a versão que ela tinha ou a ÚNICA versão nova desde que o envio começou, se tiver o tamanho do
+// pacote deste envio (envio_bytes): uma versão nova de outro tamanho é de outro lugar, e duas ou mais
+// novas querem dizer que alguém mais publicou ali. Sem a lista de antes do envio, só vale a versão
+// que ela tinha.
 function bate(registro, situacao) {
   if (situacao.versao === null) return true;
   const antes = registro.pendente === true && Array.isArray(registro.versoes_antes) ? registro.versoes_antes : null;
   if (!antes) return registro.versao === situacao.versao;
   const novas = situacao.versoes.filter((v) => !antes.includes(v));
   if (!novas.length) return registro.versao === situacao.versao;
-  return novas.length === 1 && novas[0] === situacao.versao;
+  if (novas.length !== 1 || novas[0] !== situacao.versao) return false;
+  const tamanho = (situacao.tamanhos || {})[situacao.versao];
+  return Number.isInteger(registro.envio_bytes) && tamanho === registro.envio_bytes;
 }
 
 // Outras pastas deste computador com registro para este endereço, primeiro a que pôs no ar o que está

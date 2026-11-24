@@ -229,3 +229,19 @@ test('antes guardado sem _gerador/: voltar ao antes tira o _gerador/ que aparece
   assert.equal(r.json.codigo, 'VOLTOU_COMO_ESTAVA');
   assert.equal(fs.existsSync(gerador), false);
 });
+
+test('"antes" que não consegue trocar reprova com código, o site não muda e a comparação anterior fica fechada', { skip: SEM_CHMOD }, (t) => {
+  const { env, arq } = siteDeTeste(t);
+  const revisao = path.join(arq.pasta, 'revisao');
+  t.after(() => fs.existsSync(revisao) && fs.chmodSync(revisao, 0o700));
+  estudio(env, 'antes', 'loja');
+  mudar(arq, '#aaa');
+  fs.chmodSync(revisao, 0o500);
+  const r = estudio(env, 'antes', 'loja', '--de-novo');
+  assert.deepEqual([r.codigo, r.json.codigo], [2, 'ANTES_NAO_TROCADO'], JSON.stringify(r.json));
+  assert.ok(r.json.dados.erro);
+  assert.equal(ler(arq.css), 'body{background:#aaa}', 'o site não mudou');
+  fs.chmodSync(revisao, 0o700);
+  assert.equal(estudio(env, 'escolher', 'loja', 'antes').json.codigo, 'ANTES_JA_RESOLVIDO', 'a comparação anterior não é usada');
+  assert.equal(estudio(env, 'antes', 'loja').json.codigo, 'ANTES_GUARDADO', 'rodar de novo termina');
+});

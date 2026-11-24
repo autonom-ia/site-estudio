@@ -48,7 +48,7 @@ test('1. concluir sem resposta, site mudado depois: a versão nova sobe (nunca P
   assert.ok(index.dados.toString('utf8').includes('Novo'), 'o que está no ar é a versão nova');
 });
 
-test('1b. concluir sem resposta e a versão nova no ar é de outro pacote (outro tamanho): manda de novo', async (t) => {
+test('1b. concluir sem resposta e a versão nova no ar é de outro pacote (outro tamanho): é de outro lugar, pede --por-cima', async (t) => {
   const ctx = await preparar(t);
   darChave(ctx);
   const e = ctx.servico.estado;
@@ -58,7 +58,9 @@ test('1b. concluir sem resposta e a versão nova no ar é de outro pacote (outro
   e.publicados.push({ slug: NOME, versao: 1, zip: Buffer.from('outra coisa') });
   e.noAr.set(NOME, 1);
   const r = await ctx.publicar();
-  assert.deepEqual([r.json.codigo, r.json.dados.versao, e.aberturas], ['PUBLICADO', 2, 2], r.saida);
+  assert.deepEqual([r.json.codigo, r.json.dados.versao_no_ar, e.aberturas], ['PUBLICAR_ENDERECO_JA_EM_USO', 1, 1], r.saida);
+  const s = await ctx.publicar('--por-cima');
+  assert.deepEqual([s.json.codigo, s.json.dados.versao, e.aberturas], ['PUBLICADO', 2, 2], s.saida);
 });
 
 test('1c. impressão do envio é do conteúdo (nomes e bytes), não do zip: só a data mudar não manda de novo', async (t) => {

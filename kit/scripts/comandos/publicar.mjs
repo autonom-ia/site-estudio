@@ -18,8 +18,9 @@
 // em .ferramentas/publicar/donos.json, pelo caminho da pasta e pelo endereço). Senão reprovam com
 // PUBLICAR_ENDERECO_JA_EM_USO ou PUBLICAR_PASTA_MUDOU até ela dizer --por-cima ou escolher --no-ar.
 // O envio é registrado como "pendente" antes de mandar, com as versões que o endereço já tinha: se o
-// processo cair no meio, a próxima vez sabe que a única versão nova que apareceu ali pode ser desta
-// pasta (duas ou mais novas: alguém mais publicou, e a conferência reprova). Recusa do painel antes
+// processo cair no meio, a próxima vez sabe que a única versão nova que apareceu ali, com o tamanho
+// do pacote deste envio, é desta pasta (de outro tamanho, ou duas ou mais novas: alguém mais
+// publicou, e a conferência reprova). Recusa do painel antes
 // de publicar desfaz o registro; --voltar registra a versão que ficou no ar.
 // Sem chave guardada, começa o login por código (lib/publicar-login.mjs) e devolve
 // PUBLICAR_AGUARDANDO_LOGIN; a próxima chamada continua o mesmo pedido. Se a aprovação chegou durante a
@@ -89,7 +90,7 @@ async function enviarRegistrando(cfg, chave, c, noAr, pacote, situacao) {
   const lembrete = lembreteAtual(c);
   const registro = lerDono(c, noAr);
   anotarNoAr(c, { ...(lembrete && lembrete.nome === noAr ? lembrete : {}), nome: noAr, em: new Date().toISOString() });
-  anotarDono(c, noAr, { ...(registro || {}), pendente: true, versoes_antes: situacao.versoes });
+  anotarDono(c, noAr, { ...(registro || {}), pendente: true, versoes_antes: situacao.versoes, envio_bytes: pacote.zip.length });
   try {
     return await enviarPacote(cfg, chave, noAr, pacote);
   } catch (erro) {

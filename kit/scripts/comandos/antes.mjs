@@ -9,8 +9,10 @@
 // Guardar um antes novo apaga o da comparação anterior (o antes, a página do depois e a versão vista):
 // dados.apagados diz o que havia, para o assistente nunca prometer uma versão que já saiu.
 // Nada é apagado antes de o novo estar inteiro: a comparação nova é montada ao lado e entra no lugar
-// da anterior de uma vez (lib/antes-depois.mjs, trocarPasta). A anterior é fechada antes da troca,
-// para uma falha no meio nunca juntar o antes de uma com as fontes do gerador da outra.
+// da anterior de uma vez (lib/antes-depois.mjs, trocarPasta). A anterior é fechada antes da troca:
+// se a troca falha no meio (no Windows, um arquivo aberto em outro programa), reprova com
+// ANTES_NAO_TROCADO, o site não muda, e o "escolher" nunca volta com o antes de uma e as fontes do
+// gerador da outra. Rodar "antes" de novo termina.
 import fs from 'node:fs';
 import path from 'node:path';
 import { nomeDoSite } from '../lib/args.mjs';
@@ -56,7 +58,12 @@ export default async function antes(args) {
     .filter(([, pasta]) => ehPasta(pasta)).map(([nomeDoItem]) => nomeDoItem);
   const temGerador = ehPasta(c.gerador);
   if (ehPasta(ad.pasta)) escreverJson(ad.estado, { aberto: false, escolha: estado.escolha || '' });
-  const sobras = [trocarCopia(c.gerador, ad.gerador), trocarComparacao(c, ad, temGerador)].filter(Boolean);
+  let sobras;
+  try {
+    sobras = [trocarCopia(c.gerador, ad.gerador), trocarComparacao(c, ad, temGerador)].filter(Boolean);
+  } catch (erro) {
+    reprovado('ANTES_NAO_TROCADO', { nome, erro: erro.code || String(erro.message || erro) });
+  }
   return {
     ok: true,
     codigo: 'ANTES_GUARDADO',

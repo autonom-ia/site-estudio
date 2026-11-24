@@ -206,7 +206,8 @@ const SEM_PRAZO = Number.POSITIVE_INFINITY;
 // Lê o perfil e as publicações. pasta: onde salvar as fotos. prazo: hora (Date.now) em que a leitura
 // inteira acaba (lib/ler.mjs); passou dela, para e devolve o que já leu, com esgotou: cada passo no
 // navegador espera só até o prazo, e o que já foi lido fica. Se o prazo acaba antes da lista de
-// publicações, não há nada lido, e o TempoEsgotado sobe. Devolve
+// publicações, não há nada lido, e o TempoEsgotado sobe. Publicação que não abre (erro do navegador)
+// fica de fora, e a leitura segue para a próxima. Devolve
 // { perfil, posts, fotos, esgotou }. permitirEnderecoLocal: só os testes (que servem as fotos em
 // 127.0.0.1) ligam.
 export async function lerInstagram(leitor, entrada, { base = BASE_INSTAGRAM, maximo = 24, pasta, pausa = 1500, aoAvancar = () => {}, permitirEnderecoLocal = false, prazo = SEM_PRAZO } = {}) {
@@ -230,7 +231,7 @@ export async function lerInstagram(leitor, entrada, { base = BASE_INSTAGRAM, max
       await passo(leitor.ir(href));
       lidoPost = await passo(leitor.esperarAte(lerPostNaPagina, PRAZO_DA_PAGINA_MS));
     } catch (e) {
-      if (!(e instanceof TempoEsgotado)) throw e;
+      if (!(e instanceof TempoEsgotado)) continue;
       esgotou = true;
       break;
     }
