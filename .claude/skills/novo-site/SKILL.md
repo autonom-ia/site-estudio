@@ -198,6 +198,7 @@ Pergunte uma vez: "Quer guardar algo deste site como regra para os próximos? (u
    - "O depois": `FICOU_O_DEPOIS`. Grave no `andamento.md` o que ficou.
    - "Voltar como estava": `VOLTOU_COMO_ESTAVA`. O site e o `_gerador/` voltaram ao que o passo 1 guardou; abra o site de novo.
    - "Outro caminho": `PRONTO_PARA_OUTRO_CAMINHO`. O site voltou ao original e o antes continua guardado. Pule o passo 1: faça outra leitura do pedido a partir do passo 2, e a nova comparação mostra o original contra a tentativa nova.
+   - Nos dois casos de volta, a versão que a pessoa viu fica em `revisao/antes-depois/tentativa/` até o próximo `antes`. `RESTAURACAO_FALHOU` (saída 2): a volta não terminou (no Windows, um arquivo do site aberto em outro programa); faça a `acao` e rode o mesmo `escolher` de novo. Nunca apague pasta com final `.trocando` ou `.descartando`: o estúdio põe tudo de volta sozinho ao abrir o site (`SITE_POSTO_DE_VOLTA`).
 
 ## Mudar um site que já existe
 

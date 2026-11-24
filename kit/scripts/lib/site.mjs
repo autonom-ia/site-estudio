@@ -3,7 +3,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { pastaSites, relativoARaiz, ehPasta, listarArquivos } from './caminhos.mjs';
-import { falha } from './saida.mjs';
+import { falha, avisarNaSaida } from './saida.mjs';
+import { recuperarSobras } from './antes-depois.mjs';
 
 export function caminhosDo(nome, base = pastaSites()) {
   const pasta = path.join(base, nome);
@@ -27,10 +28,13 @@ export function caminhosDo(nome, base = pastaSites()) {
   };
 }
 
-// Site existente, sem exigir que já tenha sido montado.
+// Site existente, sem exigir que já tenha sido montado. Antes, põe de volta no lugar o que uma troca
+// do "escolher" parada no meio deixou fora (lib/antes-depois.mjs, recuperarSobras), com um aviso.
 export function abrirPastaDoSite(nome) {
   const c = caminhosDo(nome);
   if (!ehPasta(c.pasta)) falha('SITE_NAO_ACHADO', { nome, pasta: relativoARaiz(c.pasta) });
+  const voltaram = recuperarSobras(c);
+  if (voltaram.length) avisarNaSaida('SITE_POSTO_DE_VOLTA', { nome, pastas: voltaram });
   return c;
 }
 
