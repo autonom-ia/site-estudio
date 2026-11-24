@@ -76,6 +76,22 @@
       },
       "noCelular": "Dia e hora em letra grande, ponto de encontro com os botões de rota e a inscrição no fim.",
       "naoTrazer": "O mapa mundial de eventos e a identidade da rede."
+    },
+    {
+      "id": "stripe",
+      "nome": "Stripe",
+      "link": "https://stripe.com/",
+      "ondeVer": "Já na primeira tela: a faixa de cores atrás do título é desenhada em 3D na própria página (WebGL), e o título e os botões de começar ficam na frente dela.",
+      "ramo": "pagamentos online",
+      "duvida": "Essa empresa é séria e grande o bastante para eu começar com ela?",
+      "principio": "Uma forma da marca desenhada em 3D, atrás do título e sem disputar com ele, dá cara de produto caprichado sem tirar a atenção do texto e do botão de começar.",
+      "comoFazemosAqui": {
+        "padrao": "marca-em-3d",
+        "texto": "Uma forma da marca em 3D ao lado da assinatura, como a roda da demo kit/demos/3d: reage à rolagem e ao ponteiro, discreta, e o botão principal continua na frente."
+      },
+      "noCelular": "A forma menor, encostada no pé da primeira tela, sem empurrar o título nem o botão para baixo.",
+      "naoTrazer": "As cores, a faixa e a marca deles, e 3D espalhado pela página: aqui, uma forma só, no topo.",
+      "conferidaEm": "2026-11-24"
     }
   ]
 }

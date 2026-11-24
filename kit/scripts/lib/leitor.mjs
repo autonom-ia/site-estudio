@@ -17,7 +17,8 @@ const PECAS = Object.freeze({ launch, openTab });
 
 // opcoes: { perfil, navegador } repassados ao launch (perfil guardado e navegador escolhido).
 export async function abrirLeitor(deps = PECAS, opcoes = {}) {
-  const nav = await deps.launch({ largura: LARGURA, altura: ALTURA, ...opcoes });
+  // sites de fora: nunca com o desenhista 3D por software (cdp.mjs, ARGS_3D), nem se pedirem
+  const nav = await deps.launch({ largura: LARGURA, altura: ALTURA, ...opcoes, com3d: false });
   let tab = null;
   try {
     tab = await deps.openTab(nav.porta);

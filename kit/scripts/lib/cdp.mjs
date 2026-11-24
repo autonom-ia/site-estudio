@@ -174,11 +174,23 @@ function portaLivre() {
   });
 }
 
+// 3D nas fotos: o desenho em WebGL é sempre feito pelo SwiftShader, o desenhista por software que
+// vem dentro do Chrome. Igual no Mac, no Linux e no Windows, com ou sem placa de vídeo (o servidor
+// de testes não tem nenhuma), e a mesma foto em toda máquina. Desde o Chrome 137 o Chrome não cai
+// mais sozinho no SwiftShader quando falta placa: sem "--enable-unsafe-swiftshader" a página fica
+// sem WebGL e a parte 3D sai vazia (ou na imagem de reserva). O "unsafe" é sobre página de fora
+// rodando no desenhista por software. Por isso as chaves vêm desligadas (com3d: false) e só a
+// sessão das conferências liga (lib/sessao.mjs): ela abre só o site da pasta, servido no próprio
+// computador, e recusa todo pedido para fora dele. O leitor, que abre sites da internet (inclusive
+// o Instagram com login), e o "verificar" abrem sem.
+export const ARGS_3D = Object.freeze(['--use-angle=swiftshader', '--enable-unsafe-swiftshader']);
+
 // Argumentos de cada jeito de abrir. Sem janela: o mesmo navegador escondido de sempre. Com
 // janela: um Chrome normal, para a pessoa usar. Perfil guardado (login do Instagram): a chave dos
 // cookies não vem do chaveiro do sistema (no Mac, a janela e o modo sem janela usam chaves diferentes
 // e um não leria o login do outro; e o chaveiro pediria a senha do computador à pessoa).
-export function argumentosDoNavegador({ caminho, porta, perfil, comJanela = false, guardado = false, largura, altura }) {
+// com3d: ver ARGS_3D.
+export function argumentosDoNavegador({ caminho, porta, perfil, comJanela = false, guardado = false, largura, altura, com3d = false }) {
   const args = [];
   if (!comJanela) args.push(ehShell(caminho) ? '--headless' : '--headless=new', '--hide-scrollbars', '--mute-audio', '--force-device-scale-factor=1');
   args.push(
@@ -191,6 +203,7 @@ export function argumentosDoNavegador({ caminho, porta, perfil, comJanela = fals
     '--autoplay-policy=no-user-gesture-required',
     `--window-size=${largura},${altura}`,
   );
+  if (com3d) args.push(...ARGS_3D);
   if (guardado) {
     if (EH_MAC) args.push('--use-mock-keychain');
     else if (!EH_WINDOWS) args.push('--password-store=basic');
@@ -203,13 +216,14 @@ export function argumentosDoNavegador({ caminho, porta, perfil, comJanela = fals
 // Abre o navegador. largura/altura = tamanho da janela (viewport inicial).
 // perfil: pasta de perfil guardada (não é apagada ao fechar); sem ela, um perfil temporário.
 // comJanela: Chrome normal, visível. navegador: { caminho } já escolhido. endereco: a primeira página.
-export async function launch({ largura = 1920, altura = 1080, perfil = '', comJanela = false, navegador = null, endereco = 'about:blank' } = {}) {
+// com3d: liga o desenho 3D por software (ver ARGS_3D); só a sessão das conferências usa.
+export async function launch({ largura = 1920, altura = 1080, perfil = '', comJanela = false, navegador = null, endereco = 'about:blank', com3d = false } = {}) {
   const achado = navegador || acharNavegador();
   if (!achado) falha('CHROME_NAO_ACHADO', {});
   const porta = await portaLivre();
   const guardado = Boolean(perfil);
   const pastaPerfil = guardado ? perfil : fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-cdp-'));
-  const args = argumentosDoNavegador({ caminho: achado.caminho, porta, perfil: pastaPerfil, comJanela, guardado, largura, altura });
+  const args = argumentosDoNavegador({ caminho: achado.caminho, porta, perfil: pastaPerfil, comJanela, guardado, largura, altura, com3d });
   const proc = spawn(achado.caminho, [...args, endereco], { stdio: 'ignore', windowsHide: !comJanela });
   let morreu = false;
   const saiu = new Promise((res) => {
