@@ -239,6 +239,10 @@
     "texto": "O site ainda não tem a lista de fatos com a fonte de cada um. Vou montar.",
     "acao": "Crie fatos.md com a tabela Fato | Fonte | Data, a partir do que a pessoa informou."
   },
+  "FATOS_TABELA_ILEGIVEL": {
+    "texto": "Não consegui ler uma das listas de fatos do site. Vou arrumar o jeito dela.",
+    "acao": "Veja dados.arquivo. Há uma linha com Fato e Fonte que não vira tabela: logo abaixo do cabeçalho precisa vir a linha separadora (|---|---|---|), e cada linha de fato com as colunas separadas por barra. Arrume e rode fatos de novo. Enquanto ela não for lida, os números dela contam como sem fonte."
+  },
   "PREFLIGHT_OK": {
     "texto": "O site passou em todas as conferências.",
     "acao": "Siga para os prints e leia cada um."

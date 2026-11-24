@@ -1,5 +1,6 @@
-// Fato com fonte: todo número de 3+ dígitos, palavra com @ e endereço tel:/mailto: que aparece no
-// texto visível de cada página precisa estar em fatos.md, numa linha com a fonte preenchida.
+// Fato com fonte: todo número de 3+ dígitos, número de qualquer tamanho com % ou com mil, milhão ou
+// bilhão, palavra com @ e endereço tel:/mailto: que aparece no texto visível de cada página precisa
+// estar em fatos.md, numa linha com a fonte preenchida.
 // Lê o texto pelo DOM do Chrome (innerText + content: do CSS + href dos links). Sem regex.
 // RED (saída 2): achado sem fonte. Logradouro e nome próprio ficam com o revisor de fatos.
 // RED fonte-de-exemplo: linha de fatos.md que ainda tem a fonte do molde (negócio fictício); os
@@ -9,7 +10,7 @@ import { nomeDoSite } from '../lib/args.mjs';
 import { abrirSite, paginasDoSite, TAMANHOS } from '../lib/site.mjs';
 import { abrirSessao, visitar } from '../lib/sessao.mjs';
 import { textoParaFatos } from '../lib/pagina.mjs';
-import { lerTabelaDeFatos, montarLastro, conferirTexto } from '../lib/fatos.mjs';
+import { lerTabelaDeFatos, tabelaDeFatosIlegivel, montarLastro, conferirTexto } from '../lib/fatos.mjs';
 import { lerTexto } from '../lib/json.mjs';
 import { progresso } from '../lib/executar.mjs';
 
@@ -17,7 +18,8 @@ export default async function fatos(args) {
   const nome = nomeDoSite(args);
   const c = abrirSite(nome);
   const temArquivo = fs.existsSync(c.fatos);
-  const linhas = temArquivo ? lerTabelaDeFatos(lerTexto(c.fatos)) : [];
+  const md = temArquivo ? lerTexto(c.fatos) : '';
+  const linhas = lerTabelaDeFatos(md);
   const lastro = montarLastro(linhas);
   const paginas = paginasDoSite(c);
   const vermelhos = [];
@@ -43,6 +45,7 @@ export default async function fatos(args) {
   const aprovado = vermelhos.length === 0;
   const avisos = [];
   if (!temArquivo) avisos.push({ codigo: 'FATOS_SEM_ARQUIVO', dados: { arquivo: c.rel('fatos.md') } });
+  else if (tabelaDeFatosIlegivel(md)) avisos.push({ codigo: 'FATOS_TABELA_ILEGIVEL', dados: { arquivo: c.rel('fatos.md') } });
   return {
     ok: aprovado,
     codigo: aprovado ? 'FATOS_OK' : 'FATOS_SEM_FONTE',

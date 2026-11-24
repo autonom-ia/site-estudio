@@ -230,3 +230,24 @@ test('letras do site: licença com nome próprio por família, OFL.txt só vale 
     fs.rmSync(base, { recursive: true, force: true });
   }
 });
+
+test('letras: família vai até o sublinhado e o colchete, e a licença casa pelo nome exato', () => {
+  assert.equal(familiaDoArquivo('Inter_18pt-Regular.ttf'), 'inter');
+  assert.equal(familiaDoArquivo('Inter[opsz,wght].ttf'), 'inter');
+  assert.equal(familiaDoArquivo('BigShouldersDisplay-latin.woff2'), 'bigshouldersdisplay');
+  const pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-letras-exato-'));
+  try {
+    const escrever = (rel) => {
+      fs.mkdirSync(path.dirname(path.join(pasta, rel)), { recursive: true });
+      fs.writeFileSync(path.join(pasta, rel), 'x');
+    };
+    // estáticos por tamanho óptico da mesma família, com OFL.txt sem nome: uma família só, passa
+    for (const rel of ['a/Inter_18pt-Regular.woff2', 'a/Inter_24pt-Regular.woff2', 'a/OFL.txt']) escrever(rel);
+    // licença de outra família que só começa igual não cobre
+    for (const rel of ['b/Roboto-Regular.woff2', 'b/OFL-RobotoMono.txt', 'c/InterTight-Regular.woff2', 'c/OFL-Inter.txt']) escrever(rel);
+    const r = conferirLetras(pasta);
+    assert.deepEqual(r.semLicenca.map((s) => `${s.pasta}:${s.familia}`).sort(), ['b:roboto', 'c:intertight']);
+  } finally {
+    fs.rmSync(pasta, { recursive: true, force: true });
+  }
+});
