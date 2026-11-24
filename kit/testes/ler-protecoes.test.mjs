@@ -28,7 +28,7 @@ function rodarLer(args) {
   const sites = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-ler-prot-'));
   try {
     fs.mkdirSync(path.join(sites, 'teste-ler'));
-    const r = spawnSync(process.execPath, [DESPACHANTE, 'ler', 'teste-ler', ...args], { encoding: 'utf8', env: { ...process.env, ESTUDIO_SITES: sites } });
+    const r = spawnSync(process.execPath, [DESPACHANTE, 'ler', 'teste-ler', ...args], { encoding: 'utf8', env: { ...process.env, ESTUDIO_SITES: sites, ESTUDIO_DADOS: path.join(sites, 'dados'), ESTUDIO_FERRAMENTAS: path.join(sites, 'ferr') } });
     const linhas = r.stdout.trim().split('\n');
     return { status: r.status, json: JSON.parse(linhas[linhas.length - 1]) };
   } finally {

@@ -138,7 +138,7 @@ test('comando ler sem @, nome, Google nem site: LER_SEM_ENDERECO, saída 1, JSON
   const sites = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-ler-sites-'));
   try {
     fs.mkdirSync(path.join(sites, 'teste-ler'));
-    const r = spawnSync(process.execPath, [DESPACHANTE, 'ler', 'teste-ler'], { encoding: 'utf8', env: { ...process.env, ESTUDIO_SITES: sites } });
+    const r = spawnSync(process.execPath, [DESPACHANTE, 'ler', 'teste-ler'], { encoding: 'utf8', env: { ...process.env, ESTUDIO_SITES: sites, ESTUDIO_DADOS: path.join(sites, 'dados'), ESTUDIO_FERRAMENTAS: path.join(sites, 'ferr') } });
     const linhas = r.stdout.trim().split('\n');
     const json = JSON.parse(linhas[linhas.length - 1]);
     assert.equal(r.status, 1);

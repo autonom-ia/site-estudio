@@ -6,6 +6,8 @@
 //   também traz uma publicação de outro perfil, que não pode entrar.
 // - casa.desafio: 5 publicações, 2 no JSON; a página da 3ª manda para a verificação do Instagram.
 // - casa.saiu: o perfil manda direto para a página de entrar (o login acabou).
+// Com exigirLogin, casa.logada e as respostas só saem com o cookie "sessionid" (que /entrar grava);
+// sem ele, vão para a página de entrar, como no Instagram de verdade.
 // Nomes e textos inventados.
 import http from 'node:http';
 import { jpeg } from './fontes-sinteticas.mjs';
@@ -91,9 +93,19 @@ function perfilDesafio(origem) {
   return pagina(`<title>Casa Desafio</title>${json({ require: [[{ items: itens }]] })}`, `<main>${links}</main>`);
 }
 
-function responder(req, origem) {
+export const COOKIE_DE_TESTE = 'sessionid=sessao-de-teste';
+
+// O pedido trouxe o cookie de sessão? Sem expressão regular: separa por "; ".
+function comSessao(req) {
+  return String(req.headers.cookie || '').split('; ').some((c) => c.startsWith('sessionid=') && c.length > 'sessionid='.length);
+}
+
+function responder(req, origem, exigirLogin) {
   const u = new URL(req.url, origem);
   const rel = decodeURIComponent(u.pathname);
+  if (rel === '/entrar') return { tipo: 'text/html', corpo: pagina('<title>Entrou</title>', '<p>entrou</p>'), cookie: `${COOKIE_DE_TESTE}; Max-Age=3600; Path=/` };
+  const protegida = rel === `/${USUARIO_LOGADO}/` || rel === '/graphql/query';
+  if (exigirLogin && protegida && !comSessao(req)) return { para: `/accounts/login/?next=${encodeURIComponent(rel)}` };
   if (rel === `/${USUARIO_LOGADO}/`) return { tipo: 'text/html', corpo: perfilLogado(origem) };
   if (rel === '/graphql/query') {
     const n = Number(u.searchParams.get('pagina'));
@@ -111,20 +123,27 @@ function responder(req, origem) {
 }
 
 // Sobe o servidor numa porta livre. pedidos: tudo o que foi pedido.
-export function servirInstagramLogado() {
+export function servirInstagramLogado({ exigirLogin = false } = {}) {
   const pedidos = [];
   return new Promise((resolve) => {
     const srv = http.createServer((req, res) => {
       const origem = `http://${req.headers.host}`;
       pedidos.push(req.url);
-      const r = responder(req, origem);
+      const r = responder(req, origem, exigirLogin);
       if (!r) return res.writeHead(404, { 'Content-Type': 'text/plain' }).end('404');
       if (r.para) return res.writeHead(302, { Location: r.para }).end();
-      return res.writeHead(200, { 'Content-Type': `${r.tipo}${r.tipo.startsWith('text') ? '; charset=utf-8' : ''}` }).end(r.corpo);
+      const cabecalhos = { 'Content-Type': `${r.tipo}${r.tipo.startsWith('text') ? '; charset=utf-8' : ''}` };
+      if (r.cookie) cabecalhos['Set-Cookie'] = r.cookie;
+      return res.writeHead(200, cabecalhos).end(r.corpo);
     });
     srv.listen(0, '127.0.0.1', () => {
       const origem = `http://127.0.0.1:${srv.address().port}`;
-      resolve({ origem, pedidos, fechar: () => new Promise((r) => srv.close(() => r())) });
+      // fecha também as conexões que o navegador mantém abertas, para não esperar o fim delas
+      const fechar = () => new Promise((r) => {
+        srv.close(() => r());
+        srv.closeAllConnections();
+      });
+      resolve({ origem, pedidos, fechar });
     });
   });
 }

@@ -5,7 +5,9 @@
 //   publicações que ficaram de fora;
 // - ritmo de gente: entre uma rolagem ou uma página e a próxima, de 1 a 2 vezes a pausa (2 a 4 s);
 // - ao primeiro sinal de verificação, ou de volta para a página de entrar, para na hora e devolve o
-//   que já leu, com o motivo em "bloqueio". Nunca tenta de novo.
+//   que já leu, com o motivo em "bloqueio". Nunca tenta de novo;
+// - prazo próprio (7 minutos): acabou, para e devolve o que já leu, com "prazo": true. Uma publicação
+//   que falha não derruba as outras.
 // Sem expressão regular: JSON.parse, URL e métodos de texto.
 import path from 'node:path';
 import { acharObjetos, jsonOuNada } from './leitor.mjs';
@@ -27,6 +29,14 @@ import {
 
 export const MAXIMO_COM_LOGIN = 40;
 export const PAUSA_COM_LOGIN_MS = 2000;
+// Cabe nos 10 minutos do assistente, com o Google, o site e as fotos depois.
+export const PRAZO_COM_LOGIN_MS = 7 * 60 * 1000;
+
+// Quantas publicações ler: o pedido (ou o padrão), nunca mais de 40 com login.
+export function limiteDePosts(pedidos, comLogin, semLogin = 24) {
+  if (!comLogin) return pedidos || semLogin;
+  return Math.min(pedidos || MAXIMO_COM_LOGIN, MAXIMO_COM_LOGIN);
+}
 const ROLAGENS_COM_LOGIN = 20;
 const ROLAGENS_SEM_NOVIDADE = 3;
 const LIMITE_DE_ITENS = 1000;
@@ -127,6 +137,7 @@ async function rolarGrade(leitor, o) {
   let semNovidade = 0;
   let parou = '';
   for (let volta = 0; volta <= ROLAGENS_COM_LOGIN; volta += 1) {
+    if (volta > 0 && o.acabou()) break;
     lido = await leitor.avaliar(lerPerfilNaPagina);
     for (const href of lido.links) {
       const c = codigoDoPost(href);
@@ -144,7 +155,7 @@ async function rolarGrade(leitor, o) {
     parou = await bloqueio(leitor);
     if (parou) break;
   }
-  return { grade, itens, lido, parou };
+  return { grade, itens, lido, parou, prazo: o.acabou() };
 }
 
 // A ordem da grade primeiro; depois as que só vieram no JSON, da mais nova para a mais antiga.
@@ -160,7 +171,7 @@ async function percorrer(leitor, o) {
   const perfilVazio = { ...dadosDoPerfil({}, o.usuario), endereco: o.endereco };
   await leitor.ir(o.endereco);
   let parou = await bloqueio(leitor);
-  if (parou) return { perfil: perfilVazio, posts: [], fotos: [], comLogin: true, bloqueio: parou };
+  if (parou) return { perfil: perfilVazio, posts: [], fotos: [], comLogin: true, bloqueio: parou, prazo: false, falhas: [] };
   await leitor.esperarAte(contarLinks, PRAZO_DA_PAGINA_MS);
   const g = await rolarGrade(leitor, o);
   parou = g.parou;
@@ -168,33 +179,46 @@ async function percorrer(leitor, o) {
   const perfil = { ...dadosDoPerfil({ ...g.lido, jsons: [...g.lido.jsons, ...respostas] }, o.usuario), endereco: o.endereco };
   const lista = ordem(g.grade, g.itens, o.maximo);
   const posts = [];
+  const falhas = [];
+  let prazo = false;
   for (const codigo of lista) {
     const href = g.grade.get(codigo) || `${o.base}/p/${codigo}/`;
     if (g.itens.has(codigo)) {
       posts.push(postDoItem(g.itens.get(codigo), codigo, href));
       continue;
     }
-    if (parou) continue;
+    if (parou || prazo) continue;
+    if (o.acabou()) {
+      prazo = true;
+      continue;
+    }
     o.aoAvancar(`Lendo a publicação ${posts.length + 1} de ${lista.length} do Instagram...`);
-    await esperar(ritmo(o.pausa));
-    await leitor.ir(href);
-    parou = await bloqueio(leitor);
-    if (parou) continue;
-    const lidoPost = await leitor.esperarAte(lerPostNaPagina, PRAZO_DA_PAGINA_MS);
-    if (lidoPost) posts.push(dadosDoPost(lidoPost, codigo, href));
+    try {
+      await esperar(ritmo(o.pausa));
+      await leitor.ir(href);
+      parou = await bloqueio(leitor);
+      if (parou) continue;
+      const lidoPost = await leitor.esperarAte(lerPostNaPagina, PRAZO_DA_PAGINA_MS);
+      if (lidoPost) posts.push(dadosDoPost(lidoPost, codigo, href));
+    } catch {
+      falhas.push(codigo);
+    }
   }
-  return { perfil, posts, fotos: [], comLogin: true, bloqueio: parou };
+  return { perfil, posts, fotos: [], comLogin: true, bloqueio: parou, prazo: prazo || (g.prazo && posts.length < o.maximo), falhas };
 }
 
-// Lê o perfil e as publicações com login. Devolve { perfil, posts, fotos, comLogin, bloqueio }.
-export async function lerInstagramComLogin(leitor, entrada, { base = BASE_INSTAGRAM, maximo = MAXIMO_COM_LOGIN, pasta, pausa = PAUSA_COM_LOGIN_MS, aoAvancar = () => {} } = {}) {
+// Lê o perfil e as publicações com login. Devolve { perfil, posts, fotos, comLogin, bloqueio, prazo,
+// falhas (códigos das publicações que deram erro) }.
+export async function lerInstagramComLogin(leitor, entrada, { base = BASE_INSTAGRAM, maximo = MAXIMO_COM_LOGIN, pasta, pausa = PAUSA_COM_LOGIN_MS, prazoMs = PRAZO_COM_LOGIN_MS, aoAvancar = () => {} } = {}) {
   const usuario = usuarioDoInstagram(entrada);
   if (!usuario) throw new Error('o @ do Instagram veio vazio');
   const endereco = `${base}/${encodeURIComponent(usuario)}/`;
   const escuta = leitor.escutarRespostas(respostaDaLeitura(base));
+  const fim = Date.now() + prazoMs;
+  const acabou = () => Date.now() >= fim;
   let r;
   try {
-    r = await percorrer(leitor, { usuario, endereco, base, maximo, pausa, escuta, aoAvancar });
+    r = await percorrer(leitor, { usuario, endereco, base, maximo: Math.min(maximo, MAXIMO_COM_LOGIN), pausa, escuta, aoAvancar, acabou });
   } finally {
     escuta.parar();
   }

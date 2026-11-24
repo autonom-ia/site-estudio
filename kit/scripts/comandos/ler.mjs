@@ -5,14 +5,14 @@
 // escreveu) e o site atual inteiro. Salva tudo em sites/<nome>/coleta/ e põe cada fato, com a fonte e
 // a data, numa parte própria de fatos.md. Basta o @ e o nome: o site atual vem do Google ou da bio.
 // Se a pessoa entrou no Instagram pela janela do estúdio (./estudio instagram entrar), o Instagram é
-// lido com esse login (padrão: 40 publicações); o Google e o site, sempre sem login. --sem-login
-// ignora o login guardado (depois de o Instagram pedir verificação, para não insistir).
+// lido com esse login (até 40 publicações); o Google e o site, sempre sem login. Se o Instagram pedir
+// verificação, a leitura para e o login fica de lado até o dia seguinte. --sem-login ignora o login.
 import path from 'node:path';
 import { nomeDoSite, inteiro } from '../lib/args.mjs';
 import { abrirPastaDoSite } from '../lib/site.mjs';
 import { abrirLeitor } from '../lib/leitor.mjs';
-import { abrirLeitorComLogin } from '../lib/instagram-conta.mjs';
-import { MAXIMO_COM_LOGIN } from '../lib/ler-instagram-login.mjs';
+import { abrirLeitorComLogin, lugarPadrao, registrarParada } from '../lib/instagram-conta.mjs';
+import { limiteDePosts } from '../lib/ler-instagram-login.mjs';
 import { lerFontes } from '../lib/ler.mjs';
 import { falha, aviso } from '../lib/saida.mjs';
 import { progresso } from '../lib/executar.mjs';
@@ -27,14 +27,13 @@ function texto(opcoes, nome) {
   return limpo;
 }
 
-const POSTS_SEM_LOGIN = 24;
 // Motivos que viram aviso: quem nunca entrou não precisa saber de login.
-const MOTIVOS_DE_AVISO = Object.freeze(['vencido', 'nao-abriu', 'janela-aberta']);
+const MOTIVOS_DE_AVISO = Object.freeze(['vencido', 'nao-abriu', 'em-uso', 'pausado']);
 
 // O leitor com login, se a pessoa entrou pela janela do estúdio. Devolve { leitor } ou { avisos }.
-async function loginGuardado(pedido, opcoes) {
+async function loginGuardado(pedido, opcoes, lugar) {
   if (!pedido.instagram || opcoes['sem-login'] === true) return { avisos: [] };
-  const r = await abrirLeitorComLogin();
+  const r = await abrirLeitorComLogin({ lugar });
   if (r.leitor) return { leitor: r.leitor, avisos: [] };
   return { avisos: MOTIVOS_DE_AVISO.includes(r.motivo) ? [aviso('LER_INSTAGRAM_LOGIN_INDISPONIVEL', { motivo: r.motivo })] : [] };
 }
@@ -53,8 +52,9 @@ export default async function ler(args) {
   // Conferido antes de abrir o navegador do login, para um número errado não deixar nada aberto.
   const postsPedidos = o.posts === undefined ? 0 : inteiro(o, 'posts', 0, 1, 60);
   const pasta = path.join(c.pasta, 'coleta');
-  const login = await loginGuardado(fontes, o);
-  const pedido = { ...fontes, posts: postsPedidos || (login.leitor ? MAXIMO_COM_LOGIN : POSTS_SEM_LOGIN) };
+  const lugar = lugarPadrao();
+  const login = await loginGuardado(fontes, o, lugar);
+  const pedido = { ...fontes, posts: limiteDePosts(postsPedidos, Boolean(login.leitor)) };
   progresso(login.leitor ? 'Lendo o Instagram com o seu login, e o resto sem entrar em conta nenhuma...' : 'Lendo as páginas públicas do negócio (sem entrar em conta nenhuma)...');
   let leitor = null;
   let r;
@@ -65,6 +65,8 @@ export default async function ler(args) {
     leitor?.fechar();
     await login.leitor?.fecharComCalma();
   }
+  // Verificação com login: o login fica de lado até amanhã, sem insistir.
+  if (login.leitor) registrarParada(r.avisos, lugar);
   r.avisos.unshift(...login.avisos);
   const leu = Boolean(r.dados.instagram || r.dados.google || r.dados.site);
   if (!leu) return { ok: false, codigo: 'LER_NADA', avisos: r.avisos, dados: r.dados, sair: 1 };

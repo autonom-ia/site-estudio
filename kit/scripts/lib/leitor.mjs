@@ -31,7 +31,9 @@ export async function abrirLeitor(deps = PECAS, opcoes = {}) {
     try {
       tab?.close();
     } catch {}
-    nav.close();
+    // Com perfil guardado, fecha pedindo ao navegador: matar à força pode estragar o login.
+    if (opcoes.perfil && nav.fecharComCalma) await nav.fecharComCalma();
+    else nav.close();
     throw e;
   }
   const avaliar = (fn, ...args) => tab.evaluate(chamada(fn, ...args), TETO_DE_AVALIAR_MS);

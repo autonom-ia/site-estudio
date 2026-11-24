@@ -83,7 +83,7 @@ Rode tudo de dentro da pasta do estúdio.
 - **Sem regex no código.** Nunca use expressão regular, nem para interpretar o que a pessoa escreveu (quem entende é você), nem em código que você escrever no `_gerador/`. Use métodos de texto (dividir, começa com, contém), `URL` e leitura de JSON.
 - **Nada pago; publicar só com confirmação.** Sem API paga. Tudo fica no computador da pessoa até ela confirmar que quer pôr no ar. O único lugar onde o estúdio publica é sites.autonomia.site, pelo `./estudio publicar <nome>` da skill `hospedar`, e só depois de você perguntar e ela dizer que sim, a cada publicação. Quem ainda não tem acesso pede em sites.autonomia.site. Em qualquer outro lugar (GitHub Pages, Netlify, Cloudflare Pages), pôr no ar é a pessoa quem faz, com o passo a passo da skill `hospedar`. Se ela pedir algo pago (imagem gerada por serviço, formulário com servidor), diga que o estúdio não faz isso e ofereça o caminho local.
 - **Tudo local no site.** Fontes (baixadas com `./estudio fonte`, já leves, cada uma com a licença com o nome dela), GSAP, Lenis e imagens ficam dentro de `site/assets/`. Nenhum endereço externo carregado pela página (o `checar` reprova).
-- **Nunca peça senha, chave ou cartão.** Nunca instale nada fora do instalador do estúdio. O acesso de publicação fica em `.ferramentas/publicar/` e só o `publicar` mexe nele: nunca abra, mostre, copie nem envie esses arquivos. O login do Instagram que a pessoa faz pela janela do estúdio fica em `.ferramentas/instagram/` e só o `instagram` e o `ler` mexem nele: a mesma regra vale.
+- **Nunca peça senha, chave ou cartão.** Nunca instale nada fora do instalador do estúdio. O acesso de publicação fica em `.ferramentas/publicar/` e só o `publicar` mexe nele: nunca abra, mostre, copie nem envie esses arquivos. O login do Instagram que a pessoa faz pela janela do estúdio fica fora da pasta do estúdio, na pasta de dados do usuário (`site-estudio/instagram/`, ver `docs/ler-instagram-com-login.md`), e só o `instagram` e o `ler` mexem nele: a mesma regra vale.
 
 ## 6. Mapa de pastas
 
@@ -94,6 +94,6 @@ Rode tudo de dentro da pasta do estúdio.
 | `referencias/` | Da pessoa: fotos, logos, documentos com os fatos, endereços de sites de que ela gosta |
 | `kit/` | O motor do estúdio. Não edite: a atualização sobrescreve. O molde do site está no `kit/` e o `novo` copia |
 | `instalar/` | O instalador e os textos da instalação. Não edite |
-| `.ferramentas/` | Os programas do estúdio (escondida), o acesso de publicação deste computador (`.ferramentas/publicar/`) e o login do Instagram, se a pessoa entrou pela janela do estúdio (`.ferramentas/instagram/`). Só o instalador, o `publicar`, o `instagram` e o `ler` mexem |
+| `.ferramentas/` | Os programas do estúdio (escondida) e o acesso de publicação deste computador (`.ferramentas/publicar/`). Só o instalador e o `publicar` mexem |
 
 **Nunca apague** `minha-marca/`, `sites/` nem `referencias/`, nem o que está dentro delas, a não ser que a pessoa peça uma remoção específica.

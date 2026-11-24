@@ -7,12 +7,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { lerInstagram, BASE_INSTAGRAM, MINIMO_DE_POSTS } from './ler-instagram.mjs';
-import { lerInstagramComLogin, PAUSA_COM_LOGIN_MS } from './ler-instagram-login.mjs';
+import { lerInstagramComLogin, PAUSA_COM_LOGIN_MS, PRAZO_COM_LOGIN_MS } from './ler-instagram-login.mjs';
 import { lerGoogle, BASE_GOOGLE } from './ler-google.mjs';
 import { lerSite, contatosDosLinks, ehSiteDoNegocio } from './ler-site.mjs';
 import { hoje } from './leitor.mjs';
 import { escreverJson, escreverTexto, lerTexto } from './json.mjs';
 import { aviso } from './saida.mjs';
+import { sanear } from './executar.mjs';
 import * as R from './registros.mjs';
 
 export { ehSiteDoNegocio };
@@ -20,17 +21,45 @@ export { ehSiteDoNegocio };
 // Fotos menores que isto pedem o original à pessoa (tela cheia no computador).
 export const LARGURA_BOA = 1080;
 
+const LIMITE_DO_DETALHE = 300;
+const INICIOS_LOCAIS = Object.freeze(['ws://', 'wss://', 'http://127.0.0.1', 'http://localhost', 'https://127.0.0.1']);
+const ESPACOS = Object.freeze([' ', '\n', '\r', '\t']);
+
+// Troca cada endereço local (o do DevTools, com o identificador da conexão) por um marcador.
+export function semEnderecosLocais(texto) {
+  let saida = '';
+  let palavra = '';
+  const fechar = () => {
+    const local = INICIOS_LOCAIS.some((ini) => palavra.toLowerCase().includes(ini));
+    saida += local ? '<endereço local>' : palavra;
+    palavra = '';
+  };
+  for (const ch of String(texto)) {
+    if (ESPACOS.includes(ch)) {
+      fechar();
+      saida += ch;
+    } else palavra += ch;
+  }
+  fechar();
+  return saida;
+}
+
+// O erro como vai para a saída: sem endereço local e sem nada com cara de segredo.
+export function detalheDoErro(e) {
+  return sanear(semEnderecosLocais(String((e && e.message) || e))).slice(0, LIMITE_DO_DETALHE);
+}
+
 async function tentar(fn) {
   try {
     return { ok: true, valor: await fn() };
   } catch (e) {
-    return { ok: false, detalhe: String((e && e.message) || e).slice(0, 300) };
+    return { ok: false, detalhe: detalheDoErro(e) };
   }
 }
 
 function lerOInstagram(pedido, ctx) {
   const comum = { base: ctx.bases.instagram, maximo: pedido.posts, pasta: path.join(ctx.pasta, 'instagram'), aoAvancar: ctx.aoAvancar };
-  if (ctx.leitorInstagram) return lerInstagramComLogin(ctx.leitorInstagram, pedido.instagram, { ...comum, pausa: ctx.pausaComLogin });
+  if (ctx.leitorInstagram) return lerInstagramComLogin(ctx.leitorInstagram, pedido.instagram, { ...comum, pausa: ctx.pausaComLogin, prazoMs: ctx.prazoComLoginMs });
   return lerInstagram(ctx.leitor, pedido.instagram, { ...comum, pausa: ctx.pausa });
 }
 
@@ -47,6 +76,7 @@ async function parteInstagram(pedido, ctx) {
     ctx.avisos.push(aviso('LER_INSTAGRAM_PEDIU_VERIFICACAO', { motivo: ig.bloqueio, lidas: ig.posts.length }));
     if (!ig.posts.length) return null;
   }
+  if (ig.prazo) ctx.avisos.push(aviso('LER_INSTAGRAM_PARCIAL', { lidas: ig.posts.length }));
   const dir = path.join(ctx.pasta, 'instagram');
   escreverJson(path.join(dir, 'perfil.json'), ig.perfil);
   escreverJson(path.join(dir, 'posts.json'), ig.posts);
@@ -102,7 +132,7 @@ async function parteSite(endereco, ctx) {
 }
 
 // pedido: { instagram, negocio, google, site, posts }. opcoes: { pasta (coleta/), fatos (fatos.md),
-// leitor, leitorInstagram (com login, opcional), bases, data, pausa, aoAvancar }.
+// leitor, leitorInstagram (com login, opcional), bases, data, pausa, prazoComLoginMs, aoAvancar }.
 // Devolve { avisos, dados, registros }.
 export async function lerFontes(pedido, opcoes) {
   const ctx = {
@@ -113,6 +143,7 @@ export async function lerFontes(pedido, opcoes) {
     pausa: opcoes.pausa === undefined ? 1500 : opcoes.pausa,
     pausaComLogin: opcoes.pausa === undefined ? PAUSA_COM_LOGIN_MS : opcoes.pausa,
     leitorInstagram: opcoes.leitorInstagram || null,
+    prazoComLoginMs: opcoes.prazoComLoginMs === undefined ? PRAZO_COM_LOGIN_MS : opcoes.prazoComLoginMs,
     aoAvancar: opcoes.aoAvancar || (() => {}),
     avisos: [],
     registros: [],

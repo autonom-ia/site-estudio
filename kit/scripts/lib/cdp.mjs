@@ -1,5 +1,5 @@
 // Navegador sem janela + DevTools Protocol, sem dependência (WebSocket nativo do Node 22+).
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -78,10 +78,38 @@ export async function launch({ largura = 1920, altura = 1080, perfil = '', comJa
       res();
     });
   });
-  const close = () => {
+  // No Windows, o Chrome abre vários processos: encerra a árvore inteira.
+  const matar = () => {
+    if (morreu) return;
+    if (EH_WINDOWS && proc.pid) {
+      try {
+        spawnSync('taskkill', ['/T', '/F', '/PID', String(proc.pid)], { stdio: 'ignore', windowsHide: true });
+      } catch {}
+    }
     try {
       proc.kill('SIGKILL');
     } catch {}
+  };
+  // Perfil guardado: se o processo do estúdio acabar ou for interrompido, o Chrome não fica para trás
+  // (aberto e escondido, segurando o login).
+  const aoSair = () => matar();
+  const aoInterromper = () => {
+    matar();
+    process.exit(130);
+  };
+  if (guardado) {
+    process.on('exit', aoSair);
+    process.once('SIGINT', aoInterromper);
+    process.once('SIGTERM', aoInterromper);
+  }
+  const soltar = () => {
+    process.off('exit', aoSair);
+    process.off('SIGINT', aoInterromper);
+    process.off('SIGTERM', aoInterromper);
+  };
+  const close = () => {
+    matar();
+    soltar();
     if (guardado) return;
     // o Windows segura o perfil por um instante depois de matar o processo
     setTimeout(() => {
