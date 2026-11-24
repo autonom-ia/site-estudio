@@ -80,8 +80,13 @@ desinstalar (o desinstalar só apaga `.ferramentas/`). No Windows, a chave é a 
      (até ~1,5 min, com o fechamento), a janela (até 7 min), fechar (até 50 s) e conferir de novo
      (até 70 s). A janela fica aberta o que sobra do orçamento, até 7 minutos, depois de guardar 2
      minutos para fechar e conferir; o fechamento e a conferência usam só o que resta.
-5. **Nada fica para trás.** Todo Chrome aberto com o perfil guardado fecha junto se o processo do
-   estúdio acabar ou for interrompido. No Windows, a árvore inteira (`taskkill /T /F`). Se mesmo
+5. **Nada fica para trás, e nada trava.** Todo Chrome que o estúdio abre fecha junto quando o
+   processo do estúdio acaba; o de perfil guardado, também se ele for interrompido. No Windows, a
+   árvore inteira (`taskkill /T /F`). O contrário também vale: o Chrome não segura o estúdio aberto.
+   Um caminho que esquecesse o navegador aberto (um erro no meio, um prazo vencido) deixaria o
+   processo do estúdio esperando o Chrome sair, para sempre; agora o estúdio termina e leva o Chrome
+   junto. Foi assim que um arquivo de testes do Mac no CI ficou 30 minutos sem terminar: um teste que
+   passa do prazo com o Chrome aberto deixava o arquivo esperando para sempre (reproduzido). Se mesmo
    assim o perfil estiver em uso, a mensagem é `INSTAGRAM_LOGIN_EM_USO`: pode ser a janela de
    entrar ou uma leitura rodando escondida, sem janela na tela.
 

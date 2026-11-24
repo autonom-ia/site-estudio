@@ -225,6 +225,10 @@ export async function launch({ largura = 1920, altura = 1080, perfil = '', comJa
   const pastaPerfil = guardado ? perfil : fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-cdp-'));
   const args = argumentosDoNavegador({ caminho: achado.caminho, porta, perfil: pastaPerfil, comJanela, guardado, largura, altura, com3d });
   const proc = spawn(achado.caminho, [...args, endereco], { stdio: 'ignore', windowsHide: !comJanela });
+  // O Chrome não segura o estúdio aberto. Sem isto, um caminho que esquecesse de fechar o navegador
+  // (um erro no meio, um prazo de teste vencido) deixaria o processo do estúdio vivo para sempre,
+  // esperando o Chrome sair. Quando o estúdio termina, o Chrome é encerrado junto (aoSair, abaixo).
+  proc.unref();
   let morreu = false;
   const saiu = new Promise((res) => {
     proc.on('error', () => {
@@ -248,15 +252,22 @@ export async function launch({ largura = 1920, altura = 1080, perfil = '', comJa
       proc.kill('SIGKILL');
     } catch {}
   };
-  // Perfil guardado: se o processo do estúdio acabar ou for interrompido, o Chrome não fica para trás
-  // (aberto e escondido, segurando o login).
-  const aoSair = () => matar();
+  // Se o processo do estúdio acabar, o Chrome não fica para trás (aberto e escondido; com perfil
+  // guardado, segurando o login). Perfil temporário: apaga a pasta, se o sistema já deixar.
+  // Interrompido (Ctrl+C), só o perfil guardado: ele é o que segura o login.
+  const aoSair = () => {
+    matar();
+    if (guardado) return;
+    try {
+      fs.rmSync(pastaPerfil, { recursive: true, force: true });
+    } catch {}
+  };
   const aoInterromper = () => {
     matar();
     process.exit(130);
   };
+  process.on('exit', aoSair);
   if (guardado) {
-    process.on('exit', aoSair);
     process.once('SIGINT', aoInterromper);
     process.once('SIGTERM', aoInterromper);
   }
