@@ -64,6 +64,18 @@ test('Instagram sem login: 14 publicações com legenda e data, foto na maior re
   assert.ok(md.includes('Legenda 1 / com barra segunda linha'), 'barra e quebra não desmontam a tabela');
 });
 
+test('Instagram sem login: nome, bio e links só do perfil pedido, nunca da conta sugerida que vem antes', opcoes, () => {
+  const perfil = JSON.parse(fs.readFileSync(path.join(pasta, 'coleta', 'instagram', 'perfil.json'), 'utf8'));
+  assert.equal(perfil.nome, NEGOCIO);
+  assert.ok(perfil.bio.startsWith('Revisão de bicicleta'));
+  assert.deepEqual(perfil.links, ['https://wa.me/5500900001111']);
+  for (const arquivo of ['perfil.json', 'posts.md']) {
+    const texto = fs.readFileSync(path.join(pasta, 'coleta', 'instagram', arquivo), 'utf8');
+    for (const outro of ['Conta Sugerida', 'conta.sugerida', 'sugerida.example', 'Outra bio']) assert.ok(!texto.includes(outro), `${arquivo}: ${outro}`);
+  }
+  assert.ok(!fs.readFileSync(fatos, 'utf8').includes('Sugerida'));
+});
+
 test('Google: horário de cada dia vem do painel do lugar, com a fonte do lugar e a data', opcoes, () => {
   const linhas = lerTabelaDeFatos(fs.readFileSync(fatos, 'utf8'));
   const horario = linhas.filter((l) => l.fato.startsWith('Horário de '));
