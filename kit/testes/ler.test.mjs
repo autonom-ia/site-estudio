@@ -7,7 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { usuarioDoInstagram, codigoDoPost, dadosDoPost, dadosDoPerfil, melhorFoto, legendaDaDescricao } from '../scripts/lib/ler-instagram.mjs';
+import { usuarioDoInstagram, codigoDoPost, dadosDoPost, dadosDoPerfil, nomeDoTitulo, melhorFoto, legendaDaDescricao } from '../scripts/lib/ler-instagram.mjs';
 import { horarioDoLugar, notaDoLugar, dadosDoLugar, enderecoDaBusca, ehDiaDaSemana } from '../scripts/lib/ler-google.mjs';
 import { linksDoMesmoSite, contatosDosLinks, fatosDoJsonLd } from '../scripts/lib/ler-site.mjs';
 import { celula, secaoLida, juntarNoFatos, registrosDoGoogle, MARCA_INICIO } from '../scripts/lib/registros.mjs';
@@ -61,6 +61,24 @@ test('perfil: nome, bio e links da bio do JSON embutido', () => {
   const lido = { jsons: [JSON.stringify({ x: { user: { username: 'casa', full_name: 'Casa', biography: 'Bio', bio_links: [{ url: 'https://wa.me/550' }], external_url: 'https://casa.example' } } })] };
   const p = dadosDoPerfil(lido, 'casa');
   assert.deepEqual([p.nome, p.bio, p.links], ['Casa', 'Bio', ['https://wa.me/550', 'https://casa.example']]);
+});
+
+test('perfil: com a conta de quem entrou (ou uma sugerida) antes do perfil pedido, só o pedido entra', () => {
+  const quemEntrou = { viewer: { user: { username: 'conta.da.pessoa', full_name: 'Outra Empresa', biography: 'Seguro viagem', bio_links: [{ url: 'https://outra.example' }], external_url: 'https://outra.example' } } };
+  const pedido = { x: { user: { username: 'Casa', full_name: 'Casa', biography: 'Bio da casa', bio_links: [], external_url: null } } };
+  // a conta de quem entrou num texto antes, e no mesmo texto antes
+  for (const jsons of [[JSON.stringify(quemEntrou), JSON.stringify(pedido)], [JSON.stringify({ a: quemEntrou, b: pedido })]]) {
+    const p = dadosDoPerfil({ jsons, titulo: 'Casa (@casa) • Instagram' }, 'casa');
+    assert.deepEqual([p.nome, p.bio, p.links, p.de], ['Casa', 'Bio da casa', [], 'json']);
+  }
+  // só a outra conta no JSON: nada dela; o nome vem do título da página do perfil pedido
+  const so = dadosDoPerfil({ jsons: [JSON.stringify(quemEntrou)], titulo: 'Casa Bonita (@casa) • Instagram photos and videos', descricao: '10 seguidores' }, 'casa');
+  assert.deepEqual([so.nome, so.bio, so.links, so.de, so.resumo], ['Casa Bonita', '', [], 'etiquetas', '10 seguidores']);
+  // título de outra conta também não serve
+  assert.equal(dadosDoPerfil({ jsons: [], titulo: 'Outra Empresa (@conta.da.pessoa) • Instagram' }, 'casa').nome, '');
+  assert.equal(nomeDoTitulo('Instagram', 'casa'), '');
+  assert.equal(nomeDoTitulo('(@casa) • Instagram', 'casa'), '', 'sem nome antes do @');
+  assert.equal(nomeDoTitulo('Casa (@CASA) • Instagram', 'casa'), 'Casa');
 });
 
 test('horário do Google: tabela do painel; sem tabela, os rótulos de cada dia', () => {

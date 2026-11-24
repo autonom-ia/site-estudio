@@ -77,25 +77,49 @@ export function lerPostNaPagina() {
   return pronto ? { jsons, datas, descricao: meta('og:description') || meta('description'), foto: meta('og:image') } : null;
 }
 
-// Nome, bio e links do perfil, do JSON embutido.
-export function dadosDoPerfil(lido, usuario) {
-  let perfil = null;
-  for (const texto of lido.jsons || []) {
-    const achados = acharObjetos(jsonOuNada(texto), (o) => typeof o.biography === 'string' && 'full_name' in o, 20);
-    perfil = achados.find((o) => String(o.username || '').toLowerCase() === usuario) || achados[0] || perfil;
-    if (perfil) break;
+// O objeto de usuário do perfil pedido, e só dele: a página (sobretudo com login) também traz a conta
+// de quem entrou e contas sugeridas, e nenhum dado delas pode entrar. Entre os objetos com o mesmo
+// @, prefere o que tem a bio.
+export function usuarioDoPerfil(textos, usuario) {
+  const alvo = String(usuario || '').toLowerCase();
+  if (!alvo) return null;
+  const ehOPedido = (o) => typeof o.username === 'string' && o.username.toLowerCase() === alvo;
+  let achado = null;
+  for (const texto of textos || []) {
+    for (const o of acharObjetos(jsonOuNada(texto), ehOPedido, 50)) {
+      if (typeof o.biography === 'string') return o;
+      achado = achado || o;
+    }
   }
+  return achado;
+}
+
+// Sem o objeto do perfil no JSON: o nome sai do título da página, "Nome (@usuario) • Instagram",
+// e só se o título for desse @. Bio e links ficam vazios (as etiquetas não trazem).
+export function nomeDoTitulo(titulo, usuario) {
+  const t = String(titulo || '');
+  const marca = ` (@${String(usuario || '').toLowerCase()})`;
+  const fim = t.toLowerCase().indexOf(marca);
+  return usuario && fim > 0 ? t.slice(0, fim).trim() : '';
+}
+
+// Nome, bio e links do perfil pedido: do JSON embutido, só do objeto com o mesmo @; sem ele, das
+// etiquetas da página do perfil. Nunca de outra conta.
+export function dadosDoPerfil(lido, usuario) {
+  const perfil = usuarioDoPerfil(lido.jsons, usuario);
   const links = [];
   if (perfil) {
     for (const b of perfil.bio_links || []) if (b && typeof b.url === 'string' && b.url) links.push(b.url);
     if (typeof perfil.external_url === 'string' && perfil.external_url && !links.includes(perfil.external_url)) links.push(perfil.external_url);
   }
+  const nome = perfil && typeof perfil.full_name === 'string' ? perfil.full_name : nomeDoTitulo(lido.titulo, usuario);
   return {
     usuario,
-    nome: perfil ? String(perfil.full_name || '') : '',
-    bio: perfil ? perfil.biography : '',
+    nome,
+    bio: perfil && typeof perfil.biography === 'string' ? perfil.biography : '',
     links,
     resumo: lido.descricao || '',
+    de: perfil ? 'json' : 'etiquetas',
   };
 }
 

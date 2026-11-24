@@ -57,7 +57,9 @@ test('com login: rola a grade e lê 40 publicações das respostas da página, f
   assert.equal(r.bloqueio, '');
   assert.equal(r.comLogin, true);
   assert.equal(r.posts.length, 40);
-  assert.equal(r.perfil.nome, 'Casa Logada');
+  assert.equal(r.perfil.nome, 'Casa Logada', 'nunca o nome da conta de quem entrou, que vem antes na página');
+  assert.equal(r.perfil.bio, 'Bio da casa logada.');
+  assert.deepEqual(r.perfil.links, []);
   assert.ok(r.posts.every((p) => p.legenda && p.data && p.de === 'json'));
   assert.ok(srv.pedidos.some((p) => p.startsWith('/graphql/query')), 'a grade pediu mais ao rolar');
   assert.deepEqual(paginasDePost(), [], 'tudo veio das respostas: nenhuma página de publicação aberta');

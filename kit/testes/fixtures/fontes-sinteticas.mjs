@@ -44,7 +44,9 @@ function png(largura, altura) {
 }
 
 function perfil() {
-  const dados = { require: [['Perfil', { data: { user: { username: USUARIO, full_name: NEGOCIO, biography: 'Revisão de bicicleta sob encomenda.\nRua Inventada, 100.', bio_links: [{ url: 'https://wa.me/5500900001111' }], external_url: null } } }]] };
+  // uma conta sugerida vem antes do perfil pedido: nada dela pode ser lido
+  const sugerida = { username: 'conta.sugerida', full_name: 'Conta Sugerida', biography: 'Outra bio.', bio_links: [{ url: 'https://sugerida.example' }] };
+  const dados = { require: [['Sugestoes', { users: [sugerida] }], ['Perfil', { data: { user: { username: USUARIO, full_name: NEGOCIO, biography: 'Revisão de bicicleta sob encomenda.\nRua Inventada, 100.', bio_links: [{ url: 'https://wa.me/5500900001111' }], external_url: null } } }]] };
   const links = [];
   for (let n = 1; n <= TOTAL_DE_POSTS; n += 1) links.push(`<a href="/${USUARIO}/${n === 5 ? 'reel' : 'p'}/${codigo(n)}/">publicação</a>`);
   // a grade aparece depois de carregar, como na página de verdade

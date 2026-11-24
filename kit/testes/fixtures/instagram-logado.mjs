@@ -6,6 +6,7 @@
 //   também traz uma publicação de outro perfil, que não pode entrar.
 // - casa.desafio: 5 publicações, 2 no JSON; a página da 3ª manda para a verificação do Instagram.
 // - casa.saiu: o perfil manda direto para a página de entrar (o login acabou).
+// A página de casa.logada traz também a conta de quem entrou, antes do perfil pedido.
 // Com exigirLogin, casa.logada e as respostas só saem com o cookie "sessionid" (que /entrar grava);
 // sem ele, vão para a página de entrar, como no Instagram de verdade.
 // Nomes e textos inventados.
@@ -63,6 +64,10 @@ export function respostaDaGrade(inicio, quantidade, origem) {
   return { data: { xdt_api__v1__feed__user_timeline_graphql_connection: { edges, page_info: { has_next_page: fim < TOTAL_LOGADO } } }, status: 'ok' };
 }
 
+// A conta de quem entrou vem ANTES do perfil pedido na página, como no Instagram logado: nenhum dado
+// dela pode ir para o perfil lido.
+export const CONTA_DE_QUEM_ENTROU = Object.freeze({ require: [['Viewer', { data: { user: { username: 'conta.de.quem.entrou', full_name: 'Conta De Quem Entrou', biography: 'Bio de outra conta.', bio_links: [{ url: 'https://outra.example' }] } } }]] });
+
 function perfilLogado(origem) {
   const perfil = { require: [['Perfil', { data: { user: { username: USUARIO_LOGADO, full_name: 'Casa Logada', biography: 'Bio da casa logada.', bio_links: [] } } }]] };
   const iniciais = respostaDaGrade(1, POR_PAGINA, origem);
@@ -84,7 +89,7 @@ function perfilLogado(origem) {
       });
     });
   </script>`;
-  return pagina(`<title>Casa Logada</title>${json(perfil)}${json({ require: [[iniciais]] })}`, `<main id="grade" style="min-height:6000vh"></main>${script}`);
+  return pagina(`<title>Casa Logada (@${USUARIO_LOGADO}) • Instagram</title>${json(CONTA_DE_QUEM_ENTROU)}${json(perfil)}${json({ require: [[iniciais]] })}`, `<main id="grade" style="min-height:6000vh"></main>${script}`);
 }
 
 function perfilDesafio(origem) {
