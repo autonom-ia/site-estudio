@@ -33,8 +33,9 @@ function volta(raio, altura, lados = 120) {
   return `${caminho(pontos)}Z`;
 }
 
-// O desenho de reserva da roda: as mesmas peças da cena (pneu, faixa, aro, raios, cubo com as
-// duas abas onde os raios prendem).
+// O desenho de reserva da roda: as mesmas peças da cena (pneu com as duas faixas, uma de cada
+// lado, aro, raios, cubo com as duas abas onde os raios prendem). A faixa do lado de trás vem
+// antes do pneu, que a esconde quase toda, como no 3D.
 function rodaDeReserva() {
   const raios = [];
   for (let i = 0; i < RAIOS; i += 1) {
@@ -47,6 +48,7 @@ function rodaDeReserva() {
     ]));
   }
   return `<svg class="palco-3d__reserva roda-reserva" viewBox="0 0 240 240" width="240" height="240" aria-hidden="true" focusable="false">
+      <path class="roda-reserva__faixa" d="${volta(1, -0.0598)}" />
       <path class="roda-reserva__pneu" d="${volta(1, 0)}" />
       <path class="roda-reserva__faixa" d="${volta(1, 0.0598)}" />
       <path class="roda-reserva__aro" d="${volta(0.925, 0)}" />

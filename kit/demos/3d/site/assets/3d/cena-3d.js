@@ -253,6 +253,8 @@
     'uniform vec3 uChao;',
     'uniform vec3 uLuz;',
     'uniform float uForca;',
+    'uniform float uBorda;',
+    'uniform vec4 uSome;',
     'vec3 lin(vec3 c) { return pow(c, vec3(2.2)); }',
     'void main() {',
     '  vec3 n = normalize(vNor);',
@@ -276,10 +278,15 @@
     '  vec3 difuso = base * (ambiente * 0.5 + dif * uForca * 0.8) * (1.0 - uMetal * 0.75);',
     '  vec3 c = difuso;',
     '  c += reflexoCor * (pontoDeLuz * uForca + janela * mix(0.02, 0.55, uBrilho));',
-    '  c += ceu * borda * mix(0.10, 0.45, uBrilho);',
+    '  c += ceu * borda * mix(0.10, 0.45, uBrilho) * uBorda;',
     '  c += base * uAcende;',
     '  c = vec3(1.0) - exp(-c * 1.2);',
-    '  gl_FragColor = vec4(pow(c, vec3(1.0 / 2.2)), 1.0);',
+    // some no fundo da página: transparente para os lados (|x| de uSome.x a uSome.y) e para a
+    // frente (z de uSome.z a uSome.w); cada par só vale se o fim passa do começo
+    '  float a = 1.0;',
+    '  if (uSome.y > uSome.x) a *= 1.0 - smoothstep(uSome.x, uSome.y, abs(vPos.x));',
+    '  if (uSome.w > uSome.z) a *= 1.0 - smoothstep(uSome.z, uSome.w, vPos.z);',
+    '  gl_FragColor = vec4(pow(c, vec3(1.0 / 2.2)) * a, a);',
     '}',
   ].join('\n');
 
@@ -371,7 +378,8 @@
       objetos: [],
       sombra: null,
       camera: { fov: (opcoes && opcoes.fov) || 0.55, olho: [0, 0, 5], alvo: [0, 0, 0] },
-      luz: { ceu: [1, 1, 1], chao: [0.4, 0.4, 0.4], direcao: [-0.6, 0.9, 0.7], forca: 1 },
+      // borda: quanto a borda da peça acende contra a luz (1 = normal)
+      luz: { ceu: [1, 1, 1], chao: [0.4, 0.4, 0.4], direcao: [-0.6, 0.9, 0.7], forca: 1, borda: 1 },
       largura: 0,
       altura: 0,
       perdida: false,
@@ -390,9 +398,10 @@
       return b;
     };
     // material: { cor: [r,g,b] ou cor do CSS, brilho 0..1, metal 0..1, acende 0..1, chao: true
-    // para o que fica embaixo da sombra (a bancada: desenhada antes da sombra, que cai nela) }
+    // para o que fica embaixo da sombra (a bancada: desenhada antes da sombra, que cai nela),
+    // some: [x0, x1, z0, z1] para sumir no fundo da página para os lados e para a frente }
     cena.objeto = function (geo, material) {
-      var o = { malha: cena.malha(geo), matriz: identidade(), visivel: true, chao: Boolean(material.chao), material: { cor: cor(material.cor), brilho: material.brilho || 0, metal: material.metal || 0, acende: material.acende || 0 } };
+      var o = { malha: cena.malha(geo), matriz: identidade(), visivel: true, chao: Boolean(material.chao), material: { cor: cor(material.cor), brilho: material.brilho || 0, metal: material.metal || 0, acende: material.acende || 0, some: new Float32Array(material.some || [0, 0, 0, 0]) } };
       cena.objetos.push(o);
       return o;
     };
@@ -427,6 +436,7 @@
       gl.uniform3fv(p3d.u.uChao, cena.luz.chao);
       gl.uniform3fv(p3d.u.uLuz, cena.luz.direcao);
       gl.uniform1f(p3d.u.uForca, cena.luz.forca);
+      gl.uniform1f(p3d.u.uBorda, cena.luz.borda);
       var aPos = gl.getAttribLocation(p3d.p, 'aPos');
       var aNor = gl.getAttribLocation(p3d.p, 'aNor');
       gl.enableVertexAttribArray(aPos);
@@ -438,6 +448,7 @@
         gl.uniform1f(p3d.u.uBrilho, m.brilho);
         gl.uniform1f(p3d.u.uMetal, m.metal);
         gl.uniform1f(p3d.u.uAcende, m.acende);
+        gl.uniform4fv(p3d.u.uSome, m.some);
         gl.bindBuffer(gl.ARRAY_BUFFER, o.malha.pos);
         gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, o.malha.nor);

@@ -124,7 +124,8 @@ test('arte 2: reserva e 3D parado são a mesma peça (pose, câmera e bancada), 
   // a pose e a câmera vão para a cena; a reserva é enquadrada pela mesma câmera
   const inicio = conf.indexOf('data-3d-pose="') + 'data-3d-pose="'.length;
   const pose = JSON.parse(conf.slice(inicio, conf.indexOf('"', inicio)).split('&quot;').join('"'));
-  assert.deepEqual(Object.keys(pose).sort(), ['alvo', 'distancia', 'fov', 'giro', 'olhar']);
+  assert.deepEqual(Object.keys(pose).sort(), ['alvo', 'bancada', 'distancia', 'fov', 'giro', 'olhar']);
+  assert.deepEqual(Object.keys(pose.bancada).sort(), ['frente', 'fundo', 'lados', 'some']);
   const q = enquadramento();
   assert.ok(conf.includes(`viewBox="${q.x.toFixed(1)} ${q.y.toFixed(1)} ${q.largura.toFixed(1)} ${q.altura.toFixed(1)}"`), 'a reserva fora do enquadramento da câmera');
   // a rodinha da reserva no ângulo de repouso: deslocada do meio e achatada (elipse)
@@ -147,6 +148,34 @@ test('arte 2: reserva e 3D parado são a mesma peça (pose, câmera e bancada), 
   assert.ok(conf.includes('data-brilho="0.08"'));
   // marca: o cubo da reserva com as duas abas, como no 3D
   assert.equal(abertura(ctx).split('class="roda-reserva__aba"').length - 1, 2);
+});
+
+test('arte 3: bancada que some no fundo, reserva pela câmera (pé, tampa em duas peças, faixa com friso) e roda de borracha', async () => {
+  const { esc, palavras } = await import('../molde/_gerador/montar.mjs');
+  const { default: abertura } = await import('../demos/3d/_gerador/secoes/abertura-3d.mjs');
+  const { default: configurador } = await import('../demos/3d/_gerador/secoes/configurador-3d.mjs');
+  const ctx = { esc, palavras, link: (r) => r, assets: 'assets/' };
+  const conf = configurador(ctx);
+  // o tampo e a linha somem para os lados e para a frente, na reserva e na cena
+  for (const trecho of ['mask="url(#caramanhola-some-lados)"', 'mask="url(#caramanhola-some-frente)"']) assert.ok(conf.includes(trecho), trecho);
+  const cena = fs.readFileSync(path.join(DEMO, 'site', 'assets', '3d', 'caramanhola-3d.js'), 'utf8');
+  assert.ok(cena.includes('some: [b.lados[0], b.lados[1], b.some[0], b.some[1]]') && cena.includes('some: [b.lados[0], b.lados[1], 0, 0]'));
+  const motor = fs.readFileSync(path.join(DEMO, 'site', 'assets', '3d', 'cena-3d.js'), 'utf8');
+  assert.ok(motor.includes('uniform vec4 uSome;') && motor.includes('* a, a);'), 'o motor sem o sumir no fundo');
+  // tampa em duas peças com a face de cima à vista; faixa como cinta com friso de sombra
+  assert.equal(conf.split('class="caramanhola-reserva__tampa"').length - 1, 2);
+  assert.equal(conf.split('class="caramanhola-reserva__tampa-topo"').length - 1, 2);
+  assert.ok(conf.includes('class="caramanhola-reserva__friso"') && conf.includes('class="caramanhola-reserva__cinta"'));
+  assert.ok(cena.includes('frisos') && cena.includes('cena.luz.borda = 0.55'));
+  // a cor tem o nome da marca
+  assert.ok(conf.includes('>Verde luz<') && !conf.includes('Verde faixa'));
+  // no celular, o palco vai de borda a borda
+  const css = fs.readFileSync(path.join(DEMO, 'site', 'assets', '3d', '3d.css'), 'utf8');
+  assert.ok(css.includes('margin-inline: calc(-1 * var(--margem));'));
+  // marca: pneu de borracha (mais escuro que o aro), as duas faixas como no 3D, cubo de 64 lados
+  const roda = fs.readFileSync(path.join(DEMO, 'site', 'assets', '3d', 'raio-3d.js'), 'utf8');
+  assert.ok(roda.includes("[1, 1, 1], 0.06)") && roda.includes('{ cor: tinta, brilho: 0.06 }') && roda.includes('], 64), { cor: metal'));
+  assert.equal(abertura(ctx).split('class="roda-reserva__faixa"').length - 1, 2);
 });
 
 test('demo 3D: conferências passam e as fotos mostram as duas cenas abertas, no celular e no computador', opcoes, () => {
@@ -420,7 +449,7 @@ async function meioDaRodinha(s, comReserva) {
       }
     }
   }
-  return { meio: n ? soma / n : null, n, peca: linhas ? pecaMeio / linhas : null, largura: img.w };
+  return { meio: n ? soma / n : null, n, peca: linhas ? pecaMeio / linhas : null, largura: img.w, img };
 }
 
 test('o giro do começo termina na pose da reserva: a rodinha no mesmo lugar no 3D parado e na reserva', opcoes, async () => {
@@ -434,10 +463,19 @@ test('o giro do começo termina na pose da reserva: a rodinha no mesmo lugar no 
       await esperar(5200); // o giro do começo acabou
       const no3d = await meioDaRodinha(s, false);
       const naReserva = await meioDaRodinha(s, true);
-      assert.ok(no3d.n > 20 && naReserva.n > 20, JSON.stringify({ no3d, naReserva }));
+      assert.ok(no3d.n > 20 && naReserva.n > 20, `rodinha não achada: 3D ${no3d.n}, reserva ${naReserva.n}`);
       // longe do meio (a pose é de lado) e no mesmo lugar nos dois (tolerância: 3% da largura)
       assert.ok(no3d.meio > no3d.peca + 8, `rodinha do 3D no meio da peça: ${JSON.stringify(no3d)}`);
       assert.ok(Math.abs(no3d.meio - naReserva.meio) < no3d.largura * 0.03, `${tamanho.largura} px: 3D ${no3d.meio.toFixed(1)}, reserva ${naReserva.meio.toFixed(1)}`);
+      // a bancada some no fundo: os cantos de baixo do palco têm a cor do fundo da página (nada de
+      // retângulo cinza recortado), no 3D e na reserva
+      for (const [qual, img] of [['3D', no3d.img], ['reserva', naReserva.img]]) {
+        for (const x of [2, img.w - 3]) {
+          const i = ((img.h - 3) * img.w + x) * 4;
+          const cor = [img.px[i], img.px[i + 1], img.px[i + 2]];
+          assert.ok(cor.every((v, k) => Math.abs(v - [236, 238, 234][k]) <= 6), `${tamanho.largura} px, ${qual}, canto ${x}: ${cor}`);
+        }
+      }
     } finally {
       await s.fechar();
     }

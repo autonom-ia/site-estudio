@@ -66,7 +66,7 @@
     var marca = lerJson(palco.getAttribute('data-3d-emblema'), null);
     // a pose de repouso e a câmera (giro, alvo, olhar, distância, fov)
     var pose = lerJson(palco.getAttribute('data-3d-pose'), null);
-    if (pose && !(Array.isArray(pose.alvo) && Array.isArray(pose.olhar) && pose.distancia > 0)) pose = null;
+    if (pose && !(Array.isArray(pose.alvo) && Array.isArray(pose.olhar) && pose.distancia > 0 && pose.bancada)) pose = null;
     if (!form || !perfil || !tampa || !faixa || !marca || !pose) throw new Error('faltam os dados da peça no palco (data-3d-perfil, -tampa, -faixa, -emblema, -pose) ou o formulário de escolhas');
     var cena = C.criar(palco, { fov: pose.fov || 0.5 });
     if (!cena) return null;
@@ -76,13 +76,24 @@
     var corpo = cena.objeto(C.formas.torno(perfil, 96), { cor: '#2B3035', brilho: 0.15 });
     var topo = cena.objeto(C.formas.torno(tampa, 48), { cor: C.corDaMarca(palco, '--cor-tinta', '#14181B'), brilho: 0.45 });
     var tira = cena.objeto(C.formas.torno(faixa, 96), { cor: '#C9CED1', brilho: 1, metal: 0.3, acende: 0.12 });
+    // o friso: uma linha de sombra em cima e embaixo da faixa (no tom do corpo, mais escuro)
+    var friso = Number(palco.getAttribute('data-3d-friso')) || 0.012;
+    var rFriso = faixa[0][0] + 0.0012;
+    var hEmbaixo = faixa[0][1];
+    var hEmCima = faixa[faixa.length - 1][1];
+    var frisos = cena.objeto(C.formas.juntar([
+      C.formas.torno([[rFriso, hEmbaixo - friso], [rFriso, hEmbaixo]], 96),
+      C.formas.torno([[rFriso, hEmCima], [rFriso, hEmCima + friso]], 96),
+    ]), { cor: '#000', brilho: 0 });
     var gravada = cena.objeto(emblema(C, marca, raioNa(perfil, marca.altura)), { cor: '#E6E9E4', brilho: 0.3 });
     var tinta = C.corDaMarca(palco, '--cor-tinta', '#14181B');
     var claro = C.corDaMarca(palco, '--cor-fundo', '#ECEEEA');
-    // a bancada: o tampo (do fundo, z -0,25, até a frente) e a linha do fundo, na altura do tampo
-    // acende: a luz da cena escurece o tampo; com ela, ele sai no tom de --cor-fundo-2, como na reserva
-    var tampo = cena.objeto(C.formas.plano(-40, 40, -0.25, 1.5), { cor: C.corDaMarca(palco, '--cor-fundo-2', '#DFE3DC'), brilho: 0, acende: 0.5, chao: true });
-    var bancada = cena.objeto(C.formas.tubo([-40, 0, -0.25], [40, 0, -0.25], 0.005, 6), { cor: C.misturar(tinta, claro, 0.55), brilho: 0 });
+    // a bancada (pose.bancada): o tampo, do fundo até a frente, e a linha do fundo, na altura do
+    // tampo. Os dois somem no fundo da página para os lados e para a frente (some), como na reserva.
+    // acende: a luz da cena escurece o tampo; com ela, ele sai no tom de --cor-fundo-2.
+    var b = pose.bancada;
+    var tampo = cena.objeto(C.formas.plano(-4, 4, b.fundo, b.frente), { cor: C.corDaMarca(palco, '--cor-fundo-2', '#DFE3DC'), brilho: 0, acende: 0.5, chao: true, some: [b.lados[0], b.lados[1], b.some[0], b.some[1]] });
+    var bancada = cena.objeto(C.formas.tubo([-4, 0, b.fundo], [4, 0, b.fundo], 0.005, 6), { cor: C.misturar(tinta, claro, 0.55), brilho: 0, some: [b.lados[0], b.lados[1], 0, 0] });
 
     cena.camera.alvo = pose.alvo;
     var t = Math.hypot(pose.olhar[0], pose.olhar[1], pose.olhar[2]);
@@ -91,6 +102,7 @@
     cena.luz.chao = C.corDaMarca(palco, '--cor-fundo-2', '#DFE3DC');
     cena.luz.direcao = [-0.7, 1.0, 0.9];
     cena.luz.forca = 0.9;
+    cena.luz.borda = 0.55; // a borda acesa mais fraca: a peça clara não some no fundo claro
     cena.chao([0, -meio, 0], [0.82, 0.82], 0.5, C.corDaMarca(palco, '--cor-tinta', '#14181B'));
 
     // estado da peça: o atual anima até o alvo
@@ -109,6 +121,7 @@
       if (f) alvo.faixa = f.getAttribute('data-faixa') === 'sim';
       troca = { inicio: performance.now(), cor: atual.cor, brilho: atual.brilho, marca: atual.marca };
       tira.visivel = alvo.faixa;
+      frisos.visivel = alvo.faixa;
       cena.acordar();
     }
     cena.ouvir(form, 'change', lerEscolha);
@@ -162,10 +175,12 @@
       corpo.material.brilho = atual.brilho;
       gravada.material.cor = atual.marca;
       gravada.material.brilho = atual.brilho * 0.6;
+      frisos.material.cor = C.misturar(atual.cor, [0, 0, 0], 0.45);
       var m = C.matriz.compor(C.matriz.girarX(inclinacao), C.matriz.girarY(angulo), C.matriz.mover(0, -meio, 0));
       corpo.matriz = m;
       topo.matriz = m;
       tira.matriz = m;
+      frisos.matriz = m;
       gravada.matriz = m;
       bancada.matriz = C.matriz.mover(0, -meio, 0);
       tampo.matriz = bancada.matriz;

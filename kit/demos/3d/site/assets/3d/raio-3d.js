@@ -28,12 +28,12 @@
     var cena = C.criar(palco, { fov: REPOUSO.fov });
     if (!cena) return null;
     var F = C.formas;
-    // o pneu: a tinta da noite um pouco mais clara, para não sumir no fundo da abertura
-    var tinta = C.misturar(C.corDaMarca(palco, '--cor-noite-2', '#1B2025'), [1, 1, 1], 0.17);
+    // o pneu: borracha, a tinta da noite só um pouco mais clara (mais escuro que o aro)
+    var tinta = C.misturar(C.corDaMarca(palco, '--cor-noite-2', '#1B2025'), [1, 1, 1], 0.06);
     var metal = C.misturar(C.corDaMarca(palco, '--cor-apoio-noite', '#A8B0B6'), [1, 1, 1], 0.25);
     var luz = C.corDaMarca(palco, '--cor-luz', '#D4F04F');
 
-    var pneu = cena.objeto(F.anel(1.0, 0.058, 160, 16), { cor: tinta, brilho: 0.2 });
+    var pneu = cena.objeto(F.anel(1.0, 0.058, 160, 16), { cor: tinta, brilho: 0.06 });
     var faixa = cena.objeto(F.juntar([
       F.torno([[0.988, 0.0598], [1.012, 0.0598]], 160),
       F.torno([[0.988, -0.0598], [1.012, -0.0598]], 160),
@@ -44,7 +44,7 @@
     var cubo = cena.objeto(F.torno([
       [0, -0.13], [0.028, -0.13], [0.028, -0.13], [0.028, -0.085], [0.105, -0.08], [0.105, -0.064], [0.045, -0.058],
       [0.045, 0.058], [0.105, 0.064], [0.105, 0.08], [0.028, 0.085], [0.028, 0.13], [0.028, 0.13], [0, 0.13],
-    ], 40), { cor: metal, brilho: 0.8, metal: 0.9 });
+    ], 64), { cor: metal, brilho: 0.8, metal: 0.9 });
     var lista = [];
     for (var i = 0; i < RAIOS; i += 1) {
       var lado = i % 2 === 0 ? 1 : -1;

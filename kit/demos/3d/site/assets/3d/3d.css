@@ -22,9 +22,10 @@
 .abertura--3d .abertura__lado { grid-area: lado; position: relative; z-index: 1; }
 .marca-3d {
   grid-area: roda; justify-self: end; width: min(92%, 26rem); aspect-ratio: 1;
-  margin-right: calc(-1 * var(--margem) - 10%); margin-top: -.5rem;
+  /* sangria franca: cerca de um quarto da roda passa da borda direita */
+  margin-right: calc(-1 * var(--margem) - 30%); margin-top: -.5rem;
   /* no celular a roda encosta no pé da abertura, como se rolasse na linha de baixo */
-  margin-bottom: calc(-1 * clamp(3.5rem, 8vw, 7rem) - 6%);
+  margin-bottom: calc(-1 * clamp(3.5rem, 8vw, 7rem) - 8%);
 }
 @container (min-width: 60rem) {
   .abertura--3d .abertura__grade {
@@ -38,7 +39,7 @@
 }
 
 /* a reserva é a mesma roda na mesma pose do 3D parado (projetada na montagem da seção) */
-.roda-reserva__pneu { fill: none; stroke: color-mix(in srgb, var(--cor-noite-2) 74%, var(--cor-sobre-noite)); stroke-width: 7; }
+.roda-reserva__pneu { fill: none; stroke: color-mix(in srgb, var(--cor-noite-2) 92%, var(--cor-sobre-noite)); stroke-width: 7; }
 .roda-reserva__faixa { fill: none; stroke: var(--cor-luz); stroke-width: 1.2; }
 .roda-reserva__aro { fill: none; stroke: var(--cor-apoio-noite); stroke-width: 3.6; }
 .roda-reserva__raios { fill: none; stroke: var(--cor-apoio-noite); stroke-width: .7; stroke-linecap: round; }
@@ -63,7 +64,9 @@
 /* no celular o palco fica preso no alto enquanto a pessoa escolhe: a peça nunca sai da tela.
    A altura tem teto em rem: a foto de conferência estica a janela e o palco não muda com ela. */
 .configurador__palco {
-  grid-area: palco; position: sticky; top: 0; z-index: 2; width: 100%; height: min(44svh, 22rem);
+  grid-area: palco; position: sticky; top: 0; z-index: 2; height: min(44svh, 22rem);
+  /* de borda a borda: a bancada some no fundo da página, sem borda reta dos lados */
+  margin-inline: calc(-1 * var(--margem));
   background: var(--cor-fundo); cursor: grab;
 }
 /* no celular, as escolhas passam por baixo do palco preso: um degradê no pé do palco as faz
@@ -106,7 +109,7 @@
     grid-template-areas: "palco texto" "palco escolhas" "palco fecho";
     align-items: start;
   }
-  .configurador__palco { top: 1.5rem; align-self: center; height: auto; aspect-ratio: 4 / 5; max-width: 38rem; justify-self: center; }
+  .configurador__palco { top: 1.5rem; align-self: center; height: auto; aspect-ratio: 4 / 5; width: 100%; max-width: 38rem; margin-inline: 0; justify-self: center; }
   .configurador__palco::after { content: none; }
 }
 
@@ -118,8 +121,10 @@
 .configurador:has([data-esmalte="6"]:checked) { --esmalte: var(--esmalte-6); }
 .caramanhola-reserva__corpo { fill: var(--esmalte); transition: fill .3s ease; }
 .caramanhola-reserva__tampa { fill: var(--cor-tinta); }
-/* a faixa no mesmo tom que ela sai no 3D (refletiva, sob a luz da cena) */
-.caramanhola-reserva__faixa { fill: #B3B8BB; }
+/* a faixa no mesmo tom que ela sai no 3D (refletiva, sob a luz da cena), com o friso de sombra */
+.caramanhola-reserva__cinta { fill: #B3B8BB; }
+.caramanhola-reserva__friso { fill: color-mix(in srgb, var(--esmalte) 55%, #000); transition: fill .3s ease; }
+.caramanhola-reserva__tampa-topo { fill: color-mix(in srgb, var(--cor-tinta) 82%, #fff); }
 .caramanhola-reserva__brilho { fill: #fff; opacity: 0; transition: opacity .3s ease; }
 .caramanhola-reserva__tampo { fill: var(--cor-fundo-2); }
 .caramanhola-reserva__bancada { stroke: color-mix(in srgb, var(--cor-tinta) 45%, var(--cor-fundo)); stroke-width: 1.2; }

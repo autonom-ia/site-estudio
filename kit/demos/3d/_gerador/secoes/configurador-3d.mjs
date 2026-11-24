@@ -22,7 +22,9 @@ const TAMPA_BRUTA = [
   [0.262, 1.9], [0.262, 1.9], [0.266, 2.06], [0.25, 2.09], [0.25, 2.09], [0.14, 2.1], [0.14, 2.1],
   [0.112, 2.12], [0.105, 2.24], [0.09, 2.27], [0.05, 2.285], [0, 2.288],
 ];
-const FAIXA = [[0.385, 0.94], [0.389, 0.94], [0.389, 0.94], [0.389, 1.06], [0.389, 1.06], [0.385, 1.06]];
+// A faixa refletiva sai um pouco do corpo (relevo); FRISO: a linha de sombra em cima e embaixo dela.
+const FAIXA = [[0.385, 0.94], [0.392, 0.94], [0.392, 0.94], [0.392, 1.06], [0.392, 1.06], [0.385, 1.06]];
+const FRISO = 0.012;
 // A rodinha raiada da marca, gravada num lado só da peça (centro na altura 1,5, onde o corpo é reto).
 const EMBLEMA = { altura: 1.5, raio: 0.1, raios: 8 };
 const PASSOS = 3; // pontos novos entre dois pontos do perfil
@@ -58,7 +60,7 @@ const CORES = [
   { valor: 'grafite', nome: 'Grafite', hex: '#2B3035', tom: 'escuro' },
   { valor: 'azul', nome: 'Azul quadro', hex: '#1C46BF', tom: 'escuro' },
   { valor: 'concreto', nome: 'Concreto', hex: '#C3C8C0', tom: 'claro' },
-  { valor: 'verde', nome: 'Verde faixa', hex: '#B9D63A', tom: 'claro' },
+  { valor: 'verde', nome: 'Verde luz', hex: '#B9D63A', tom: 'claro' },
 ];
 const ACABAMENTOS = [
   { valor: 'fosca', nome: 'Fosca', brilho: 0.08 },
@@ -74,22 +76,22 @@ const TITULO = [['fina', 'Monte a'], ['pesada', 'caramanhola'], ['media', 'do se
 // A peça parada e a câmera: giro de repouso (radianos), alvo, direção do olhar (do alvo para o
 // olho), distância e abertura (fov, vertical). A cena 3D (caramanhola-3d.js) lê daqui
 // (data-3d-pose): mira com esta câmera e termina o giro do começo exatamente neste giro. A reserva
-// é enquadrada pela mesma câmera e desenha a rodinha no mesmo ângulo: mesma peça, mesmo tamanho,
-// mesmo lugar, mesma pose.
-const POSE = Object.freeze({ giro: 0.5, alvo: [0, 0.02, 0], olhar: [0, 0.53, 5.6], distancia: 5.1, fov: 0.5 });
-// A bancada: o tampo vai do fundo (z -0,25, onde fica a linha) até a frente (z 1,5).
-const BANCADA = Object.freeze({ fundo: -0.25, frente: 1.5 });
+// é desenhada pela mesma câmera (contorno, base, tampa, faixa e rodinha projetados): mesma peça,
+// mesmo tamanho, mesmo lugar, mesma pose.
+// bancada: o tampo vai do fundo (z, onde fica a linha) até a frente; ele e a linha somem no fundo
+// da página para os lados (de "lados[0]" a "lados[1]" do meio) e para a frente (de "some[0]" a
+// "some[1]"), para não virar um retângulo recortado.
+const POSE = Object.freeze({
+  giro: 0.5, alvo: [0, 0.02, 0], olhar: [0, 0.53, 5.6], distancia: 5.1, fov: 0.5,
+  bancada: { fundo: -0.25, frente: 1.5, lados: [0.45, 1.25], some: [0.05, 0.6] },
+});
+const BANCADA = POSE.bancada;
 
-// Desenho de reserva: o perfil visto de frente (1 unidade = 100), com sombra de cilindro por cima.
+// Desenho de reserva: unidades da reserva (a peça tem 1 unidade de raio = 100 de frente, base em ALTO).
 const ESCALA = 100;
 const ALTO = 240;
 const MEIO = 60;
-const ponto = (r, h, lado) => `${(MEIO + lado * r * ESCALA).toFixed(1)} ${(ALTO - h * ESCALA).toFixed(1)}`;
-function silhueta(perfil) {
-  const direita = perfil.map(([r, h]) => ponto(r, h, 1));
-  const esquerda = [...perfil].reverse().map(([r, h]) => ponto(r, h, -1));
-  return `M${[...direita, ...esquerda].join('L')}Z`;
-}
+const VOLTA = 72; // pontos em cada anel do perfil
 
 // raio do perfil numa altura (a mesma conta de caramanhola-3d.js)
 function raioNa(perfil, altura) {
@@ -101,65 +103,160 @@ function raioNa(perfil, altura) {
   return perfil[perfil.length - 1][0];
 }
 
-// A rodinha gravada no ângulo de repouso: cada ponto colado no corpo, como na cena (lado da frente
-// quando o giro é zero), girado pelo giro de repouso e visto de frente. Sai uma elipse deslocada.
-export function emblemaNaPose(giro = POSE.giro) {
-  const R = raioNa(CORPO, EMBLEMA.altura) + 0.006;
-  const noCorpo = (u, v) => {
-    const a = Math.PI / 2 - u / R;
-    const [x, z] = [Math.cos(a) * R, Math.sin(a) * R];
-    const xg = Math.cos(giro) * x + Math.sin(giro) * z;
-    return [MEIO + xg * ESCALA, ALTO - (EMBLEMA.altura + v) * ESCALA];
-  };
-  const p = ([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`;
-  const voltas = 32;
-  const aro = [];
-  for (let i = 0; i <= voltas; i += 1) {
-    const a = (i / voltas) * Math.PI * 2;
-    aro.push(p(noCorpo(Math.cos(a) * EMBLEMA.raio, Math.sin(a) * EMBLEMA.raio)));
-  }
-  const raios = [];
-  for (let k = 0; k < EMBLEMA.raios; k += 1) {
-    const a = (k / EMBLEMA.raios) * Math.PI * 2;
-    raios.push(`M${p(noCorpo(0, 0))}L${p(noCorpo(Math.cos(a) * EMBLEMA.raio, Math.sin(a) * EMBLEMA.raio))}`);
-  }
-  return { centro: noCorpo(0, 0), d: `M${aro.join('L')}Z${raios.join('')}` };
-}
-
-// A câmera da cena (as mesmas contas do motor): devolve onde um ponto da peça (em pé, base em
-// y = 0) cai na altura da tela, em "tangente" (0 no meio da tela, tan(fov/2) na borda de cima).
+// A câmera da cena (as mesmas contas do motor), para a reserva. projetar([x, y, z]) leva um ponto
+// da peça (em pé, base em y = 0, eixo em x = z = 0) para a reserva: [x, y] em unidades da reserva.
+// A escala é a que dá à peça, de frente, a mesma altura que ela tem no desenho de frente.
 function camera() {
   const altura = TAMPA[TAMPA.length - 1][1];
   const meio = altura / 2;
   const t = Math.hypot(...POSE.olhar);
   const olho = POSE.olhar.map((v, i) => POSE.alvo[i] + (v / t) * POSE.distancia);
   const frente = POSE.alvo.map((v, i) => v - olho[i]);
-  const n = Math.hypot(...frente);
-  const f = frente.map((v) => v / n);
-  // "para cima" da câmera: perpendicular à frente, sem virar de lado
-  const cima = [0, f[2] * f[2] + f[0] * f[0], -f[1] * f[2]];
-  const nc = Math.hypot(...cima);
-  const naTela = ([x, y, z]) => {
+  const nf = Math.hypot(...frente);
+  const f = frente.map((v) => v / nf);
+  // "para cima" da câmera: perpendicular à frente, sem virar de lado; "direita": frente x cima
+  const c0 = [0, f[2] * f[2] + f[0] * f[0], -f[1] * f[2]];
+  const nc = Math.hypot(...c0);
+  const cima = c0.map((v) => v / nc);
+  const dir = [f[1] * cima[2] - f[2] * cima[1], f[2] * cima[0] - f[0] * cima[2], f[0] * cima[1] - f[1] * cima[0]];
+  const tangentes = ([x, y, z]) => {
     const d = [x - olho[0], y - meio - olho[1], z - olho[2]];
-    return (d[0] * cima[0] + d[1] * cima[1] + d[2] * cima[2]) / nc / (d[0] * f[0] + d[1] * f[1] + d[2] * f[2]);
+    const fundo = d[0] * f[0] + d[1] * f[1] + d[2] * f[2];
+    return [(d[0] * dir[0] + d[1] * dir[1] + d[2] * dir[2]) / fundo, (d[0] * cima[0] + d[1] * cima[1] + d[2] * cima[2]) / fundo];
   };
-  const base = naTela([0, 0, 0]);
-  // unidades da reserva por "tangente": a altura da peça na tela vira a altura dela na reserva
-  const escala = (altura * ESCALA) / (naTela([0, altura, 0]) - base);
-  return { naTela, base, escala };
+  const base = tangentes([0, 0, 0])[1];
+  const escala = (altura * ESCALA) / (tangentes([0, altura, 0])[1] - base);
+  const projetar = (p) => {
+    const [tx, ty] = tangentes(p);
+    return [MEIO + tx * escala, ALTO - (ty - base) * escala];
+  };
+  return { projetar, base, escala };
+}
+const CAMERA = camera();
+const xy = ([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`;
+
+// Um anel do perfil (raio r na altura h) na reserva: os pontos, o mais à esquerda, o mais à direita,
+// e os dois arcos entre eles. A frente é o arco mais baixo na tela (a câmera olha de cima).
+function anel(r, h) {
+  const pts = [];
+  for (let k = 0; k < VOLTA; k += 1) {
+    const a = (k / VOLTA) * Math.PI * 2;
+    pts.push(CAMERA.projetar([Math.cos(a) * r, h, Math.sin(a) * r]));
+  }
+  let esq = 0;
+  let dir = 0;
+  pts.forEach((p, k) => {
+    if (p[0] < pts[esq][0]) esq = k;
+    if (p[0] > pts[dir][0]) dir = k;
+  });
+  const arco = (de, ate) => {
+    const lista = [];
+    for (let k = de; ; k = (k + 1) % VOLTA) {
+      lista.push(pts[k]);
+      if (k === ate) break;
+    }
+    return lista;
+  };
+  const a1 = arco(esq, dir);
+  const a2 = arco(dir, esq);
+  const maisBaixo = (lista) => Math.max(...lista.map((p) => p[1]));
+  const [frente, atras] = maisBaixo(a1) >= maisBaixo(a2) ? [a1, [...a2].reverse()] : [[...a2].reverse(), a1];
+  // frente e atrás, os dois da esquerda para a direita
+  return { pts, esq: pts[esq], dir: pts[dir], frente, atras };
 }
 
-// A bancada na reserva, pela câmera da cena: onde fica a linha do fundo e a frente do tampo.
+// Onde uma linha (pontos da esquerda para a direita) passa na altura x; null se não passa.
+function alturaEm(linha, x) {
+  for (let i = 1; i < linha.length; i += 1) {
+    const [x0, y0] = linha[i - 1];
+    const [x1, y1] = linha[i];
+    if ((x0 <= x && x <= x1) || (x1 <= x && x <= x0)) return x1 === x0 ? Math.max(y0, y1) : y0 + ((y1 - y0) * (x - x0)) / (x1 - x0);
+  }
+  return null;
+}
+// O pé visto de cima: de cada anel de baixo, aparece o arco da frente; o pé é o mais baixo deles
+// em cada ponto (sem isso, o fundo côncavo da peça sai como um calombo embaixo).
+function pe(aneis, esq, dir, passos = 48) {
+  const pontos = [];
+  for (let k = 0; k <= passos; k += 1) {
+    const x = esq[0] + ((dir[0] - esq[0]) * k) / passos;
+    let y = -Infinity;
+    for (const a of aneis) {
+      const v = alturaEm(a.frente, x);
+      if (v !== null && v > y) y = v;
+    }
+    pontos.push([x, y]);
+  }
+  return pontos;
+}
+
+// Contorno de um sólido de torno visto pela câmera: o pé (arcos da frente dos anéis de baixo), o
+// lado direito subindo, o arco de trás do anel de cima e o lado esquerdo descendo. A base sai em elipse.
+function solido(perfil) {
+  const aneis = perfil.filter(([r]) => r > 0.001).map(([r, h]) => anel(r, h));
+  const alto = aneis[aneis.length - 1];
+  // os anéis de baixo: até o mais largo do primeiro terço da peça
+  const h0 = perfil[0][1];
+  const h1 = perfil[perfil.length - 1][1];
+  const deBaixo = aneis.filter((a, i) => perfil.filter(([r]) => r > 0.001)[i][1] <= h0 + (h1 - h0) / 3);
+  const largo = deBaixo.reduce((m, a) => (a.dir[0] - a.esq[0] > m.dir[0] - m.esq[0] ? a : m), deBaixo[0]);
+  const lado = aneis.slice(aneis.indexOf(largo));
+  const pontos = [
+    ...pe(deBaixo, largo.esq, largo.dir),
+    ...lado.map((a) => a.dir),
+    ...[...alto.atras].reverse(),
+    ...[...lado].reverse().map((a) => a.esq),
+  ];
+  return `M${pontos.map(xy).join('L')}Z`;
+}
+// A elipse inteira de um anel (a face de cima de uma peça, vista de cima).
+const elipse = (r, h) => `M${anel(r, h).pts.map(xy).join('L')}Z`;
+// Uma faixa em volta da peça, da altura h0 à h1: o que aparece dela na frente.
+function cinta(r, h0, h1) {
+  const embaixo = anel(r, h0);
+  const em = anel(r, h1);
+  return `M${[...embaixo.frente, ...[...em.frente].reverse()].map(xy).join('L')}Z`;
+}
+
+// A rodinha gravada no ângulo de repouso: cada ponto colado no corpo, como na cena (lado da frente
+// quando o giro é zero), girado pelo giro de repouso e visto pela câmera.
+export function emblemaNaPose(giro = POSE.giro) {
+  const R = raioNa(CORPO, EMBLEMA.altura) + 0.006;
+  const noCorpo = (u, v) => {
+    const a = Math.PI / 2 - u / R;
+    const [x, z] = [Math.cos(a) * R, Math.sin(a) * R];
+    return CAMERA.projetar([Math.cos(giro) * x + Math.sin(giro) * z, EMBLEMA.altura + v, -Math.sin(giro) * x + Math.cos(giro) * z]);
+  };
+  const voltas = 32;
+  const aro = [];
+  for (let i = 0; i <= voltas; i += 1) {
+    const a = (i / voltas) * Math.PI * 2;
+    aro.push(xy(noCorpo(Math.cos(a) * EMBLEMA.raio, Math.sin(a) * EMBLEMA.raio)));
+  }
+  const raios = [];
+  for (let k = 0; k < EMBLEMA.raios; k += 1) {
+    const a = (k / EMBLEMA.raios) * Math.PI * 2;
+    raios.push(`M${xy(noCorpo(0, 0))}L${xy(noCorpo(Math.cos(a) * EMBLEMA.raio, Math.sin(a) * EMBLEMA.raio))}`);
+  }
+  return { centro: noCorpo(0, 0), d: `M${aro.join('L')}Z${raios.join('')}` };
+}
+
+// A bancada na reserva, pela câmera da cena: a linha do fundo, a frente do tampo e onde o tampo
+// some no fundo da página (para a frente e para os lados, na altura da peça).
 export function bancadaNaReserva() {
-  const { naTela, base, escala } = camera();
-  const y = (z) => ALTO - (naTela([0, 0, z]) - base) * escala;
-  return { linha: y(BANCADA.fundo), frente: y(BANCADA.frente) };
+  const y = (z) => CAMERA.projetar([0, 0, z])[1];
+  const x = (d) => CAMERA.projetar([d, 0, 0])[0];
+  return {
+    linha: y(BANCADA.fundo), frente: y(BANCADA.frente),
+    some: [y(BANCADA.some[0]), y(BANCADA.some[1])],
+    lados: [x(BANCADA.lados[0]) - MEIO, x(BANCADA.lados[1]) - MEIO],
+  };
 }
 
 // O enquadramento da reserva: a mesma faixa de altura que a câmera vê, centrada na peça. O palco
 // é mais largo que o desenho (celular e computador), e a sobra dos lados mostra a bancada.
 export function enquadramento() {
-  const { base, escala } = camera();
+  const { base, escala } = CAMERA;
   const meiaAltura = Math.tan(POSE.fov / 2) * escala;
   const centro = ALTO + base * escala; // a linha do meio da tela (tangente 0)
   const altura = 2 * meiaAltura;
@@ -167,39 +264,67 @@ export function enquadramento() {
   return { x: MEIO - largura / 2, y: centro - meiaAltura, largura, altura };
 }
 
+// A tampa em duas peças, como a cena: o anel (até o ombro) e o bico (do ombro para cima).
+const OMBRO = 2.095;
+const TAMPA_ANEL = TAMPA.filter(([, h]) => h <= OMBRO);
+const TAMPA_BICO = TAMPA.filter(([, h]) => h > OMBRO);
+
 function caramanholaDeReserva() {
-  const bancada = bancadaNaReserva();
+  const b = bancadaNaReserva();
   const q = enquadramento();
-  const faixaY = ALTO - FAIXA[3][1] * ESCALA;
-  const faixaAlto = (FAIXA[3][1] - FAIXA[0][1]) * ESCALA;
-  const faixaLargo = FAIXA[2][0] * ESCALA;
+  const corpo = solido(CORPO);
+  const [, topoAnel] = TAMPA_ANEL[TAMPA_ANEL.length - 1];
+  const raioAnel = TAMPA_ANEL[TAMPA_ANEL.length - 1][0];
+  const fx = (v) => (MEIO + v).toFixed(1);
+  // degradê dos lados: some de "lados[0]" a "lados[1]" do meio, nos dois lados
+  const pLado = (v) => ((v + 400) / 920).toFixed(4);
   return `<svg class="palco-3d__reserva caramanhola-reserva" viewBox="${q.x.toFixed(1)} ${q.y.toFixed(1)} ${q.largura.toFixed(1)} ${q.altura.toFixed(1)}" width="${Math.round(q.largura)}" height="${Math.round(q.altura)}" aria-hidden="true" focusable="false">
         <defs>
           <linearGradient id="caramanhola-volume" x1="0" x2="1" y1="0" y2="0">
             <stop offset="0" stop-color="#000" stop-opacity=".42" />
-            <stop offset=".22" stop-color="#000" stop-opacity="0" />
-            <stop offset=".36" stop-color="#fff" stop-opacity=".16" />
-            <stop offset=".55" stop-color="#fff" stop-opacity="0" />
+            <stop offset=".2" stop-color="#000" stop-opacity=".04" />
+            <stop offset=".38" stop-color="#fff" stop-opacity=".06" />
+            <stop offset=".6" stop-color="#000" stop-opacity=".04" />
             <stop offset="1" stop-color="#000" stop-opacity=".5" />
           </linearGradient>
           <radialGradient id="caramanhola-chao">
             <stop offset="0" stop-color="#000" stop-opacity=".28" />
             <stop offset="1" stop-color="#000" stop-opacity="0" />
           </radialGradient>
+          <linearGradient id="caramanhola-lados" gradientUnits="userSpaceOnUse" x1="-400" x2="520" y1="0" y2="0">
+            <stop offset="0" stop-color="#fff" stop-opacity="0" />
+            <stop offset="${pLado(MEIO - b.lados[1])}" stop-color="#fff" stop-opacity="0" />
+            <stop offset="${pLado(MEIO - b.lados[0])}" stop-color="#fff" />
+            <stop offset="${pLado(MEIO + b.lados[0])}" stop-color="#fff" />
+            <stop offset="${pLado(MEIO + b.lados[1])}" stop-color="#fff" stop-opacity="0" />
+            <stop offset="1" stop-color="#fff" stop-opacity="0" />
+          </linearGradient>
+          <linearGradient id="caramanhola-frente" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="${b.some[0].toFixed(1)}" y2="${b.some[1].toFixed(1)}">
+            <stop offset="0" stop-color="#fff" />
+            <stop offset="1" stop-color="#fff" stop-opacity="0" />
+          </linearGradient>
+          <mask id="caramanhola-some-lados" maskUnits="userSpaceOnUse" x="-400" y="-200" width="920" height="700"><rect x="-400" y="-200" width="920" height="700" fill="url(#caramanhola-lados)" /></mask>
+          <mask id="caramanhola-some-frente" maskUnits="userSpaceOnUse" x="-400" y="-200" width="920" height="700"><rect x="-400" y="-200" width="920" height="700" fill="url(#caramanhola-frente)" /></mask>
         </defs>
-        <rect class="caramanhola-reserva__tampo" x="-400" y="${bancada.linha.toFixed(1)}" width="920" height="${(bancada.frente - bancada.linha).toFixed(1)}" />
-        <line class="caramanhola-reserva__bancada" x1="-400" x2="520" y1="${bancada.linha.toFixed(1)}" y2="${bancada.linha.toFixed(1)}" />
-        <ellipse cx="${MEIO}" cy="${ALTO}" rx="50" ry="7" fill="url(#caramanhola-chao)" />
-        <path class="caramanhola-reserva__corpo" d="${silhueta(CORPO)}" />
-        <rect class="caramanhola-reserva__faixa" x="${(MEIO - faixaLargo).toFixed(1)}" y="${faixaY.toFixed(1)}" width="${(faixaLargo * 2).toFixed(1)}" height="${faixaAlto.toFixed(1)}" />
+        <g mask="url(#caramanhola-some-lados)">
+          <rect class="caramanhola-reserva__tampo" x="-400" y="${b.linha.toFixed(1)}" width="920" height="${(b.frente - b.linha).toFixed(1)}" mask="url(#caramanhola-some-frente)" />
+          <line class="caramanhola-reserva__bancada" x1="-400" x2="520" y1="${b.linha.toFixed(1)}" y2="${b.linha.toFixed(1)}" />
+        </g>
+        <ellipse cx="${MEIO}" cy="${ALTO.toFixed(1)}" rx="50" ry="7" fill="url(#caramanhola-chao)" />
+        <path class="caramanhola-reserva__corpo" d="${corpo}" />
+        <g class="caramanhola-reserva__faixa">
+          <path class="caramanhola-reserva__friso" d="${cinta(FAIXA[0][0] + 0.0012, FAIXA[0][1] - FRISO, FAIXA[3][1] + FRISO)}" />
+          <path class="caramanhola-reserva__cinta" d="${cinta(FAIXA[2][0], FAIXA[0][1], FAIXA[3][1])}" />
+        </g>
         <path class="caramanhola-reserva__emblema" d="${emblemaNaPose().d}" />
-        <path d="${silhueta(CORPO)}" fill="url(#caramanhola-volume)" />
-        <rect class="caramanhola-reserva__brilho" x="${MEIO - 25}" y="${ALTO - 168}" width="5" height="138" rx="2.5" />
-        <path class="caramanhola-reserva__tampa" d="${silhueta(TAMPA)}" />
-        <path d="${silhueta(TAMPA)}" fill="url(#caramanhola-volume)" />
+        <path d="${corpo}" fill="url(#caramanhola-volume)" />
+        <rect class="caramanhola-reserva__brilho" x="${fx(-25)}" y="${ALTO - 168}" width="5" height="138" rx="2.5" />
+        <path class="caramanhola-reserva__tampa" d="${solido(TAMPA_ANEL)}" />
+        <path class="caramanhola-reserva__tampa-topo" d="${elipse(raioAnel, topoAnel)}" />
+        <path class="caramanhola-reserva__tampa" d="${solido(TAMPA_BICO)}" />
+        <path class="caramanhola-reserva__tampa-topo" d="${elipse(TAMPA_BICO[TAMPA_BICO.length - 2][0], TAMPA_BICO[TAMPA_BICO.length - 2][1])}" />
       </svg>`;
 }
-
 
 function grupo({ nome, legenda, classe, opcoes }) {
   return `<fieldset class="escolhas__grupo ${classe}">
@@ -243,7 +368,7 @@ export default function configurador3d({ esc, assets }) {
       <p class="configurador__lide">${esc('Escolha a cor, o acabamento e a faixa: a peça muda na hora. Arraste a caramanhola para ver o outro lado.')}</p>
     </div>
     <div class="configurador__palco palco-3d" id="caramanhola" data-3d="caramanhola" data-3d-estado="reserva" role="img" aria-label="A caramanhola com a escolha feita"
-      data-3d-perfil="${esc(JSON.stringify(CORPO))}" data-3d-tampa="${esc(JSON.stringify(TAMPA))}" data-3d-faixa="${esc(JSON.stringify(FAIXA))}" data-3d-emblema="${esc(JSON.stringify(EMBLEMA))}" data-3d-pose="${esc(JSON.stringify(POSE))}">
+      data-3d-perfil="${esc(JSON.stringify(CORPO))}" data-3d-tampa="${esc(JSON.stringify(TAMPA))}" data-3d-faixa="${esc(JSON.stringify(FAIXA))}" data-3d-friso="${FRISO}" data-3d-emblema="${esc(JSON.stringify(EMBLEMA))}" data-3d-pose="${esc(JSON.stringify(POSE))}">
       ${caramanholaDeReserva()}
     </div>
     <form class="escolhas" data-3d-opcoes="caramanhola" data-3d-antes="Caramanhola " aria-label="Monte a caramanhola">
