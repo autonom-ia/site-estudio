@@ -63,6 +63,23 @@ desinstalar (o desinstalar só apaga `.ferramentas/`). No Windows, a chave é a 
    um serviço de rede antigo segurando o arquivo dos cookies esconde o login). Encerrar o principal à
    força é o último recurso, depois do teto. Por fim, confere num navegador novo, sem janela, que o
    login ficou gravado; só então devolve `INSTAGRAM_ENTROU`. Se não ficou, `INSTAGRAM_ENTRAR_FALHOU`.
+   - **Serviço que passa dos 15 s é encerrado à força.** Um serviço de rede ou de armazenamento
+     travado depois de o principal sair perde o que ainda não gravou; a conferência seguinte, num
+     navegador novo, é que diz se o login ficou. Esperar mais não ajuda: ele segura o perfil e, no
+     Windows, esconde o login do próximo navegador.
+   - **Só se encerra processo que ainda é deste navegador.** A lista dos processos é guardada antes
+     do fechamento, e o sistema reaproveita o número de um processo que saiu (no Windows, logo).
+     Antes de encerrar, o estúdio pergunta a linha de comando de cada número (`ps` no Mac e no
+     Linux, PowerShell no Windows) e só encerra quem ainda tem a pasta deste perfil nela. Se o
+     sistema não responder, não encerra nada.
+   - **Sem a lista, não conta como fechado por inteiro.** Se `SystemInfo.getProcessInfo` não
+     responder, o estúdio não sabe quais serviços esperar nem quais encerrar: o fechamento conta como
+     não calmo, e a conferência no navegador novo decide.
+   - **Um orçamento só.** O assistente desiste de um comando em 10 minutos. `instagram entrar
+     --confirmar` inteiro cabe em 9 min 30 s, contados desde o começo: conferir o login guardado
+     (até ~1,5 min, com o fechamento), a janela (até 7 min), fechar (até 50 s) e conferir de novo
+     (até 70 s). A janela fica aberta o que sobra do orçamento, até 7 minutos, depois de guardar 2
+     minutos para fechar e conferir; o fechamento e a conferência usam só o que resta.
 5. **Nada fica para trás.** Todo Chrome aberto com o perfil guardado fecha junto se o processo do
    estúdio acabar ou for interrompido. No Windows, a árvore inteira (`taskkill /T /F`). Se mesmo
    assim o perfil estiver em uso, a mensagem é `INSTAGRAM_LOGIN_EM_USO`: pode ser a janela de

@@ -6,7 +6,7 @@
 // - leitura com login: o mesmo perfil, no Chrome sem janela (abrirLeitorComLogin).
 // O valor do cookie não sai da memória do processo: só se confere se ele existe e quando vence.
 import fs from 'node:fs';
-import { launch, conectarNavegador, esperar } from './cdp.mjs';
+import { launch, conectarNavegador, esperar, TETO_FECHAR_COM_CALMA_MS } from './cdp.mjs';
 import { acharNavegadorComJanela } from './chrome.mjs';
 import { abrirLeitor } from './leitor.mjs';
 import { falha } from './saida.mjs';
@@ -18,8 +18,17 @@ export const ENDERECO_DE_ENTRAR = 'https://www.instagram.com/accounts/login/';
 export const DOMINIO_DO_INSTAGRAM = 'instagram.com';
 const ENDERECOS_DOS_COOKIES = Object.freeze(['https://www.instagram.com/']);
 const COOKIE_DE_SESSAO = 'sessionid';
-// Menor que os 10 minutos do assistente: a janela fecha antes de o assistente desistir do processo.
-export const PRAZO_PARA_ENTRAR_MS = 9 * 60 * 1000;
+// O assistente desiste de um comando em 10 minutos. "instagram entrar" inteiro (conferir o login
+// guardado, a janela, fechar com calma e conferir de novo) cabe num orçamento só, menor que isso.
+export const ORCAMENTO_PARA_ENTRAR_MS = 9.5 * 60 * 1000;
+// A janela fica aberta até 7 minutos; o resto do orçamento é de quem vem antes e depois dela.
+export const PRAZO_PARA_ENTRAR_MS = 7 * 60 * 1000;
+// Depois da janela: fechar com calma e conferir o login num navegador novo (abrir, até 20 s; a aba,
+// até 10 s; olhar os cookies e fechar de novo).
+const RESERVA_PARA_CONFERIR_MS = 70 * 1000;
+export const RESERVA_DEPOIS_DA_JANELA_MS = TETO_FECHAR_COM_CALMA_MS + RESERVA_PARA_CONFERIR_MS;
+// Fechar à força leva pouco, mas não nada: o piso de qualquer fechamento.
+const PISO_DO_FECHAR_MS = 5000;
 const INTERVALO_MS = 1000;
 // O Instagram ainda grava alguns cookies logo depois de entrar.
 const PAUSA_DEPOIS_DE_ENTRAR_MS = 3000;
@@ -63,8 +72,20 @@ async function abrirOuExplicar(abrir, perfil) {
   }
 }
 
+// Quanto a janela pode ficar aberta: o prazo dela, sem passar do orçamento (fim) menos o que fica
+// guardado para fechar e conferir depois. 0 = não há tempo.
+export function prazoDaJanela({ fim, agora = Date.now(), prazoMs = PRAZO_PARA_ENTRAR_MS }) {
+  return Math.max(0, Math.min(prazoMs, fim - agora - RESERVA_DEPOIS_DA_JANELA_MS));
+}
+
+// O prazo de um fechamento: o teto de sempre, sem passar do fim (mas nunca menos que o piso).
+export function prazoDoFechar(fim, agora = Date.now()) {
+  return Math.max(PISO_DO_FECHAR_MS, Math.min(TETO_FECHAR_COM_CALMA_MS, fim - agora));
+}
+
 // O perfil guardado tem login? Abre sem janela, olha os cookies e fecha. Sem perfil: false.
-export async function temLoginSalvo({ lugar = lugarPadrao(), navegador, dominio = DOMINIO_DO_INSTAGRAM, enderecos = ENDERECOS_DOS_COOKIES } = {}) {
+// fim: até quando o fechamento pode ir (o orçamento de quem chamou).
+export async function temLoginSalvo({ lugar = lugarPadrao(), navegador, dominio = DOMINIO_DO_INSTAGRAM, enderecos = ENDERECOS_DOS_COOKIES, fim = Infinity } = {}) {
   prepararLugar(lugar);
   if (!fs.existsSync(lugar.perfil)) return false;
   const achado = navegadorComJanela(navegador);
@@ -72,7 +93,7 @@ export async function temLoginSalvo({ lugar = lugarPadrao(), navegador, dominio 
   try {
     return temSessao(await leitor.cookies(enderecos), { dominio });
   } finally {
-    await leitor.fecharComCalma();
+    await leitor.fecharComCalma(prazoDoFechar(fim));
   }
 }
 
@@ -150,20 +171,21 @@ async function esperarNaJanela(nav, { dominio, prazoMs, intervaloMs, pausaDepois
 // Abre a janela e espera a pessoa entrar. Devolve { estado, detalhe }: estado 'entrou', 'fechou'
 // (a pessoa fechou a janela ou o Chrome), 'prazo' ou 'erro' (o DevTools parou de responder com o
 // Chrome aberto, ou o login não ficou guardado; detalhe diz o quê). "entrou" só depois de conferir,
-// num navegador novo, que o login ficou gravado no disco. endereco, dominio e enderecos: os testes
-// trocam por uma página local.
-export async function esperarEntrar({ lugar = lugarPadrao(), navegador, endereco = ENDERECO_DE_ENTRAR, dominio = DOMINIO_DO_INSTAGRAM, enderecos = ENDERECOS_DOS_COOKIES, prazoMs = PRAZO_PARA_ENTRAR_MS, intervaloMs = INTERVALO_MS, pausaDepoisMs = PAUSA_DEPOIS_DE_ENTRAR_MS } = {}) {
+// num navegador novo, que o login ficou gravado no disco. fim: o fim do orçamento do comando (a
+// janela, o fechamento e a conferência saem do que resta dele). endereco, dominio e enderecos: os
+// testes trocam por uma página local.
+export async function esperarEntrar({ lugar = lugarPadrao(), navegador, endereco = ENDERECO_DE_ENTRAR, dominio = DOMINIO_DO_INSTAGRAM, enderecos = ENDERECOS_DOS_COOKIES, fim = Date.now() + ORCAMENTO_PARA_ENTRAR_MS, prazoMs = PRAZO_PARA_ENTRAR_MS, intervaloMs = INTERVALO_MS, pausaDepoisMs = PAUSA_DEPOIS_DE_ENTRAR_MS } = {}) {
   const achado = navegadorComJanela(navegador);
   criarPerfil(lugar);
   const nav = await abrirOuExplicar(() => launch({ perfil: lugar.perfil, comJanela: true, navegador: achado, endereco, ...JANELA }), lugar.perfil);
   let r;
   let calmo = false;
   try {
-    r = await esperarNaJanela(nav, { dominio, prazoMs, intervaloMs, pausaDepoisMs });
+    r = await esperarNaJanela(nav, { dominio, prazoMs: prazoDaJanela({ fim, prazoMs }), intervaloMs, pausaDepoisMs });
   } finally {
-    calmo = await nav.fecharComCalma();
+    calmo = await nav.fecharComCalma(prazoDoFechar(fim - RESERVA_PARA_CONFERIR_MS));
   }
   if (r.estado !== 'entrou') return r;
-  if (await temLoginSalvo({ lugar, navegador: achado, dominio, enderecos })) return r;
+  if (await temLoginSalvo({ lugar, navegador: achado, dominio, enderecos, fim })) return r;
   return { estado: 'erro', detalhe: calmo ? 'o login não ficou guardado ao fechar o navegador' : 'o navegador não fechou a tempo e o login não ficou guardado' };
 }

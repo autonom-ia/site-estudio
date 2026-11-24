@@ -70,12 +70,12 @@ export async function abrirLeitor(deps = PECAS, opcoes = {}) {
       } catch {}
     },
     // Fecha pedindo ao navegador: com perfil guardado, ele grava os cookies antes de sair. Devolve
-    // true se fechou sozinho, por inteiro (cdp.mjs, fecharComCalma).
-    fecharComCalma: async () => {
+    // true se fechou sozinho, por inteiro (cdp.mjs, fecharComCalma). tetoMs: prazo do fechamento inteiro.
+    fecharComCalma: async (tetoMs) => {
       try {
         tab.close();
       } catch {}
-      if (nav.fecharComCalma) return nav.fecharComCalma();
+      if (nav.fecharComCalma) return nav.fecharComCalma(tetoMs);
       nav.close();
       return true;
     },

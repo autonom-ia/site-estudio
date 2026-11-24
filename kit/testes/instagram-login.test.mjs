@@ -8,15 +8,15 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { postsDoJson, itensDoJson, bloqueioDoEndereco, respostaDaLeitura, lerInstagramComLogin, limiteDePosts, MAXIMO_COM_LOGIN } from '../scripts/lib/ler-instagram-login.mjs';
-import { temSessao, semJanela, abrirLeitorComLogin } from '../scripts/lib/instagram-conta.mjs';
+import { temSessao, semJanela, abrirLeitorComLogin, prazoDaJanela, prazoDoFechar, ORCAMENTO_PARA_ENTRAR_MS, PRAZO_PARA_ENTRAR_MS, RESERVA_DEPOIS_DA_JANELA_MS } from '../scripts/lib/instagram-conta.mjs';
 import { lugarPadrao, perfilEmUso, sairDaConta, criarPerfil, migrarPerfilAntigo, gravarPausa, pausadoHoje, registrarParada, pastaDeDados, idDoEstudio } from '../scripts/lib/instagram-lugar.mjs';
 import { detalheDoErro, lerFontes } from '../scripts/lib/ler.mjs';
 import { acharNavegadorComJanela } from '../scripts/lib/chrome.mjs';
 import { KitErro } from '../scripts/lib/saida.mjs';
-import { argumentosDoNavegador, processosVivos, ehEscritor, nomeNoTasklist } from '../scripts/lib/cdp.mjs';
+import { argumentosDoNavegador, processosVivos, ehEscritor, pidsComAPasta, processosComAPasta, fechouPorInteiro, TETO_FECHAR_COM_CALMA_MS } from '../scripts/lib/cdp.mjs';
 import { EH_MAC, EH_WINDOWS } from '../scripts/lib/caminhos.mjs';
 import { respostaDaGrade, itemLogado, USUARIO_LOGADO, USUARIO_DESAFIO, TOTAL_LOGADO, LARGURA_MAIOR, PROTECAO, codigoLogado, codigoDesafio } from './fixtures/instagram-logado.mjs';
 
@@ -123,12 +123,84 @@ test('processos vivos: só pergunta, e separa o que existe do que já saiu', () 
   assert.deepEqual(processosVivos(undefined), []);
 });
 
-test('Windows: o nome do programa sai da linha do tasklist, para não encerrar número reaproveitado', () => {
-  assert.equal(nomeNoTasklist('"chrome.exe","4242","Console","1","120.000 K"\r\n'), 'chrome.exe');
-  assert.equal(nomeNoTasklist('"Notepad.EXE","4242","Console","1","1 K"'), 'notepad.exe');
-  assert.equal(nomeNoTasklist('INFO: No tasks are running which match the specified criteria.'), '');
-  assert.equal(nomeNoTasklist(''), '');
-  assert.equal(nomeNoTasklist(undefined), '');
+test('número reaproveitado: só conta o processo com a pasta do perfil na linha de comando', () => {
+  const perfil = '/home/ana/.local/share/site-estudio/instagram/abc/perfil';
+  const ps = [
+    `  501 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome --remote-debugging-port=9 --user-data-dir=${perfil} --no-first-run about:blank`,
+    `  502 /Applications/Google Chrome.app/Contents/Frameworks/Helper --type=renderer --user-data-dir=${perfil}`,
+    // o Chrome da própria pessoa, com outro perfil: nunca
+    '  503 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    // uma pasta que começa igual não é a mesma pasta
+    `  504 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome --user-data-dir=${perfil}2`,
+    '  505 /usr/bin/vim notas.txt',
+    'linha sem número',
+    '',
+  ].join('\n');
+  assert.deepEqual(pidsComAPasta(ps, perfil), [501, 502]);
+  // Windows: a pasta entre aspas, maiúscula e minúscula indiferentes (só no Windows o sistema as iguala)
+  const win = 'C:\\Users\\ana\\AppData\\Local\\site-estudio\\instagram\\abc\\perfil';
+  const saidaWin = `4242 "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" --type=renderer --user-data-dir="${win}" --lang=pt-BR\r\n4243 "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"\r\n`;
+  assert.deepEqual(pidsComAPasta(saidaWin, win), [4242]);
+  assert.deepEqual(pidsComAPasta(saidaWin, win.toUpperCase()), EH_WINDOWS ? [4242] : []);
+  // a lista com os dois jeitos de escrever a mesma pasta
+  assert.deepEqual(pidsComAPasta(ps, ['/outro/jeito', perfil]), [501, 502]);
+  for (const vazio of ['', undefined]) assert.deepEqual(pidsComAPasta(vazio, perfil), []);
+  assert.deepEqual(pidsComAPasta(ps, ''), [], 'sem pasta, ninguém');
+});
+
+test('número reaproveitado, no sistema de verdade: encerra só quem tem a pasta, nunca outro programa', async (t) => {
+  const pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-pasta-'));
+  const inteira = fs.realpathSync.native(pasta);
+  const abrir = (arg) => spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)', '--', arg], { stdio: 'ignore', windowsHide: true });
+  const filhos = [abrir(`--user-data-dir=${pasta}`), abrir(`--user-data-dir=${inteira}`), abrir(`--user-data-dir=${pasta}2`), abrir('--outra-coisa')];
+  t.after(() => {
+    for (const f of filhos) f.kill('SIGKILL');
+    fs.rmSync(pasta, { recursive: true, force: true });
+  });
+  const pids = filhos.map((f) => f.pid);
+  // espera os quatro aparecerem na lista do sistema com a linha de comando
+  let achados = [];
+  for (let i = 0; i < 50 && achados.length < 2; i += 1) {
+    achados = processosComAPasta(pids, pasta);
+    if (achados.length < 2) await new Promise((r) => setTimeout(r, 100));
+  }
+  assert.deepEqual(achados.sort(), [pids[0], pids[1]].sort(), 'a pasta, escrita dos dois jeitos; nem a pasta parecida nem o outro programa');
+  assert.deepEqual(processosComAPasta([process.pid], pasta), [], 'este processo de teste não tem a pasta');
+  assert.deepEqual(processosComAPasta([], pasta), []);
+});
+
+test('fechado por inteiro: o principal saiu sozinho E se conhece a lista dos processos', () => {
+  const lista = [{ pid: 1, tipo: 'browser' }];
+  assert.equal(fechouPorInteiro(true, lista), true);
+  assert.equal(fechouPorInteiro(true, []), false, 'sem a lista, não sabe se os serviços gravaram nem quem encerrar');
+  assert.equal(fechouPorInteiro(true, undefined), false);
+  assert.equal(fechouPorInteiro(false, lista), false);
+});
+
+test('entrar: um orçamento só, menor que os 10 minutos do assistente', () => {
+  const MINUTO = 60 * 1000;
+  assert.ok(ORCAMENTO_PARA_ENTRAR_MS < 10 * MINUTO);
+  assert.equal(PRAZO_PARA_ENTRAR_MS, 7 * MINUTO);
+  // conferir o login guardado antes (abrir até 20 s, a aba até 10 s, fechar) + janela + fechar e conferir
+  const conferirAntes = 20000 + 10000 + TETO_FECHAR_COM_CALMA_MS;
+  assert.ok(ORCAMENTO_PARA_ENTRAR_MS - conferirAntes - RESERVA_DEPOIS_DA_JANELA_MS > 5 * MINUTO, 'no pior caso, a janela ainda fica mais de 5 minutos');
+  const agora = 1000000;
+  const fim = agora + ORCAMENTO_PARA_ENTRAR_MS;
+  // comum: o login guardado foi conferido em segundos; a janela fica os 7 minutos
+  assert.equal(prazoDaJanela({ fim, agora: agora + 3000 }), PRAZO_PARA_ENTRAR_MS);
+  // a conferência antes demorou: a janela encolhe, e janela + fechar + conferir cabem até o fim
+  const depoisDaConferencia = agora + conferirAntes;
+  const janela = prazoDaJanela({ fim, agora: depoisDaConferencia });
+  assert.ok(janela < PRAZO_PARA_ENTRAR_MS);
+  assert.equal(depoisDaConferencia + janela + RESERVA_DEPOIS_DA_JANELA_MS, fim);
+  // sem tempo nenhum: 0, nunca negativo; e o prazo menor dos testes vale
+  assert.equal(prazoDaJanela({ fim, agora: fim }), 0);
+  assert.equal(prazoDaJanela({ fim, agora, prazoMs: 1500 }), 1500);
+  // o fechamento: o teto de sempre com folga; perto do fim, o que resta; passado o fim, o piso
+  assert.equal(prazoDoFechar(fim, agora), TETO_FECHAR_COM_CALMA_MS);
+  assert.equal(prazoDoFechar(fim, fim - 20000), 20000);
+  assert.equal(prazoDoFechar(fim, fim + 60000), 5000);
+  assert.equal(prazoDoFechar(Infinity, agora), TETO_FECHAR_COM_CALMA_MS);
 });
 
 test('serviços que gravam no perfil: rede e armazenamento; páginas e GPU não', () => {
@@ -397,7 +469,7 @@ test('mensagens do login: existem, sem jargão, e o aviso antes de entrar diz o 
   assert.ok(MENSAGENS.LER_INSTAGRAM_PEDIU_VERIFICACAO.texto.includes('até amanhã'), 'depois da verificação, não insiste');
   assert.ok(MENSAGENS.INSTAGRAM_ANTES_DE_ENTRAR.acao.includes('Vou abrir'), 'diz antes de abrir, não depois');
   assert.ok(MENSAGENS.INSTAGRAM_JA_ENTROU.texto.includes('já está guardado aqui no estúdio'));
-  assert.ok(MENSAGENS.INSTAGRAM_PRAZO_ACABOU.texto.includes('quase 9 minutos'));
+  assert.ok(MENSAGENS.INSTAGRAM_PRAZO_ACABOU.texto.includes('quase 7 minutos'));
   assert.ok(!MENSAGENS.INSTAGRAM_LOGIN_EM_USO.texto.includes('Feche'), 'pode estar rodando sem janela');
   assert.ok(MENSAGENS.INSTAGRAM_SAIR_FALHOU.texto.includes('feche o Chrome') || MENSAGENS.INSTAGRAM_SAIR_FALHOU.texto.includes('Feche o Chrome'));
 });
