@@ -49,13 +49,14 @@ test('aprovação que chega durante a espera devolve PUBLICAR_ACESSO_LIBERADO e 
 });
 
 test('a espera do cadeado cabe no orçamento total da chamada', async (t) => {
-  const ctx = await preparar(t, {}, { ESTUDIO_PUBLICAR_PRAZO_MS: '8000', ESTUDIO_PUBLICAR_ORCAMENTO_MS: '1' });
+  const ctx = await preparar(t, {}, { ESTUDIO_PUBLICAR_PRAZO_MS: '30000', ESTUDIO_PUBLICAR_ORCAMENTO_MS: '1' });
   darChave(ctx);
   ctx.servico.estado.enderecoDoSite = `${ctx.servico.base}/fora/`;
   const inicio = Date.now();
   const r = await ctx.publicar();
   assert.equal(r.json.codigo, 'PUBLICADO_CERTIFICADO_PENDENTE');
-  assert.ok(Date.now() - inicio < 5000, 'não esperou o prazo inteiro do cadeado');
+  // o prazo do cadeado é 30 s; a chamada tem de voltar bem antes (a folga cobre o Node lento do CI)
+  assert.ok(Date.now() - inicio < 15000, 'não esperou o prazo inteiro do cadeado');
   assert.equal(configuracao({}).tempos.orcamentoMs, 100000);
   assert.ok(TEMPO_DE_CONCLUIR_MS > 30000 && TEMPO_DE_CONCLUIR_MS < 60000, 'concluir espera mais que uma chamada comum, abaixo do corte do proxy');
 });
