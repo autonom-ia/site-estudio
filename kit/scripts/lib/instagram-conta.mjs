@@ -114,15 +114,10 @@ async function olhar(conexao, dominio) {
 // Voltas seguidas com erro do DevTools (com o Chrome vivo) antes de desistir.
 const ERROS_SEGUIDOS = 3;
 
-// Abre a janela e espera a pessoa entrar. Devolve { estado, detalhe }: estado 'entrou', 'fechou'
-// (a pessoa fechou a janela ou o Chrome), 'prazo' ou 'erro' (o DevTools parou de responder com o
-// Chrome aberto; detalhe diz o erro). endereco e dominio: os testes trocam por uma página local.
-export async function esperarEntrar({ lugar = lugarPadrao(), navegador, endereco = ENDERECO_DE_ENTRAR, dominio = DOMINIO_DO_INSTAGRAM, prazoMs = PRAZO_PARA_ENTRAR_MS, intervaloMs = INTERVALO_MS, pausaDepoisMs = PAUSA_DEPOIS_DE_ENTRAR_MS } = {}) {
-  const achado = navegadorComJanela(navegador);
-  criarPerfil(lugar);
-  const nav = await abrirOuExplicar(() => launch({ perfil: lugar.perfil, comJanela: true, navegador: achado, endereco, ...JANELA }), lugar.perfil);
+// A espera com a janela aberta: { estado, detalhe }.
+async function esperarNaJanela(nav, { dominio, prazoMs, intervaloMs, pausaDepoisMs }) {
+  const conexao = await conectarNavegador(nav.porta);
   try {
-    const conexao = await conectarNavegador(nav.porta);
     const fim = Date.now() + prazoMs;
     let semJanelaSeguidas = 0;
     let errosSeguidos = 0;
@@ -148,6 +143,27 @@ export async function esperarEntrar({ lugar = lugarPadrao(), navegador, endereco
     }
     return { estado: 'prazo' };
   } finally {
-    await nav.fecharComCalma();
+    conexao.close();
   }
+}
+
+// Abre a janela e espera a pessoa entrar. Devolve { estado, detalhe }: estado 'entrou', 'fechou'
+// (a pessoa fechou a janela ou o Chrome), 'prazo' ou 'erro' (o DevTools parou de responder com o
+// Chrome aberto, ou o login não ficou guardado; detalhe diz o quê). "entrou" só depois de conferir,
+// num navegador novo, que o login ficou gravado no disco. endereco, dominio e enderecos: os testes
+// trocam por uma página local.
+export async function esperarEntrar({ lugar = lugarPadrao(), navegador, endereco = ENDERECO_DE_ENTRAR, dominio = DOMINIO_DO_INSTAGRAM, enderecos = ENDERECOS_DOS_COOKIES, prazoMs = PRAZO_PARA_ENTRAR_MS, intervaloMs = INTERVALO_MS, pausaDepoisMs = PAUSA_DEPOIS_DE_ENTRAR_MS } = {}) {
+  const achado = navegadorComJanela(navegador);
+  criarPerfil(lugar);
+  const nav = await abrirOuExplicar(() => launch({ perfil: lugar.perfil, comJanela: true, navegador: achado, endereco, ...JANELA }), lugar.perfil);
+  let r;
+  let calmo = false;
+  try {
+    r = await esperarNaJanela(nav, { dominio, prazoMs, intervaloMs, pausaDepoisMs });
+  } finally {
+    calmo = await nav.fecharComCalma();
+  }
+  if (r.estado !== 'entrou') return r;
+  if (await temLoginSalvo({ lugar, navegador: achado, dominio, enderecos })) return r;
+  return { estado: 'erro', detalhe: calmo ? 'o login não ficou guardado ao fechar o navegador' : 'o navegador não fechou a tempo e o login não ficou guardado' };
 }

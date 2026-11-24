@@ -54,8 +54,12 @@ desinstalar (o desinstalar só apaga `.ferramentas/`). No Windows, a chave é a 
 3. **A pessoa entra sozinha.** O estúdio nunca vê, digita nem guarda a senha. Pelo protocolo de
    depuração do navegador (`Storage.getCookies`), ele só olha, a cada segundo, se o cookie
    `sessionid` do Instagram apareceu. Nenhuma página é lida para isso.
-4. **Percebe, fecha e avisa.** Com a sessão, espera 3 segundos, fecha a janela pedindo ao navegador
-   (`Browser.close`, que grava os cookies no disco) e devolve `INSTAGRAM_ENTROU`.
+4. **Percebe, fecha e avisa.** Com a sessão, espera 3 segundos e fecha a janela pedindo ao navegador
+   (`Browser.close`, que grava os cookies no disco). Espera o processo principal **e** os processos
+   filhos que ele tinha (lista de `SystemInfo.getProcessInfo`) saírem sozinhos: no Windows, o serviço
+   de rede, que grava os cookies, pode terminar depois do principal. Só encerra à força o que ainda
+   estiver vivo depois de 30 s. Depois, confere num navegador novo, sem janela, que o login ficou
+   gravado; só então devolve `INSTAGRAM_ENTROU`. Se não ficou, `INSTAGRAM_ENTRAR_FALHOU`.
    Janela (ou Chrome) fechada pela pessoa: `INSTAGRAM_JANELA_FECHADA`. DevTools sem responder com o
    Chrome aberto, três vezes seguidas: `INSTAGRAM_ENTRAR_FALHOU`, com o erro em `dados.detalhe`.
    Sem entrar em 9 minutos: `INSTAGRAM_PRAZO_ACABOU` (9, e não 10, para a janela fechar antes de o

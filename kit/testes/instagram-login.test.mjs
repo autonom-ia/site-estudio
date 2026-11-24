@@ -16,7 +16,7 @@ import { lugarPadrao, perfilEmUso, sairDaConta, criarPerfil, migrarPerfilAntigo,
 import { detalheDoErro, lerFontes } from '../scripts/lib/ler.mjs';
 import { acharNavegadorComJanela } from '../scripts/lib/chrome.mjs';
 import { KitErro } from '../scripts/lib/saida.mjs';
-import { argumentosDoNavegador } from '../scripts/lib/cdp.mjs';
+import { argumentosDoNavegador, processosVivos } from '../scripts/lib/cdp.mjs';
 import { EH_MAC, EH_WINDOWS } from '../scripts/lib/caminhos.mjs';
 import { respostaDaGrade, itemLogado, USUARIO_LOGADO, USUARIO_DESAFIO, TOTAL_LOGADO, LARGURA_MAIOR, PROTECAO, codigoLogado, codigoDesafio } from './fixtures/instagram-logado.mjs';
 
@@ -115,6 +115,12 @@ test('respostas guardadas: só as de dados do próprio Instagram', () => {
   assert.equal(aceita('https://www.instagram.com/graphql/query'), true);
   assert.equal(aceita('https://www.instagram.com/casa/'), false);
   assert.equal(aceita('https://outro.example/graphql/query'), false);
+});
+
+test('processos vivos: só pergunta, e separa o que existe do que já saiu', () => {
+  assert.deepEqual(processosVivos([process.pid, 2147483646]), [process.pid]);
+  assert.deepEqual(processosVivos([]), []);
+  assert.deepEqual(processosVivos(undefined), []);
 });
 
 test('janela fechada: nenhuma aba de página aberta', () => {

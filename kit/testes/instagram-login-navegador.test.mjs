@@ -16,7 +16,7 @@ import path from 'node:path';
 import http from 'node:http';
 import { acharNavegador, acharNavegadorComJanela } from '../scripts/lib/chrome.mjs';
 import { abrirLeitor } from '../scripts/lib/leitor.mjs';
-import { launch, conectarNavegador } from '../scripts/lib/cdp.mjs';
+import { launch, conectarNavegador, processosVivos } from '../scripts/lib/cdp.mjs';
 import { lerFontes } from '../scripts/lib/ler.mjs';
 import { lerInstagramComLogin } from '../scripts/lib/ler-instagram-login.mjs';
 import { esperarEntrar, temLoginSalvo, abrirLeitorComLogin, sairDaConta } from '../scripts/lib/instagram-conta.mjs';
@@ -142,8 +142,24 @@ async function gravarLogin(lugar, endereco) {
     await new Promise((r) => setTimeout(r, 200));
   }
   conexao.close();
-  await nav.fecharComCalma();
+  assert.equal(await nav.fecharComCalma(), true, 'o navegador fechou sozinho, por inteiro');
 }
+
+// No Windows, o processo principal do Chrome pode sair antes do serviço de rede, que é quem grava os
+// cookies; matar no meio perde o login. Fechar com calma só volta quando todos saíram sozinhos.
+test('fechar com calma: só volta depois de o navegador e todos os processos dele saírem sozinhos', opcoesDoSistema, async (t) => {
+  const lugar = lugarTemporario(t, 'fechar');
+  fs.mkdirSync(lugar.perfil, { recursive: true });
+  const nav = await launch({ perfil: lugar.perfil, navegador: CHROME, endereco: 'about:blank', largura: 800, altura: 600 });
+  const conexao = await conectarNavegador(nav.porta);
+  const pids = (await conexao.send('SystemInfo.getProcessInfo', {})).processInfo.map((p) => p.id);
+  conexao.close();
+  assert.ok(pids.length >= 2, 'o principal e pelo menos um filho');
+  assert.equal(processosVivos(pids).length, pids.length);
+  assert.equal(await nav.fecharComCalma(), true);
+  assert.deepEqual(processosVivos(pids), [], 'nenhum processo do navegador sobrou');
+  assert.equal(nav.vivo(), false);
+});
 
 test('login guardado: sobrevive a fechar e abrir o navegador sem janela; sair apaga', opcoesDoSistema, async (t) => {
   const lugar = lugarTemporario(t, 'perfil');
@@ -195,7 +211,7 @@ test('janela visível: abre, percebe a entrada sozinha, fecha, e a leitura sem j
   const entrada = await servirEntrada(1500);
   t.after(() => entrada.fechar());
   const dominio = '127.0.0.1';
-  const r = await esperarEntrar({ lugar, navegador: CHROME, endereco: `${entrada.origem}/`, dominio, prazoMs: 30000, pausaDepoisMs: 200 });
+  const r = await esperarEntrar({ lugar, navegador: CHROME, endereco: `${entrada.origem}/`, dominio, enderecos: [`${entrada.origem}/`], prazoMs: 30000, pausaDepoisMs: 200 });
   assert.deepEqual(r, { estado: 'entrou' });
   assert.equal(await temLoginSalvo({ lugar, navegador: CHROME, dominio, enderecos: [`${entrada.origem}/`] }), true, 'janela e modo escondido usam a mesma chave');
   const prazo = await esperarEntrar({ lugar: outro, navegador: CHROME, endereco: 'about:blank', dominio, prazoMs: 2000 });

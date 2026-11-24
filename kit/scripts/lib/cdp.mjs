@@ -14,7 +14,48 @@ const TETO_SUBIDA_MS = 20000;
 // Prazo de cada pergunta ao DevTools durante a subida e da aba nova (endereço e WebSocket).
 const TETO_PEDIDO_MS = 2000;
 const TETO_ABA_MS = 10000;
-const TETO_FECHAR_MS = 5000;
+// Teto para o navegador fechar sozinho. Normalmente fecha em menos de 1 s e a espera acaba ali;
+// o teto só vale para um navegador travado.
+const TETO_FECHAR_MS = 30000;
+
+// Números dos processos que ainda existem (process.kill com sinal 0 só pergunta, não encerra).
+export function processosVivos(pids) {
+  return (pids || []).filter((pid) => {
+    try {
+      process.kill(pid, 0);
+      return true;
+    } catch (e) {
+      return e.code === 'EPERM';
+    }
+  });
+}
+
+function encerrar(pid) {
+  try {
+    process.kill(pid, 'SIGKILL');
+  } catch {
+    /* já saiu */
+  }
+}
+
+// Espera todos os processos saírem, até "fim". Devolve true se saíram.
+async function esperarSumirem(pids, fim) {
+  while (processosVivos(pids).length) {
+    if (Date.now() >= fim) return false;
+    await esperar(100);
+  }
+  return true;
+}
+
+// Os processos do navegador (principal, páginas, rede, armazenamento) pelo DevTools.
+async function processosDoNavegador(nav) {
+  try {
+    const r = await nav.send('SystemInfo.getProcessInfo', {}, TETO_PEDIDO_MS * 2);
+    return (r.processInfo || []).map((p) => Number(p.id)).filter((pid) => Number.isInteger(pid) && pid > 0);
+  } catch {
+    return [];
+  }
+}
 
 // Prazo de um pedido sem passar do prazo total que ainda resta.
 const prazo = (fim, teto) => AbortSignal.timeout(Math.max(1, Math.min(teto, fim - Date.now())));
@@ -118,20 +159,30 @@ export async function launch({ largura = 1920, altura = 1080, perfil = '', comJa
       } catch {}
     }, 300);
   };
-  // Fecha pedindo ao navegador (ele grava os cookies no disco antes de sair). Sem resposta no
-  // prazo, mata o processo.
-  const fecharComCalma = async (prazoMs = TETO_FECHAR_MS) => {
+  // Fecha pedindo ao navegador (Browser.close: ele grava os cookies no disco antes de sair) e espera
+  // de verdade: o processo principal E os processos filhos que ele tinha (o serviço de rede, que é
+  // quem grava os cookies, pode terminar depois do principal, sobretudo no Windows). Só se algum
+  // ainda estiver vivo depois do teto, encerra à força. Devolve true se fechou sozinho, por inteiro.
+  const fecharComCalma = async (tetoMs = TETO_FECHAR_MS) => {
+    let filhos = [];
+    let calmo = morreu;
     if (!morreu) {
+      const fim = Date.now() + tetoMs;
       try {
         const nav = await conectarNavegador(porta, { prazoMs: TETO_ABA_MS });
-        nav.send('Browser.close', {}, prazoMs).catch(() => {});
-        await Promise.race([saiu, esperar(prazoMs)]);
+        filhos = await processosDoNavegador(nav);
+        nav.send('Browser.close', {}, tetoMs).catch(() => {});
+        await Promise.race([saiu, esperar(Math.max(1, fim - Date.now()))]);
         nav.close();
+        calmo = morreu && (await esperarSumirem(filhos, fim));
       } catch {
         /* sem conexão: vai à força */
       }
     }
     close();
+    // último recurso: filho que sobrou depois do teto (o principal já foi encerrado acima)
+    if (!calmo) for (const pid of processosVivos(filhos)) encerrar(pid);
+    return calmo;
   };
   const fim = Date.now() + TETO_SUBIDA_MS;
   while (Date.now() < fim && !morreu) {
