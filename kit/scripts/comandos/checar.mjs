@@ -5,6 +5,8 @@
 // resto-do-molde (elemento com data-molde: texto do negócio fictício que ainda não foi trocado).
 // WARN: og:image relativa, JSON-LD que não abre, fonte usada que não foi declarada, link com o
 // mesmo texto 4 vezes ou mais (link-repetido) e a mesma frase 3 vezes ou mais (frase-repetida).
+// Pedido montado na página (lib/pagina-leitura.mjs, pedidos): RED pedido-sem-whatsapp,
+// pedido-link-quebrado, pedido-opcao-sem-valor, pedido-fala-a-cada-letra; WARN pedido-opcao-marcada.
 // Letras (lib/letras.mjs): RED fonte-sem-licenca; WARN fonte-pesada (não .woff2, ou soma alta).
 import fs from 'node:fs';
 import path from 'node:path';
@@ -13,7 +15,7 @@ import { nomeDoSite } from '../lib/args.mjs';
 import { abrirSite, paginasDoSite, TAMANHOS } from '../lib/site.mjs';
 import { abrirSessao, visitar } from '../lib/sessao.mjs';
 import { estatico } from '../lib/pagina.mjs';
-import { repeticoes } from '../lib/pagina-leitura.mjs';
+import { repeticoes, pedidos } from '../lib/pagina-leitura.mjs';
 import { progresso } from '../lib/executar.mjs';
 import { esperar } from '../lib/cdp.mjs';
 import { anotarLetras } from '../lib/letras.mjs';
@@ -110,6 +112,9 @@ export default async function checar(args) {
       await esperar(50);
       anotarEstatico(pagina, est, sessao.rede(), sessao.errosJs(), red, warn);
       for (const w of await sessao.avaliar(repeticoes, REPETICAO)) warn.push({ pagina: pagina.rel, ...w });
+      const pedido = await sessao.avaliar(pedidos);
+      for (const r of pedido.red) red.push({ pagina: pagina.rel, ...r });
+      for (const w of pedido.warn) warn.push({ pagina: pagina.rel, ...w });
     }
   } finally {
     await sessao.fechar();

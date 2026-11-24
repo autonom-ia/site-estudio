@@ -15,6 +15,8 @@ import { fileURLToPath } from 'node:url';
 import { acharNavegador } from '../scripts/lib/chrome.mjs';
 import { abrirSessao, visitar } from '../scripts/lib/sessao.mjs';
 import { TAMANHOS } from '../scripts/lib/site.mjs';
+import { pedidos } from '../scripts/lib/pagina-leitura.mjs';
+import { whatsapp } from '../molde/_gerador/montar.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PECA = path.join(RAIZ, 'kit', 'pecas', 'pedido.js');
@@ -93,11 +95,44 @@ test('pedido: itens, quantidade, preço e total; a peça não escreve palavra qu
   assert.equal(decodeURIComponent(link.split('?text=')[1]), m);
 });
 
+test('pedido: quantidade negativa, quebrada ou zero não entra na linha nem no total (um filtro só)', () => {
+  const { montarMensagem, totalDe } = carregarPeca();
+  const itens = [
+    { nome: 'Câmara de ar aro 29', quantidade: 2, preco: 35 },
+    { nome: 'Fita de guidão', quantidade: -3, preco: 20 },
+    { nome: 'Pedal', quantidade: 1.5, preco: 100 },
+    { nome: 'Selim', quantidade: 0, preco: 90 },
+    { nome: 'Corrente', quantidade: 'dois', preco: 60 },
+  ];
+  const m = montarMensagem(ABERTURA, itens, []);
+  assert.equal(m, `${ABERTURA}\n- Câmara de ar aro 29: 2 (R$\u00a070,00)\nTotal: R$\u00a070,00`);
+  assert.equal(totalDe(itens), 'R$\u00a070,00', 'o total soma só o que a mensagem mostra');
+  assert.equal(totalDe([{ nome: 'Pedal', quantidade: -1, preco: 100 }]), '', 'nada válido com preço: sem total');
+});
+
+test('pedido: número sem dígito não vira link (a peça deixa o botão como o gerador fez)', () => {
+  const { linkDoWhatsapp } = carregarPeca();
+  for (const numero of ['', '   ', undefined, 'sem número']) assert.equal(linkDoWhatsapp(numero, ABERTURA), '');
+});
+
+test('gerador: whatsapp(numero, texto) codifica a mensagem e para o montar sem número', async () => {
+  const { whatsapp } = await import('../molde/_gerador/montar.mjs');
+  const texto = 'Olá! Quero 2 & 3 #29 + selim';
+  const href = whatsapp('+55 (11) 90000-0000', texto);
+  assert.ok(href.startsWith('https://wa.me/5511900000000?text='), href);
+  const codificado = href.split('?text=')[1];
+  for (const cru of ['&', '#', '+', ' ']) assert.ok(!codificado.includes(cru), `"${cru}" cru no link: ${href}`);
+  assert.equal(decodeURIComponent(codificado), texto);
+  assert.throws(() => whatsapp('', texto), (e) => e.message.includes('não tem dígito nenhum'));
+});
+
 test('pedido: a peça não marca opção nenhuma e manda o resumo visível ficar fora de região viva', () => {
   assert.ok(!CODIGO.includes('.checked =') && !CODIGO.includes(".checked=") && !CODIGO.includes("setAttribute('checked'"), 'a peça marca opção sozinha');
   assert.ok(!CODIGO.includes("'aria-live'"), 'a peça põe região viva no resumo');
   assert.ok(CODIGO.includes('Nunca é região viva (sem aria-live)'));
   assert.ok(CODIGO.includes('opção marcada por padrão só com um fato com fonte'));
+  assert.ok(CODIGO.includes('white-space: pre-line'), 'o cabeçalho manda o resumo mostrar uma linha por item');
+  assert.ok(CODIGO.includes('Ela não acrescenta palavra nenhuma: o texto da abertura e dos rótulos é do autor da parte.'));
 });
 
 // No navegador: a pessoa digita letra por letra; o resumo visível e o link acompanham, mas o anúncio
@@ -110,15 +145,29 @@ const PAGINA = `<!doctype html>
     <fieldset><legend>O que dá para pedir</legend>
       <label><input type="checkbox" data-item="Câmara de ar aro 29"> Câmara de ar aro 29</label>
       <label><input type="checkbox" data-item="Revisão completa"> Revisão completa</label>
-      <label for="fitas">Fitas de guidão</label> <input id="fitas" type="number" min="0" value="0" data-item="Fita de guidão">
+      <label><input type="checkbox" data-item=""> (sem nome: não entra)</label>
+      <label for="fitas">Fitas de guidão</label> <input id="fitas" type="number" value="0" data-item="Fita de guidão">
       <button type="button" data-mais="fitas">Mais uma fita de guidão</button>
     </fieldset>
+    <label><input type="checkbox" data-campo="Embrulho"> Para presente (sem data-valor: não entra)</label>
+    <label><input type="checkbox" data-campo="Entrega" data-valor="Retirar na loja"> Retirar na loja</label>
     <label for="dia">Para o dia</label> <input id="dia" type="date" data-campo="Para o dia">
     <label for="recado">Recado</label> <input id="recado" type="text" data-campo="Recado">
+    <p data-pedido-mensagem>${ABERTURA}</p>
+    <p data-pedido-aviso role="status"></p>
+    <a data-pedido-enviar href="https://wa.me/5511900000000?text=${encodeURIComponent(ABERTURA)}">Enviar pelo WhatsApp</a>
   </form>
-  <p data-pedido-mensagem>${ABERTURA}</p>
-  <p data-pedido-aviso role="status"></p>
-  <a data-pedido-enviar href="https://wa.me/5511900000000?text=${encodeURIComponent(ABERTURA)}">Enviar pelo WhatsApp</a>
+  <form data-pedido id="outro" data-whatsapp="5511911111111" data-mensagem="Olá! Quero agendar uma revisão.">
+    <label for="fitas2">Fitas</label> <input id="fitas2" type="number" min="0" step="1" value="0" data-item="Fita">
+    <button type="button" data-mais="fitas2">Mais uma fita</button>
+    <p data-pedido-mensagem>Olá! Quero agendar uma revisão.</p>
+    <p data-pedido-aviso role="status"></p>
+    <a data-pedido-enviar href="https://wa.me/5511911111111?text=Ol%C3%A1!%20Quero%20agendar%20uma%20revis%C3%A3o.">Enviar</a>
+  </form>
+  <form data-pedido id="sem-numero" data-whatsapp="" data-mensagem="Olá! Quero um orçamento.">
+    <input type="text" data-campo="Recado" value="oi">
+    <a data-pedido-enviar href="#contato">Enviar</a>
+  </form>
 </section>
 <script src="assets/js/pedido.js" defer></script>
 </body></html>
@@ -137,9 +186,10 @@ test('pedido no navegador: digitar não fala a cada letra; terminar o campo fala
     await visitar(sessao, { rel: 'index.html' }, TAMANHOS.find((t) => t.nome === 'celular'));
     const r = await sessao.avaliar(async (abertura) => {
       const quadro = () => new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(ok)));
-      const aviso = document.querySelector('[data-pedido-aviso]');
-      const enviar = document.querySelector('[data-pedido-enviar]');
-      const resumo = document.querySelector('[data-pedido-mensagem]');
+      const [form, outro, semNumero] = document.querySelectorAll('form[data-pedido]');
+      const aviso = form.querySelector('[data-pedido-aviso]');
+      const enviar = form.querySelector('[data-pedido-enviar]');
+      const resumo = form.querySelector('[data-pedido-mensagem]');
       let falas = 0;
       new MutationObserver(() => {
         falas += 1;
@@ -158,8 +208,24 @@ test('pedido no navegador: digitar não fala a cada letra; terminar o campo fala
       const terminou = { falas, aviso: aviso.textContent };
       document.querySelector('[data-mais="fitas"]').click();
       document.querySelector('[data-item="Revisão completa"]').click();
+      document.querySelector('[data-item=""]').click();
+      document.querySelector('[data-campo="Embrulho"]').click();
+      document.querySelector('[data-campo="Entrega"]').click();
       await quadro();
-      return { abertura, inicio, digitando, terminou, fim: texto() };
+      const fitas = document.getElementById('fitas');
+      // dois pedidos na mesma parte: o "mais" de um não mexe no outro, e cada um escreve no seu resumo
+      outro.querySelector('[data-mais="fitas2"]').click();
+      await quadro();
+      return {
+        abertura,
+        inicio,
+        digitando,
+        terminou,
+        fim: texto(),
+        fitas: { valor: fitas.value, min: fitas.min, step: fitas.step },
+        outro: { fitas: document.getElementById('fitas2').value, resumo: outro.querySelector('[data-pedido-mensagem]').textContent },
+        semNumero: semNumero.querySelector('[data-pedido-enviar]').getAttribute('href'),
+      };
     }, ABERTURA);
     assert.equal(r.inicio.link, ABERTURA, 'sem nada escolhido, a mensagem já é a abertura');
     assert.equal(r.inicio.marcados, 0, 'nada vem marcado');
@@ -169,7 +235,12 @@ test('pedido no navegador: digitar não fala a cada letra; terminar o campo fala
     assert.equal(r.digitando.link, r.digitando.resumo);
     assert.equal(r.terminou.falas, 1);
     assert.equal(r.terminou.aviso, `Mensagem pronta: ${ABERTURA}\nRecado: Sem pressa`);
-    assert.equal(r.fim, `${ABERTURA}\n- Revisão completa\n- Fita de guidão: 1\nRecado: Sem pressa`);
+    // item sem nome e caixa de campo sem data-valor não entram (nada de "on"); a com data-valor entra
+    assert.equal(r.fim, `${ABERTURA}\n- Revisão completa\n- Fita de guidão: 1\nEntrega: Retirar na loja\nRecado: Sem pressa`);
+    assert.ok(r.fim.split('\n').every((l) => l !== '- on' && !l.endsWith(': on')), r.fim);
+    assert.deepEqual(r.fitas, { valor: '1', min: '0', step: '1' }, 'a peça põe min 0 e passo 1 na quantidade');
+    assert.deepEqual(r.outro, { fitas: '1', resumo: 'Olá! Quero agendar uma revisão.\n- Fita: 1' });
+    assert.equal(r.semNumero, '#contato', 'sem número, a peça não troca o link');
   } finally {
     await sessao.fechar();
     fs.rmSync(pasta, { recursive: true, force: true });
@@ -194,7 +265,67 @@ test('a primeira versão já nasce com o pedido certo: a skill novo-site e o com
     '**A mensagem pronta nunca sai vazia.**',
     '**O leitor de tela fala uma vez, não a cada letra.**',
     'nunca é região viva (sem `aria-live`)',
+    '`whatsapp(número, abertura)`',
+    '`type="number" min="0" step="1"`',
+    '`data-valor`',
+    '`white-space: pre-line`',
+    'Tudo fica dentro do próprio `<form data-pedido>`',
+    'A peça não acrescenta palavra: o texto da abertura e dos rótulos é seu.',
   ]) assert.ok(secao.includes(trecho), `como-usar, pedido-no-whatsapp, sem: ${trecho}`);
+  assert.ok(skill.includes('A peça não acrescenta palavra: o texto da abertura e dos rótulos é do autor'));
   // a orientação antiga punha a quantidade num aria-live, sem dizer o que não pode ser região viva
   assert.ok(!secao.includes('a quantidade num `aria-live`'));
+});
+
+// O checar relê a página como saiu do gerador (sem script nenhum) e reprova o pedido que quebraria
+// para quem abre sem JavaScript ou com leitor de tela.
+const PEDIDO_CERTO = `<form data-pedido data-whatsapp="5511900000000" data-mensagem="Olá! Quero 2 & 3.">
+  <input type="checkbox" data-item="Câmara de ar aro 29">
+  <input type="radio" name="e" data-campo="Entrega" data-valor="Retirar na loja">
+  <p data-pedido-mensagem>Olá! Quero 2 &amp; 3.</p><p data-pedido-aviso role="status"></p>
+  <a data-pedido-enviar href="${whatsapp('5511900000000', 'Olá! Quero 2 & 3.')}">Enviar</a>
+</form>`;
+const PEDIDOS_ERRADOS = `<form data-pedido id="sem-numero" data-whatsapp="sem" data-mensagem="Olá!">
+  <a data-pedido-enviar href="#">Enviar</a>
+</form>
+<form data-pedido id="cru" data-whatsapp="5511900000000" data-mensagem="Olá! Quero 2 &amp; 3.">
+  <input type="checkbox" data-item="">
+  <input type="checkbox" data-campo="Embrulho" checked>
+  <div aria-live="polite"><p data-pedido-mensagem>Olá!</p></div>
+  <a data-pedido-enviar href="https://wa.me/5511900000000?text=Olá! Quero 2 &amp; 3 #29">Enviar</a>
+</form>
+<form data-pedido id="vazio" data-whatsapp="5511900000000" data-mensagem="Olá!">
+  <a data-pedido-enviar href="https://wa.me/5511900000000?text=">Enviar</a>
+</form>`;
+
+test('checar: o pedido que sai do gerador passa; número, link, opção sem valor e região viva reprovam', opcoes, async () => {
+  const pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-pedido-checar-'));
+  const pagina = (corpo) => `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>P</title></head><body>${corpo}</body></html>`;
+  fs.writeFileSync(path.join(pasta, 'index.html'), pagina(PEDIDO_CERTO));
+  fs.mkdirSync(path.join(pasta, 'errado'));
+  fs.writeFileSync(path.join(pasta, 'errado', 'index.html'), pagina(PEDIDOS_ERRADOS));
+  const sessao = await abrirSessao(pasta);
+  try {
+    const celular = TAMANHOS.find((t) => t.nome === 'celular');
+    await visitar(sessao, { rel: 'index.html' }, celular);
+    assert.deepEqual(await sessao.avaliar(pedidos), { red: [], warn: [] });
+
+    await visitar(sessao, { rel: 'errado/index.html' }, celular);
+    const r = await sessao.avaliar(pedidos);
+    const achados = r.red.map((v) => `${v.tipo} ${v.detalhe.split(':')[0]}`);
+    for (const esperado of [
+      'pedido-sem-whatsapp pedido #sem-numero',
+      'pedido-link-quebrado pedido #cru',
+      'pedido-opcao-sem-valor pedido #cru',
+      'pedido-fala-a-cada-letra pedido #cru',
+      'pedido-link-quebrado pedido #vazio',
+    ]) assert.ok(achados.includes(esperado), `faltou ${esperado} em ${achados.join(' | ')}`);
+    assert.equal(r.red.filter((v) => v.tipo === 'pedido-opcao-sem-valor').length, 2, 'item sem nome e caixa sem data-valor');
+    assert.ok(r.red.some((v) => v.detalhe.includes('não está codificada')), JSON.stringify(r.red));
+    assert.ok(r.red.some((v) => v.detalhe.includes('mensagem vazia')), JSON.stringify(r.red));
+    assert.deepEqual(r.warn.map((w) => w.tipo), ['pedido-opcao-marcada']);
+  } finally {
+    await sessao.fechar();
+    fs.rmSync(pasta, { recursive: true, force: true });
+  }
 });
