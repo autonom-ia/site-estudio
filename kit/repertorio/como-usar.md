@@ -2,7 +2,7 @@
 
 Para o assistente. A pessoa nunca lê este arquivo: fale com ela em palavras simples, como manda o `AGENTS.md`.
 
-São 40 fichas de sites reais e no ar, separadas pela **ação de quem visita** o site. Cada arquivo `<ação>.json` desta pasta é uma ação. O repertório vem dentro do `kit/`, então chega a todo mundo pela atualização do estúdio; não copie para a pasta da pessoa.
+São 42 fichas de sites reais e no ar, separadas pela **ação de quem visita** o site. Cada arquivo `<ação>.json` desta pasta é uma ação. O repertório vem dentro do `kit/`, então chega a todo mundo pela atualização do estúdio; não copie para a pasta da pessoa.
 
 | Arquivo | Quem visita quer |
 |---|---|
@@ -48,16 +48,17 @@ O estúdio guarda de cada referência só o endereço público e o que aprendemo
 | `ramo` | o ramo do site. É só contexto: nunca é o critério de escolha |
 | `duvida` | a dúvida de quem visita que aquela página resolve, nas palavras de quem visita |
 | `principio` | por que funciona, em uma frase |
-| `comoFazemosAqui` | como o estúdio entrega a mesma ideia num site sem servidor: `padrao` (um dos cinco abaixo) e `texto` (a adaptação) |
+| `comoFazemosAqui` | como o estúdio entrega a mesma ideia num site sem servidor: `padrao` (um dos cinco jeitos abaixo, ou um dos dois de 3D) e `texto` (a adaptação) |
 | `noCelular` | como a ideia fica na tela pequena |
 | `naoTrazer` | o que é da marca deles, ou o que não cabe num site sem servidor |
+| `conferidaEm` | opcional: o dia (AAAA-MM-DD) em que a ficha foi conferida ao vivo, seguindo o `ondeVer`. Obrigatório nas fichas de 3D |
 
 ## Como escolher (etapa 3 da skill `novo-site`)
 
 1. **Parta do brief, não do ramo.** Leia a ação principal e responda: "o que a pessoa que chega precisa saber, ou ver, para fazer isso?" Essa é a **dúvida que a página resolve**.
 2. Abra o arquivo da ação principal, pela tabela "Da ação do brief ao arquivo". Se a dúvida mistura duas ações (ver o lugar e reservar), abra também o da segunda. Não leia os oito.
 3. Compare a `duvida` de cada ficha com a dúvida do brief, pelo sentido. Escolha **2 ou 3** fichas. Pelo menos **2 de outro ramo**: é nelas que mora a ideia que o ramo ainda não usa. Uma do mesmo ramo pode entrar, se ensinar algo que as outras não ensinam.
-4. **Confira ao vivo só as escolhidas.** Abra o `link` de cada uma, siga o `ondeVer` até a parte da página onde o princípio aparece e veja se ele ainda está lá. A capa sozinha não confere nada. Nunca abra as 40.
+4. **Confira ao vivo só as escolhidas.** Abra o `link` de cada uma, siga o `ondeVer` até a parte da página onde o princípio aparece e veja se ele ainda está lá. A capa sozinha não confere nada. Nunca abra todas.
    - **O site recusa leitura automática** (acesso negado, 403, 405, tela de "confirme que você é humano", ou nenhuma resposta enquanto os outros sites abrem): ele **não saiu do ar**. Abra no navegador do seu programa, se ele tiver um. Se esse navegador for o da própria pessoa (como a extensão do Claude no Chrome), peça licença antes, como no `ler`. Sem navegador, escolha outra ficha do mesmo arquivo e anote na coluna Observação do `referencias.md`: "trocada: o site recusa leitura automática". Nunca escreva que saiu do ar, nem a data de uma conferência que não aconteceu.
    - **O princípio mudou** (a página existe, mas não faz mais o que a ficha diz): troque de ficha e anote a troca.
    - **Saiu do ar** só quando o endereço não existe (página não encontrada, domínio sem dono).
@@ -106,10 +107,44 @@ Tudo roda na própria página, com os dados do `fatos.md`. Nada de servidor, con
 - O endereço completo escrito em texto, e dois botões: `https://www.google.com/maps/search/?api=1&query=<endereço>` e `https://waze.com/ul?q=<endereço>&navigate=yes`, com o endereço do `fatos.md` passado por `encodeURIComponent`.
 - Horário de hoje e uma referência de quem chega (foto real da fachada, ponto de referência) ajudam mais que o mapa.
 
+## 3D: só com prova e com limite
+
+Dois jeitos usam 3D. Os dois têm demo própria do estúdio em `kit/demos/3d/`, por cima do molde: `./estudio novo <nome> --demo 3d` cria o site de exemplo (página inicial com a marca em 3D, página `monte` com o configurador) para você ver, fotografar com `./estudio prints <nome>` e copiar as peças. A demo é do negócio fictício e nunca vai ao ar.
+
+**Quando usar.** Só quando ver a peça de vários lados, ou a marca ganhar corpo, ajuda a pessoa a decidir, e o brief tem o que mostrar: um produto de forma simples com opções (cor, acabamento, um opcional) ou uma forma que já é da marca.
+
+**Quando não usar.**
+- O negócio não precisa: serviço, consulta, comida, lugar. Foto real conta mais que objeto desenhado; use `troca-de-fotos`.
+- Já existem fotos reais de cada opção: `troca-de-fotos` é mais leve e mais verdadeira.
+- A peça é complexa (carro inteiro, móvel com tecido, roupa no corpo): o modelo passa do limite e parece de mentira.
+- O público usa celular fraco ou internet ruim: o 3D esquenta o aparelho e demora; a imagem de reserva já resolve.
+- Para enfeitar: um 3D por página, no máximo, e nunca no lugar do texto ou da ação principal.
+
+**Obrigatório, sempre** (as demos fazem assim; copie o jeito):
+- Todo o código do 3D em `site/assets/3d/`. A página só baixa o carregador (`3d.js`); o motor e a cena baixam quando o palco chega perto da tela.
+- Imagem de reserva no palco desde o começo (desenho parado da mesma peça): é o que aparece sem WebGL, com "reduzir movimento" ligado e se algo falhar.
+- Teclado e leitor de tela: escolhas em botões de rádio dentro de `<fieldset>` com `<legend>`, a escolha escrita num `aria-live`; forma só de enfeite leva `aria-hidden`.
+- Cores da marca, lidas dos tokens: a peça muda junto com a marca.
+- Limite de peso: todo o código do 3D até **200 KB comprimido** e cada modelo até **1,5 MB**. Entra na conta tudo de `site/assets/3d/`, todo `.wasm` e toda biblioteca que fala com o WebGL, em qualquer pasta (o three.js sozinho passa de 170 KB). O modelo `.gltf` soma os `.bin` e as texturas dele; `.glb` e `.obj` contam sozinhos. O `checar` reprova acima (`3d-pesado`). As demos, em WebGL puro, somam cerca de 14 KB.
+- As fotos de conferência esperam cada cena abrir. `CENA_3D_NAO_ABRIU` (saiu a imagem parada; o motivo vem junto), `CENA_3D_VAZIA` (o palco saiu liso) e `CENA_3D_FORA_DA_FOTO` (o palco não aparece na foto) se corrigem antes de mostrar.
+- Movimento que ninguém pediu para em até 5 s (a peça gira sozinha só no começo). Falha no 3D aparece no console e o `checar` mostra; a imagem de reserva fica no lugar.
+
+### `configurador-3d`: a peça muda na hora com cada escolha
+
+- Demo: seção `kit/demos/3d/_gerador/secoes/configurador-3d.mjs` e cena `site/assets/3d/caramanhola-3d.js`. O perfil da peça mora na seção e serve ao 3D e à imagem de reserva.
+- Poucas escolhas, todas do `fatos.md`, cada uma com o nome escrito (cor sozinha não basta). A imagem de reserva acompanha a escolha só com CSS.
+- A escolha final vai escrita no texto do WhatsApp, como no `pedido-no-whatsapp`. Arrastar gira a peça; ninguém precisa girar para decidir.
+
+### `marca-em-3d`: uma forma da marca reage à rolagem e ao ponteiro
+
+- Demo: seção `kit/demos/3d/_gerador/secoes/abertura-3d.mjs` e cena `site/assets/3d/raio-3d.js` (a roda raiada da oficina de exemplo).
+- Discreta: não gira sozinha, só responde à rolagem e ao ponteiro, e parada não gasta bateria. Fica ao lado da assinatura do topo, nunca por cima do texto.
+- A forma é da marca da pessoa (o símbolo, o produto, um objeto do ofício). Sem forma própria, não use.
+
 ## Quando nenhuma ficha serve
 
 Se nenhuma dúvida do repertório chega perto da do brief, mesmo depois da tabela "Da ação do brief ao arquivo", procure de 2 a 3 sites reais com o mesmo objetivo (de qualquer ramo) e escreva a ficha deles no `referencias.md`, no mesmo formato. Nunca invente uma referência que você não abriu.
 
 ## Para quem mantém o estúdio
 
-`node kit/scripts/manutencao/links-do-repertorio.mjs` abre os 40 links e lista os que não respondem normalmente, separando quem recusa leitura automática (está no ar) de quem saiu do ar. Fica fora do `npm test` porque depende da internet. Ficha fora do ar se troca; ficha que só recusa leitor fica, porque a instrução do passo 4 cobre.
+`node kit/scripts/manutencao/links-do-repertorio.mjs` abre todos os links e lista os que não respondem normalmente, separando quem recusa leitura automática (está no ar) de quem saiu do ar. Fica fora do `npm test` porque depende da internet. Ficha fora do ar se troca; ficha que só recusa leitor fica, porque a instrução do passo 4 cobre.

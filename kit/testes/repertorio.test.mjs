@@ -15,6 +15,9 @@ const PASTA = path.join(KIT, 'repertorio');
 const ACOES = ['pedir', 'reservar', 'comprar', 'simular', 'escolher', 'visitar', 'orcar', 'participar'];
 // Os cinco jeitos de entregar a ideia num site sem servidor ("como fazemos aqui").
 const PADROES = ['troca-de-fotos', 'pedido-no-whatsapp', 'link-de-pagamento-ou-agenda', 'simulador-na-pagina', 'mapa-por-botao'];
+// Os dois jeitos com 3D, cada um com a demo própria do estúdio em kit/demos/3d.
+const PADROES_3D = ['configurador-3d', 'marca-em-3d'];
+const DEMO_3D = 'kit/demos/3d';
 // ondeVer: o caminho do link até a parte da página onde o princípio aparece (quase nunca é a capa).
 const CAMPOS = ['id', 'nome', 'link', 'ondeVer', 'ramo', 'duvida', 'principio', 'comoFazemosAqui', 'noCelular', 'naoTrazer'];
 // Texto que termina em ponto final; a dúvida termina em interrogação.
@@ -57,9 +60,22 @@ function problemasDoLink(link) {
   return p;
 }
 
+// conferidaEm (opcional): o dia em que a ficha foi conferida ao vivo, AAAA-MM-DD, nunca no futuro.
+const HOJE = new Date().toISOString().slice(0, 10);
+function dataValida(v) {
+  if (typeof v !== 'string' || v.length !== 10) return false;
+  const [ano, mes, dia] = v.split('-');
+  const digitos = (x, n) => typeof x === 'string' && x.length === n && [...x].every((c) => c >= '0' && c <= '9');
+  if (!digitos(ano, 4) || !digitos(mes, 2) || !digitos(dia, 2)) return false;
+  const d = new Date(`${v}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v && v <= HOJE;
+}
+
 function problemasDaFicha(f) {
-  if (!mesmasChaves(f, CAMPOS)) return [`campos diferentes de: ${CAMPOS.join(', ')}`];
+  const campos = f && Object.hasOwn(f, 'conferidaEm') ? [...CAMPOS, 'conferidaEm'] : CAMPOS;
+  if (!mesmasChaves(f, campos)) return [`campos diferentes de: ${CAMPOS.join(', ')} (e conferidaEm, opcional)`];
   const p = [];
+  if (campos.length > CAMPOS.length && !dataValida(f.conferidaEm)) p.push('conferidaEm fora do formato AAAA-MM-DD ou no futuro');
   const idOk = typeof f.id === 'string' && f.id.length >= 2 && !f.id.startsWith('-') && !f.id.endsWith('-')
     && [...f.id].every((c) => PERMITIDOS_NO_ID.includes(c));
   if (!idOk) p.push('id fora do formato (minúsculas, números e hífen)');
@@ -69,7 +85,7 @@ function problemasDaFicha(f) {
   const como = f.comoFazemosAqui;
   if (!mesmasChaves(como, ['padrao', 'texto'])) p.push('comoFazemosAqui sem padrao e texto');
   else {
-    if (!PADROES.includes(como.padrao)) p.push(`padrao "${como.padrao}" não existe`);
+    if (![...PADROES, ...PADROES_3D].includes(como.padrao)) p.push(`padrao "${como.padrao}" não existe`);
     p.push(...problemasDoTexto('comoFazemosAqui.texto', como.texto, '.'));
   }
   return p;
@@ -89,6 +105,11 @@ test('o repertório tem um arquivo por ação, e cada um diz o que quem visita q
     assert.deepEqual(problemasDoTexto('visitanteQuer', dados.visitanteQuer, '.'), [], arquivo);
     assert.ok(Array.isArray(dados.fichas) && dados.fichas.length >= 4, `${arquivo}: pelo menos 4 fichas`);
   }
+});
+
+test('a data de conferência é AAAA-MM-DD de verdade e nunca no futuro', () => {
+  for (const v of ['2026-11-24', '2024-02-29']) assert.equal(dataValida(v), true, v);
+  for (const v of ['2026-13-01', '2026-02-30', '2023-02-29', '24/11/2026', '2026-1-24', '2026-11-2a', '9999-12-31', 20261124, null]) assert.equal(dataValida(v), false, String(v));
 });
 
 test('toda ficha do repertório segue o formato', () => {
@@ -122,6 +143,44 @@ test('os cinco jeitos de fazer aqui aparecem no repertório e estão explicados 
   assert.ok(guia.split('\n').length < 300);
 });
 
+test('os jeitos com 3D apontam para a demo própria e o como-usar diz quando usar, quando não e o limite de peso', () => {
+  const fichas = todasAsFichas();
+  for (const padrao of PADROES_3D) {
+    const com = fichas.filter((f) => f.comoFazemosAqui.padrao === padrao);
+    assert.ok(com.length >= 1, `nenhuma ficha com ${padrao}`);
+    for (const f of com) assert.ok(f.comoFazemosAqui.texto.includes(DEMO_3D), `${f.id}: não aponta para ${DEMO_3D}`);
+    // ficha de 3D só entra conferida ao vivo, com a data da conferência
+    for (const f of com) assert.ok(dataValida(f.conferidaEm), `${f.id}: sem conferidaEm`);
+  }
+  assert.ok(fs.existsSync(path.join(RAIZ, ...DEMO_3D.split('/'), '_gerador', 'ordem.mjs')), 'a demo não existe');
+  const guia = fs.readFileSync(path.join(PASTA, 'como-usar.md'), 'utf8');
+  const secao = guia.slice(guia.indexOf('## 3D: só com prova e com limite'), guia.indexOf('## Quando nenhuma ficha serve'));
+  assert.ok(secao.length > 200, 'como-usar.md sem a seção de 3D');
+  for (const trecho of ['**Quando usar.**', '**Quando não usar.**', 'celular fraco', 'O negócio não precisa', '200 KB comprimido', '1,5 MB', '`3d-pesado`',
+    'imagem de reserva', 'reduzir movimento', 'perto da tela', '`aria-live`', '--demo 3d', 'CENA_3D_NAO_ABRIU', 'CENA_3D_VAZIA',
+    ...PADROES_3D.map((p) => `### \`${p}\``)]) {
+    assert.ok(secao.includes(trecho), `seção de 3D sem "${trecho}"`);
+  }
+  // o limite escrito é o mesmo que o checar aplica
+  return import('../scripts/lib/peso-3d.mjs').then(({ LIMITE_3D }) => {
+    assert.equal(LIMITE_3D.js_kb_comprimido, 200);
+    assert.equal(LIMITE_3D.modelo_kb, 1536);
+  });
+});
+
+test('as skills levam o 3D: a novo-site escolhe e constrói pela regra, a revisar confere', () => {
+  for (const pasta of ['.claude', '.agents']) {
+    const site = fs.readFileSync(path.join(RAIZ, pasta, 'skills', 'novo-site', 'SKILL.md'), 'utf8');
+    for (const trecho of ['**3D só com prova e com limite.**', '`configurador-3d`', '`marca-em-3d`', '"Quando não usar"', '--demo 3d', '`3d-pesado`', 'CENA_3D_NAO_ABRIU', '--reduzido']) {
+      assert.ok(site.includes(trecho), `${pasta} novo-site sem "${trecho}"`);
+    }
+    const revisar = fs.readFileSync(path.join(RAIZ, pasta, 'skills', 'revisar', 'SKILL.md'), 'utf8');
+    for (const trecho of ['CENA_3D_NAO_ABRIU', 'CENA_3D_VAZIA', '3D: só com prova e com limite', 'Se há 3D']) {
+      assert.ok(revisar.includes(trecho), `${pasta} revisar sem "${trecho}"`);
+    }
+  }
+});
+
 test('o repertório é só texto: nenhum print, foto ou logo de marca no estúdio', () => {
   for (const nome of fs.readdirSync(PASTA)) {
     assert.ok(fs.statSync(path.join(PASTA, nome)).isFile(), `${nome} é pasta`);
@@ -153,7 +212,7 @@ test('a skill novo-site escolhe pela ação e pela dúvida, com 2 de outro ramo,
     const inicio = skill.indexOf('## Etapa 3.');
     const etapa3 = skill.slice(inicio, skill.indexOf('## Etapa 4.'));
     assert.ok(inicio !== -1 && etapa3.length > 0, `${pasta}: sem a etapa 3`);
-    for (const trecho of ['kit/repertorio/como-usar.md', 'ação principal', 'dúvida', 'só contexto', '2 de outro ramo', 'celular', 'ao vivo', 'Nunca abra as 40', 'só o endereço',
+    for (const trecho of ['kit/repertorio/como-usar.md', 'ação principal', 'dúvida', 'só contexto', '2 de outro ramo', 'celular', 'ao vivo', 'Nunca abra todas', 'só o endereço',
       '`ondeVer`', 'recusa leitura automática', 'não saiu do ar', 'chamar no WhatsApp', 'Da ação do brief ao arquivo']) {
       assert.ok(etapa3.includes(trecho), `${pasta}: etapa 3 sem "${trecho}"`);
     }

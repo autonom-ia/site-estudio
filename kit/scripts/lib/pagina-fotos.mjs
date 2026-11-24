@@ -53,3 +53,57 @@ export function prenderParaFoto() {
   }
   return { presos, altura: document.documentElement.scrollHeight };
 }
+
+// Espera as partes em 3D (palcos com data-3d) terminarem antes da foto: cada palco até ficar
+// "pronta" ou até a página dizer por que ficou na reserva (data-3d-motivo), com prazo por palco.
+// Palco que ainda nem começou (o vigia de rolagem não o viu) é trazido à tela para começar.
+// Lição: sem esperar, a foto saía com o palco vazio (a cena ainda baixando) ou no meio da troca;
+// e esperar só os "carregando" deixava passar o palco que ainda não tinha começado.
+export async function esperarCenas3d(tetoPorPalcoMs) {
+  const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
+  const quadro = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const palcos = [...document.querySelectorAll('[data-3d]')];
+  if (!palcos.length) return 0;
+  const terminou = (p) => p.getAttribute('data-3d-estado') === 'pronta' || p.hasAttribute('data-3d-motivo');
+  let rolou = false;
+  for (const p of palcos) {
+    const fim = Date.now() + tetoPorPalcoMs;
+    if (!terminou(p) && p.getAttribute('data-3d-estado') !== 'carregando') {
+      p.scrollIntoView({ block: 'center', behavior: 'instant' });
+      rolou = true;
+    }
+    while (Date.now() < fim && !terminou(p)) await dormir(100);
+  }
+  if (rolou) {
+    for (let k = 0; k < 10 && scrollY !== 0; k += 1) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      await quadro();
+    }
+  }
+  await quadro();
+  for (const a of document.getAnimations()) {
+    try {
+      const tempo = a.effect && a.effect.getComputedTiming ? a.effect.getComputedTiming() : null;
+      if (tempo && tempo.endTime !== Infinity) a.finish();
+    } catch (e) {}
+  }
+  await quadro();
+  return palcos.length;
+}
+
+// Onde está cada palco 3D na página (depois de prenderParaFoto) e em que estado ficou:
+// pronta (a cena desenhou), reserva (imagem parada) ou carregando (passou do prazo).
+export function cenas3d() {
+  return [...document.querySelectorAll('[data-3d]')].map((p) => {
+    const r = p.getBoundingClientRect();
+    return {
+      cena: p.getAttribute('data-3d'),
+      estado: p.getAttribute('data-3d-estado') || 'sem-estado',
+      motivo: p.getAttribute('data-3d-motivo') || '',
+      x: Math.max(0, r.left + scrollX),
+      y: Math.max(0, r.top + scrollY),
+      largura: Math.min(r.width, innerWidth),
+      altura: r.height,
+    };
+  });
+}

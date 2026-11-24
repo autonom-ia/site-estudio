@@ -8,6 +8,7 @@
 // Pedido montado na página (lib/pagina-leitura.mjs, pedidos): RED pedido-sem-whatsapp,
 // pedido-link-quebrado, pedido-opcao-sem-valor, pedido-fala-a-cada-letra; WARN pedido-opcao-marcada.
 // Letras (lib/letras.mjs): RED fonte-sem-licenca; WARN fonte-pesada (não .woff2, ou soma alta).
+// 3D (lib/peso-3d.mjs): RED 3d-pesado (código de assets/3d acima de 200 KB comprimido, ou modelo acima de 1,5 MB).
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -19,6 +20,7 @@ import { repeticoes, pedidos } from '../lib/pagina-leitura.mjs';
 import { progresso } from '../lib/executar.mjs';
 import { esperar } from '../lib/cdp.mjs';
 import { anotarLetras } from '../lib/letras.mjs';
+import { anotar3d } from '../lib/peso-3d.mjs';
 import { falha } from '../lib/saida.mjs';
 
 // As bibliotecas de movimento que o molde carrega. A fonte de verdade é a ordem do site, a mesma
@@ -101,6 +103,7 @@ export default async function checar(args) {
   const warn = [];
   for (const rel of await vendorAusente(c.site, c.gerador)) red.push({ pagina: '-', tipo: 'vendor-ausente', detalhe: `site/${rel}` });
   anotarLetras(c.site, red, warn);
+  anotar3d(c.site, red);
   const paginas = paginasDoSite(c);
   const notebook = TAMANHOS.find((t) => t.nome === 'notebook');
   const sessao = await abrirSessao(c.site);

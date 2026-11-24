@@ -1,6 +1,9 @@
 // Sessão de navegador para um site: servidor local na pasta site/ + Chrome sem janela + uma aba.
 // Registra o que a rede pediu (endereço externo, arquivo que não carregou, peso) e os erros de
-// JavaScript da página. O tamanho de tela troca a qualquer momento (celular, tablet, notebook…).
+// JavaScript da página (exceção e console.error). O tamanho de tela troca a qualquer momento.
+// O navegador abre com o desenho 3D por software ligado (cdp.mjs, ARGS_3D), então a sessão
+// recusa todo pedido que não seja do próprio computador: endereço de fora aparece na rede como
+// pedido recusado (o checar acusa), mas nada de fora chega a rodar na página.
 import path from 'node:path';
 import { launch, openTab, navegar, esperar } from './cdp.mjs';
 import { servir } from './servidor.mjs';
@@ -13,14 +16,39 @@ export function chamada(fn, ...args) {
 // deps: as peças de verdade; os testes trocam por falsas para simular falha no meio.
 const PECAS = Object.freeze({ launch, openTab, servir });
 
+// Só o próprio computador: pedido para outro endereço é recusado antes de sair.
+const LOCAIS = Object.freeze(['127.0.0.1', 'localhost', '[::1]']);
+export function ehLocal(url) {
+  let u;
+  try {
+    u = new URL(url);
+  } catch {
+    return false;
+  }
+  if (u.protocol === 'data:' || u.protocol === 'blob:' || u.protocol === 'about:') return true;
+  return (u.protocol === 'http:' || u.protocol === 'https:') && LOCAIS.includes(u.hostname);
+}
+
+async function apenasLocal(tab) {
+  tab.on((m) => {
+    if (m.method !== 'Fetch.requestPaused') return;
+    const { requestId, request } = m.params;
+    const passa = ehLocal(request.url);
+    // a resposta pode chegar com a aba já fechando (fim da conferência): nada a fazer
+    tab.send(passa ? 'Fetch.continueRequest' : 'Fetch.failRequest', passa ? { requestId } : { requestId, errorReason: 'BlockedByClient' }).catch(() => {});
+  });
+  await tab.send('Fetch.enable', { patterns: [{ urlPattern: '*' }] });
+}
+
 export async function abrirSessao(raizServida, { tamanho = null } = {}, deps = PECAS) {
   const srv = await deps.servir(raizServida);
   let nav = null;
   let tab = null;
   // Qualquer falha na partida fecha o que já abriu: aba, Chrome e servidor não ficam soltos.
   try {
-    nav = await deps.launch({ largura: 1920, altura: 1080 });
+    nav = await deps.launch({ largura: 1920, altura: 1080, com3d: true });
     tab = await deps.openTab(nav.porta);
+    await apenasLocal(tab);
     await tab.send('Page.enable');
     await tab.send('Runtime.enable');
     await tab.send('Network.enable');
@@ -53,6 +81,10 @@ async function montarSessao(srv, nav, tab, tamanho) {
     } else if (m.method === 'Network.loadingFailed') {
       const p = pedidos.get(m.params.requestId);
       if (p && !m.params.canceled) p.falhou = m.params.errorText || 'falhou';
+    } else if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error') {
+      // erro que a própria página escreveu (ex.: o 3D que não compilou e voltou para a reserva)
+      const texto = (m.params.args || []).map((a) => (a.value !== undefined ? String(a.value) : a.description || '')).join(' ');
+      errosJs.push(`console.error: ${texto}`.split('\n')[0].slice(0, 240));
     } else if (m.method === 'Runtime.exceptionThrown') {
       const d = m.params.exceptionDetails || {};
       const ex = d.exception || {};

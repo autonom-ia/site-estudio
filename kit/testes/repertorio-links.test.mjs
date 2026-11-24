@@ -14,7 +14,7 @@ test('resposta normal é no ar; bloqueio e desafio são "recusa leitor", nunca "
   assert.equal(classificar({ erro: 'ENOTFOUND' }), 'fora-do-ar');
 });
 
-test('a conferência lê os 40 links das fichas, cada um com a ação e o id', () => {
+test('a conferência lê todos os links das fichas, cada um com a ação e o id', () => {
   const links = linksDoRepertorio();
   assert.ok(links.length >= 35, String(links.length));
   for (const l of links) assert.ok(l.acao && l.id && l.link.startsWith('https://'), JSON.stringify(l));
