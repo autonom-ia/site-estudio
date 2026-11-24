@@ -15,6 +15,7 @@ import { acharNavegador } from '../scripts/lib/chrome.mjs';
 import { esperar } from '../scripts/lib/cdp.mjs';
 import { abrirSessao } from '../scripts/lib/sessao.mjs';
 import { conferir3d, LIMITE_3D } from '../scripts/lib/peso-3d.mjs';
+import { fotografarPng } from '../scripts/comandos/prints.mjs';
 import { demosDisponiveis } from '../scripts/comandos/novo.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -112,6 +113,40 @@ test('arte: reserva da roda na pose do 3D, contorno alisado que mantém pontos e
   assert.equal(conf.split('assinatura__linha--').length - 1, 4, 'o título com as quatro linhas de pesos');
   assert.ok(conf.includes('<a class="botao" data-3d-pedido'), 'a ação principal com o botão da marca');
   assert.ok(conf.includes('class="caramanhola-reserva__bancada"'), 'a peça fica de pé numa linha de bancada');
+});
+
+test('arte 2: reserva e 3D parado são a mesma peça (pose, câmera e bancada), e o brilhante reflete em peça em pé', async () => {
+  const { esc, palavras } = await import('../molde/_gerador/montar.mjs');
+  const { default: abertura } = await import('../demos/3d/_gerador/secoes/abertura-3d.mjs');
+  const { default: configurador, emblemaNaPose, bancadaNaReserva, enquadramento } = await import('../demos/3d/_gerador/secoes/configurador-3d.mjs');
+  const ctx = { esc, palavras, link: (r) => r, assets: 'assets/' };
+  const conf = configurador(ctx);
+  // a pose e a câmera vão para a cena; a reserva é enquadrada pela mesma câmera
+  const inicio = conf.indexOf('data-3d-pose="') + 'data-3d-pose="'.length;
+  const pose = JSON.parse(conf.slice(inicio, conf.indexOf('"', inicio)).split('&quot;').join('"'));
+  assert.deepEqual(Object.keys(pose).sort(), ['alvo', 'distancia', 'fov', 'giro', 'olhar']);
+  const q = enquadramento();
+  assert.ok(conf.includes(`viewBox="${q.x.toFixed(1)} ${q.y.toFixed(1)} ${q.largura.toFixed(1)} ${q.altura.toFixed(1)}"`), 'a reserva fora do enquadramento da câmera');
+  // a rodinha da reserva no ângulo de repouso: deslocada do meio e achatada (elipse)
+  const rodinha = emblemaNaPose();
+  assert.ok(conf.includes(`d="${rodinha.d}"`));
+  assert.ok(rodinha.centro[0] > 60 + 10, `rodinha no meio: ${rodinha.centro[0]}`);
+  assert.equal(emblemaNaPose(0).centro[0], 60, 'no giro zero, a rodinha fica de frente');
+  // a bancada tem corpo: tampo da linha do fundo para a frente, e a linha na mesma altura
+  const b = bancadaNaReserva();
+  assert.ok(b.frente > b.linha + 20, JSON.stringify(b));
+  assert.ok(conf.includes(`class="caramanhola-reserva__tampo" x="-400" y="${b.linha.toFixed(1)}"`));
+  assert.ok(conf.includes(`y1="${b.linha.toFixed(1)}" y2="${b.linha.toFixed(1)}"`));
+  // a cena lê a pose e a câmera da página e põe o tampo embaixo da sombra
+  const cena = fs.readFileSync(path.join(DEMO, 'site', 'assets', '3d', 'caramanhola-3d.js'), 'utf8');
+  for (const trecho of ["getAttribute('data-3d-pose')", 'pose.distancia', 'pose.olhar', 'formas.plano(', 'chao: true', 'metal: 0.3, acende: 0.12']) assert.ok(cena.includes(trecho), trecho);
+  // o motor tem a segunda janela, em pé, que só acende com brilho
+  const motor = fs.readFileSync(path.join(DEMO, 'site', 'assets', '3d', 'cena-3d.js'), 'utf8');
+  assert.ok(motor.includes('janelaEmPe') && motor.includes('* uBrilho;'), 'sem a janela em pé');
+  // fosco bem fosco
+  assert.ok(conf.includes('data-brilho="0.08"'));
+  // marca: o cubo da reserva com as duas abas, como no 3D
+  assert.equal(abertura(ctx).split('class="roda-reserva__aba"').length - 1, 2);
 });
 
 test('demo 3D: conferências passam e as fotos mostram as duas cenas abertas, no celular e no computador', opcoes, () => {
@@ -341,6 +376,64 @@ test('falha no 3D não some calada: desenho que não compila e montagem que queb
       // as escolhas seguem funcionando sem o 3D
       await s.tab.evaluate(`(() => { const i = document.querySelector('input[name="cor"][value="azul"]'); i.checked = true; i.dispatchEvent(new Event('change', { bubbles: true })); })()`);
       assert.ok((await s.tab.evaluate(`document.querySelector('[data-3d-resumo]').textContent`)).includes('azul'), caso.nome);
+    } finally {
+      await s.fechar();
+    }
+  }
+});
+
+// Mede onde a rodinha gravada aparece (o meio, na horizontal) no palco: no 3D parado e na reserva.
+async function meioDaRodinha(s, comReserva) {
+  if (comReserva) await s.tab.evaluate(`(() => { const st = document.createElement('style'); st.textContent = '#caramanhola > canvas { opacity: 0 !important; transition: none !important } #caramanhola > .palco-3d__reserva { opacity: 1 !important; transition: none !important }'; document.head.appendChild(st); })()`);
+  await esperar(150);
+  const caixa = JSON.parse(await s.tab.evaluate(`JSON.stringify((() => { const p = document.getElementById('caramanhola').getBoundingClientRect(); const e = document.querySelector('.caramanhola-reserva__emblema').getBoundingClientRect(); return { x: p.left + scrollX, y: p.top + scrollY, w: p.width, h: p.height, ey0: e.top - p.top, ey1: e.bottom - p.top }; })())`));
+  const img = await fotografarPng(s.tab, { x: caixa.x, y: caixa.y, width: caixa.w, height: caixa.h }, 1);
+  // pixels claros (a rodinha clara) por dentro da peça grafite (entre o primeiro e o último pixel
+  // escuro da linha: o fundo do palco também é claro), nas linhas da rodinha
+  const cor = (x, y) => img.px[(y * img.w + x) * 4];
+  let soma = 0;
+  let n = 0;
+  let pecaMeio = 0;
+  let linhas = 0;
+  const y0 = Math.max(0, Math.floor(caixa.ey0) + 2);
+  const y1 = Math.min(img.h, Math.ceil(caixa.ey1) - 2);
+  for (let y = y0; y < y1; y += 1) {
+    let esq = -1;
+    let dir = -1;
+    for (let x = 0; x < img.w; x += 1) {
+      if (cor(x, y) < 90) {
+        if (esq < 0) esq = x;
+        dir = x;
+      }
+    }
+    if (esq < 0) continue;
+    pecaMeio += (esq + dir) / 2;
+    linhas += 1;
+    for (let x = esq; x <= dir; x += 1) {
+      if (cor(x, y) > 170) {
+        soma += x;
+        n += 1;
+      }
+    }
+  }
+  return { meio: n ? soma / n : null, n, peca: linhas ? pecaMeio / linhas : null, largura: img.w };
+}
+
+test('o giro do começo termina na pose da reserva: a rodinha no mesmo lugar no 3D parado e na reserva', opcoes, async () => {
+  if (!fs.existsSync(path.join(base, 'demo'))) assert.equal(estudio('novo', 'demo', '--demo', '3d').codigo, 0);
+  for (const tamanho of [CELULAR, { largura: 1440, altura: 900, movel: false }]) {
+    const s = await abrirSessao(path.join(base, 'demo', 'site'), { tamanho });
+    try {
+      await s.ir(s.url('monte/'));
+      await irAoPalco(s);
+      assert.ok(await esperarEstado(s, 'pronta'), `ficou em ${await estado(s)}`);
+      await esperar(5200); // o giro do começo acabou
+      const no3d = await meioDaRodinha(s, false);
+      const naReserva = await meioDaRodinha(s, true);
+      assert.ok(no3d.n > 20 && naReserva.n > 20, JSON.stringify({ no3d, naReserva }));
+      // longe do meio (a pose é de lado) e no mesmo lugar nos dois (tolerância: 3% da largura)
+      assert.ok(no3d.meio > no3d.peca + 8, `rodinha do 3D no meio da peça: ${JSON.stringify(no3d)}`);
+      assert.ok(Math.abs(no3d.meio - naReserva.meio) < no3d.largura * 0.03, `${tamanho.largura} px: 3D ${no3d.meio.toFixed(1)}, reserva ${naReserva.meio.toFixed(1)}`);
     } finally {
       await s.fechar();
     }

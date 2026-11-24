@@ -29,11 +29,11 @@
     if (!cena) return null;
     var F = C.formas;
     // o pneu: a tinta da noite um pouco mais clara, para não sumir no fundo da abertura
-    var tinta = C.misturar(C.corDaMarca(palco, '--cor-noite-2', '#1B2025'), [1, 1, 1], 0.12);
+    var tinta = C.misturar(C.corDaMarca(palco, '--cor-noite-2', '#1B2025'), [1, 1, 1], 0.17);
     var metal = C.misturar(C.corDaMarca(palco, '--cor-apoio-noite', '#A8B0B6'), [1, 1, 1], 0.25);
     var luz = C.corDaMarca(palco, '--cor-luz', '#D4F04F');
 
-    var pneu = cena.objeto(F.anel(1.0, 0.058, 160, 16), { cor: tinta, brilho: 0.55 });
+    var pneu = cena.objeto(F.anel(1.0, 0.058, 160, 16), { cor: tinta, brilho: 0.2 });
     var faixa = cena.objeto(F.juntar([
       F.torno([[0.988, 0.0598], [1.012, 0.0598]], 160),
       F.torno([[0.988, -0.0598], [1.012, -0.0598]], 160),

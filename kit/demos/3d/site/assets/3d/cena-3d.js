@@ -118,6 +118,15 @@
     return { pos: pos, nor: nor, idx: idx };
   }
 
+  // Tampo plano deitado (y = 0), de x0 a x1 e de z0 (fundo) a z1 (frente): a bancada.
+  function plano(x0, x1, z0, z1) {
+    return {
+      pos: [x0, 0, z0, x1, 0, z0, x0, 0, z1, x1, 0, z1],
+      nor: [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+      idx: [0, 2, 1, 1, 2, 3],
+    };
+  }
+
   // Tubo reto entre dois pontos (um raio de roda, uma haste).
   function tubo(a, b, raio, lados) {
     var d = normal(sub(b, a));
@@ -226,8 +235,10 @@
   ].join('\n');
 
   // Luz de estúdio: céu e chão (luz que vem de cima e de baixo), uma luz principal, o brilho do
-  // acabamento, um reflexo de janela comprida (o que faz o brilhante parecer brilhante) e a borda
-  // que acende de lado. As cores entram e saem em sRGB, com a conta feita em luz linear; o fim
+  // acabamento, o reflexo de duas janelas (o que faz o brilhante parecer brilhante) e a borda que
+  // acende de lado. A primeira janela é alta e acende em peça deitada (a roda); a segunda é uma
+  // janela comprida em pé, que acende em peça em pé (um cilindro, como a caramanhola, reflete o
+  // que está ao lado, nunca o que está em cima) e só nos acabamentos com brilho. As cores entram e saem em sRGB, com a conta feita em luz linear; o fim
   // da conta amacia as luzes fortes como uma câmera (sem estourar o branco).
   var FRAGMENTO = [
     'precision mediump float;',
@@ -257,7 +268,9 @@
     '  float aperto = mix(12.0, 220.0, uBrilho);',
     '  float pontoDeLuz = pow(max(dot(n, h), 0.0), aperto) * mix(0.08, 1.6, uBrilho);',
     '  vec3 r = reflect(-v, n);',
-    '  float janela = smoothstep(0.25, 0.55, r.y) * smoothstep(0.95, 0.6, abs(r.x + 0.35));',
+    '  float janelaAlta = smoothstep(0.25, 0.55, r.y) * smoothstep(0.95, 0.6, abs(r.x + 0.35));',
+    '  float janelaEmPe = smoothstep(0.24, 0.06, abs(r.x + 0.5)) * smoothstep(-0.5, 0.0, r.y) * smoothstep(0.7, 0.35, r.y) * uBrilho;',
+    '  float janela = max(janelaAlta, janelaEmPe);',
     '  float borda = pow(1.0 - max(dot(n, v), 0.0), 3.0);',
     '  vec3 reflexoCor = mix(vec3(1.0), base * 1.4 + 0.05, uMetal);',
     '  vec3 difuso = base * (ambiente * 0.5 + dif * uForca * 0.8) * (1.0 - uMetal * 0.75);',
@@ -376,9 +389,10 @@
       gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(geo.idx), gl.STATIC_DRAW);
       return b;
     };
-    // material: { cor: [r,g,b] ou cor do CSS, brilho 0..1, metal 0..1, acende 0..1 }
+    // material: { cor: [r,g,b] ou cor do CSS, brilho 0..1, metal 0..1, acende 0..1, chao: true
+    // para o que fica embaixo da sombra (a bancada: desenhada antes da sombra, que cai nela) }
     cena.objeto = function (geo, material) {
-      var o = { malha: cena.malha(geo), matriz: identidade(), visivel: true, material: { cor: cor(material.cor), brilho: material.brilho || 0, metal: material.metal || 0, acende: material.acende || 0 } };
+      var o = { malha: cena.malha(geo), matriz: identidade(), visivel: true, chao: Boolean(material.chao), material: { cor: cor(material.cor), brilho: material.brilho || 0, metal: material.metal || 0, acende: material.acende || 0 } };
       cena.objetos.push(o);
       return o;
     };
@@ -400,6 +414,41 @@
       return true;
     };
 
+    // Desenha os objetos com luz: só os do chão (chao: true) ou só os outros.
+    var pintar = function (vista, doChao) {
+      var lista = cena.objetos.filter(function (o) { return o.visivel && o.chao === doChao; });
+      if (!lista.length) return;
+      var cam = cena.camera;
+      gl.useProgram(p3d.p);
+      gl.enable(gl.DEPTH_TEST);
+      gl.uniformMatrix4fv(p3d.u.uVista, false, vista);
+      gl.uniform3fv(p3d.u.uOlho, cam.olho);
+      gl.uniform3fv(p3d.u.uCeu, cena.luz.ceu);
+      gl.uniform3fv(p3d.u.uChao, cena.luz.chao);
+      gl.uniform3fv(p3d.u.uLuz, cena.luz.direcao);
+      gl.uniform1f(p3d.u.uForca, cena.luz.forca);
+      var aPos = gl.getAttribLocation(p3d.p, 'aPos');
+      var aNor = gl.getAttribLocation(p3d.p, 'aNor');
+      gl.enableVertexAttribArray(aPos);
+      gl.enableVertexAttribArray(aNor);
+      lista.forEach(function (o) {
+        var m = o.material;
+        gl.uniformMatrix4fv(p3d.u.uModelo, false, o.matriz);
+        gl.uniform3fv(p3d.u.uCor, m.cor);
+        gl.uniform1f(p3d.u.uBrilho, m.brilho);
+        gl.uniform1f(p3d.u.uMetal, m.metal);
+        gl.uniform1f(p3d.u.uAcende, m.acende);
+        gl.bindBuffer(gl.ARRAY_BUFFER, o.malha.pos);
+        gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, o.malha.nor);
+        gl.vertexAttribPointer(aNor, 3, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, o.malha.idx);
+        gl.drawElements(gl.TRIANGLES, o.malha.n, gl.UNSIGNED_SHORT, 0);
+      });
+      gl.disableVertexAttribArray(aPos);
+      gl.disableVertexAttribArray(aNor);
+    };
+
     cena.desenhar = function () {
       if (cena.perdida) return;
       cena.ajustar();
@@ -409,6 +458,8 @@
       var cam = cena.camera;
       var vista = multiplicar(perspectiva(cam.fov, cena.largura / cena.altura, 0.1, 40), olharPara(cam.olho, cam.alvo));
 
+      // a bancada primeiro, depois a sombra por cima dela, depois a peça
+      pintar(vista, true);
       if (cena.sombra) {
         var s = cena.sombra;
         gl.useProgram(pSombra.p);
@@ -428,36 +479,7 @@
         gl.disableVertexAttribArray(aCanto);
         gl.disable(gl.BLEND);
       }
-
-      gl.useProgram(p3d.p);
-      gl.enable(gl.DEPTH_TEST);
-      gl.uniformMatrix4fv(p3d.u.uVista, false, vista);
-      gl.uniform3fv(p3d.u.uOlho, cam.olho);
-      gl.uniform3fv(p3d.u.uCeu, cena.luz.ceu);
-      gl.uniform3fv(p3d.u.uChao, cena.luz.chao);
-      gl.uniform3fv(p3d.u.uLuz, cena.luz.direcao);
-      gl.uniform1f(p3d.u.uForca, cena.luz.forca);
-      var aPos = gl.getAttribLocation(p3d.p, 'aPos');
-      var aNor = gl.getAttribLocation(p3d.p, 'aNor');
-      gl.enableVertexAttribArray(aPos);
-      gl.enableVertexAttribArray(aNor);
-      cena.objetos.forEach(function (o) {
-        if (!o.visivel) return;
-        var m = o.material;
-        gl.uniformMatrix4fv(p3d.u.uModelo, false, o.matriz);
-        gl.uniform3fv(p3d.u.uCor, m.cor);
-        gl.uniform1f(p3d.u.uBrilho, m.brilho);
-        gl.uniform1f(p3d.u.uMetal, m.metal);
-        gl.uniform1f(p3d.u.uAcende, m.acende);
-        gl.bindBuffer(gl.ARRAY_BUFFER, o.malha.pos);
-        gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
-        gl.bindBuffer(gl.ARRAY_BUFFER, o.malha.nor);
-        gl.vertexAttribPointer(aNor, 3, gl.FLOAT, false, 0, 0);
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, o.malha.idx);
-        gl.drawElements(gl.TRIANGLES, o.malha.n, gl.UNSIGNED_SHORT, 0);
-      });
-      gl.disableVertexAttribArray(aPos);
-      gl.disableVertexAttribArray(aNor);
+      pintar(vista, false);
       if (!cena.desenhada) {
         cena.desenhada = true;
         palco.setAttribute('data-3d-estado', 'pronta');
@@ -493,6 +515,10 @@
     cena.ouvir = function (alvo, evento, fn, op) {
       alvo.addEventListener(evento, fn, op);
       ouvidos.push([alvo, evento, fn, op]);
+    };
+    // Vigia da cena (ResizeObserver, IntersectionObserver): parar() desliga todos.
+    cena.vigiar = function (vigia) {
+      vigias.push(vigia);
     };
     // Para de vez: solta o desenho, tira o canvas, os vigias e os ouvintes; a reserva volta.
     cena.parar = function (motivo) {
@@ -548,7 +574,7 @@
     criar: criar,
     cenaDo: cenaDo,
     cenas: (window.Cena3D && window.Cena3D.cenas) || {},
-    formas: { torno: torno, tubo: tubo, anel: anel, juntar: juntar },
+    formas: { torno: torno, tubo: tubo, anel: anel, plano: plano, juntar: juntar },
     matriz: { identidade: identidade, compor: compor, girarX: girarX, girarY: girarY, girarZ: girarZ, mover: mover },
     cor: cor,
     corDaMarca: corDaMarca,
