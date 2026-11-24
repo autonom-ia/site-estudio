@@ -14,7 +14,151 @@ const TETO_SUBIDA_MS = 20000;
 // Prazo de cada pergunta ao DevTools durante a subida e da aba nova (endereço e WebSocket).
 const TETO_PEDIDO_MS = 2000;
 const TETO_ABA_MS = 10000;
-const TETO_FECHAR_MS = 5000;
+// Teto para o processo principal fechar sozinho. Normalmente fecha em menos de 1 s e a espera acaba
+// ali; o teto só vale para um navegador travado.
+const TETO_FECHAR_MS = 30000;
+// Teto para os serviços que gravam no perfil saírem depois do principal. Medido num Mac sobrecarregado:
+// o principal levou 11 s para sair e o serviço de rede, mais 4 s; num Mac livre, os dois saem em 0,2 s.
+const TETO_ESCRITORES_MS = 15000;
+// Teto para um processo encerrado à força sumir da lista do sistema.
+const TETO_ENCERRAR_MS = 5000;
+// Teto do fechamento inteiro (fecharComCalma): as esperas acima saem dele, e quem chama pode dar menos.
+export const TETO_FECHAR_COM_CALMA_MS = TETO_FECHAR_MS + TETO_ESCRITORES_MS + TETO_ENCERRAR_MS;
+
+// Números dos processos que ainda existem (process.kill com sinal 0 só pergunta, não encerra).
+export function processosVivos(pids) {
+  return (pids || []).filter((pid) => {
+    try {
+      process.kill(pid, 0);
+      return true;
+    } catch (e) {
+      return e.code === 'EPERM';
+    }
+  });
+}
+
+// Separa "<número> <linha de comando>" no primeiro espaço: { pid, comando }; null se não houver número.
+function separarLinha(crua) {
+  const linha = String(crua || '').trim();
+  const corte = [...linha].findIndex((c) => c === ' ' || c === '\t');
+  if (corte <= 0) return null;
+  const pid = Number(linha.slice(0, corte));
+  if (!Number.isInteger(pid) || pid <= 0) return null;
+  return { pid, comando: linha.slice(corte + 1) };
+}
+
+// A pasta aparece inteira na linha de comando: logo depois dela vem o fim, um espaço ou aspas (uma
+// pasta "perfil" não casa com "perfil2"). No Windows, maiúscula e minúscula são a mesma pasta.
+function temAPasta(comando, pasta) {
+  const texto = EH_WINDOWS ? comando.toLowerCase() : comando;
+  const alvo = EH_WINDOWS ? pasta.toLowerCase() : pasta;
+  if (!alvo) return false;
+  for (let i = texto.indexOf(alvo); i >= 0; i = texto.indexOf(alvo, i + 1)) {
+    const depois = texto[i + alvo.length];
+    if (depois === undefined || depois === ' ' || depois === '"' || depois === '\t' || depois === '\r') return true;
+  }
+  return false;
+}
+
+// Da saída de "ps -o pid=,args=" (Mac e Linux) ou do PowerShell (Windows), uma linha por processo
+// ("<número> <linha de comando>"): os números cuja linha de comando tem a pasta do perfil (uma pasta
+// ou a lista dos jeitos de escrever a mesma pasta).
+export function pidsComAPasta(saida, pastas) {
+  const lista = [].concat(pastas || []).filter(Boolean);
+  return String(saida || '')
+    .split('\n')
+    .map(separarLinha)
+    .filter((p) => p && lista.some((pasta) => temAPasta(p.comando, pasta)))
+    .map((p) => p.pid);
+}
+
+// A pasta como foi passada e como o sistema a escreve por inteiro (no Mac, /var é /private/var; no
+// Windows, o nome curto C:\Users\RUNNER~1 vira o longo): o Chrome pode repassar qualquer uma das duas.
+function jeitosDaPasta(pasta) {
+  try {
+    const inteira = fs.realpathSync.native(pasta);
+    return inteira === pasta ? [pasta] : [pasta, inteira];
+  } catch {
+    return [pasta];
+  }
+}
+
+// Pergunta ao sistema a linha de comando de cada processo. Sem resposta, ''.
+const TETO_PERGUNTA_MS = 15000;
+function linhasDeComando(pids) {
+  const opcoes = { encoding: 'utf8', windowsHide: true, timeout: TETO_PERGUNTA_MS };
+  try {
+    if (EH_WINDOWS) {
+      const filtro = pids.map((pid) => `ProcessId=${pid}`).join(' OR ');
+      const script = `[Console]::OutputEncoding=[Text.Encoding]::UTF8; Get-CimInstance Win32_Process -Filter '${filtro}' | ForEach-Object { [string]$_.ProcessId + ' ' + $_.CommandLine }`;
+      return spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], opcoes).stdout || '';
+    }
+    return spawnSync('ps', ['-ww', '-o', 'pid=,args=', '-p', pids.join(',')], opcoes).stdout || '';
+  } catch {
+    return '';
+  }
+}
+
+// Dos números guardados, os que AINDA são do navegador deste perfil. O sistema reaproveita o número
+// de um processo que saiu (no Windows, logo): entre guardar a lista e encerrar passam até dezenas de
+// segundos, e o número pode já ser de outro programa da pessoa, até de outro Chrome. Só conta quem
+// tem esta pasta de perfil na linha de comando (todos os processos do Chrome a recebem). Se o sistema
+// não responder, ninguém conta: melhor deixar um processo para trás do que encerrar o de outra pessoa.
+export function processosComAPasta(pids, pasta) {
+  if (!pids.length) return [];
+  return pidsComAPasta(linhasDeComando(pids), jeitosDaPasta(pasta)).filter((pid) => pids.includes(pid));
+}
+
+function encerrar(pid) {
+  try {
+    process.kill(pid, 'SIGKILL');
+  } catch {
+    /* já saiu */
+  }
+}
+
+// Fechou por inteiro: o principal saiu sozinho E se conhece a lista dos processos (sem ela, não dá para
+// saber se os serviços que gravam no perfil terminaram nem encerrar os que sobraram).
+export function fechouPorInteiro(principalSaiu, processos) {
+  return Boolean(principalSaiu) && Array.isArray(processos) && processos.length > 0;
+}
+
+// Espera todos os processos saírem, até "fim". Devolve true se saíram.
+async function esperarSumirem(pids, fim) {
+  while (processosVivos(pids).length) {
+    if (Date.now() >= fim) return false;
+    await esperar(100);
+  }
+  return true;
+}
+
+// Os processos do navegador ({ pid, tipo }: principal, páginas, GPU, rede, armazenamento) pelo DevTools.
+// Se o DevTools não responder, lista vazia (e o fechamento não conta como inteiro).
+async function processosDoNavegador(nav, prazoMs = TETO_PEDIDO_MS * 2) {
+  try {
+    const r = await nav.send('SystemInfo.getProcessInfo', {}, prazoMs);
+    return (r.processInfo || [])
+      .map((p) => ({ pid: Number(p.id), tipo: String(p.type || '') }))
+      .filter((p) => Number.isInteger(p.pid) && p.pid > 0);
+  } catch {
+    return [];
+  }
+}
+
+// Serviços que gravam no perfil: o de rede (cookies) e o de armazenamento.
+export function ehEscritor(tipo) {
+  const t = String(tipo || '');
+  return t.includes('NetworkService') || t.includes('StorageService');
+}
+
+// Espera a promessa, no máximo ms, sem deixar relógio pendurado (ele seguraria o processo aberto).
+function ateNoMaximo(promessa, ms) {
+  let relogio;
+  const limite = new Promise((res) => {
+    relogio = setTimeout(res, ms);
+  });
+  return Promise.race([promessa, limite]).finally(() => clearTimeout(relogio));
+}
 
 // Prazo de um pedido sem passar do prazo total que ainda resta.
 const prazo = (fim, teto) => AbortSignal.timeout(Math.max(1, Math.min(teto, fim - Date.now())));
@@ -132,27 +276,54 @@ export async function launch({ largura = 1920, altura = 1080, perfil = '', comJa
       } catch {}
     }, 300);
   };
-  // Fecha pedindo ao navegador (ele grava os cookies no disco antes de sair). Sem resposta no
-  // prazo, mata o processo.
-  const fecharComCalma = async (prazoMs = TETO_FECHAR_MS) => {
+  // Fecha pedindo ao navegador (Browser.close: no fechamento normal, o Chrome grava os cookies no
+  // disco antes de o processo principal sair) e espera o principal sair de verdade, até
+  // TETO_FECHAR_MS: num computador lento ele leva mais de 10 s, e matar antes perde o login. Depois,
+  // dá até TETO_ESCRITORES_MS aos serviços que gravam no perfil (rede e armazenamento), que podem
+  // sair depois do principal; o que sobrar (páginas, GPU, um serviço travado) é encerrado, para o
+  // próximo navegador abrir o perfil sem ninguém segurando os arquivos (no Windows, segurar o
+  // arquivo dos cookies esconde o login). Só se encerra processo que ainda tem esta pasta de perfil
+  // na linha de comando (processosComAPasta). Encerrar o principal à força é o último recurso, depois
+  // do teto. tetoMs é o prazo do fechamento inteiro: cada espera sai do que resta dele, e
+  // TETO_ENCERRAR_MS fica guardado para o fim. Devolve true se fechou por inteiro (fechouPorInteiro).
+  // ultimoFechamento() conta o que sobrou.
+  let sobraram = [];
+  const fecharComCalma = async (tetoMs = TETO_FECHAR_COM_CALMA_MS) => {
+    const fimDoFechar = Date.now() + Math.max(tetoMs, TETO_ENCERRAR_MS);
+    // o que resta para uma espera, sem tocar no tempo guardado para encerrar à força
+    const resta = (teto) => Math.max(1, Math.min(teto, fimDoFechar - TETO_ENCERRAR_MS - Date.now()));
+    let processos = [];
+    let calmo = morreu;
     if (!morreu) {
       try {
-        const nav = await conectarNavegador(porta, { prazoMs: TETO_ABA_MS });
-        nav.send('Browser.close', {}, prazoMs).catch(() => {});
-        await Promise.race([saiu, esperar(prazoMs)]);
+        const nav = await conectarNavegador(porta, { prazoMs: resta(TETO_ABA_MS) });
+        processos = await processosDoNavegador(nav, resta(TETO_PEDIDO_MS * 2));
+        nav.send('Browser.close', {}, resta(TETO_FECHAR_MS)).catch(() => {});
+        await ateNoMaximo(saiu, resta(TETO_FECHAR_MS));
         nav.close();
+        calmo = fechouPorInteiro(morreu, processos);
+        const escritores = processos.filter((p) => ehEscritor(p.tipo)).map((p) => p.pid);
+        if (morreu) await esperarSumirem(escritores, Date.now() + resta(TETO_ESCRITORES_MS));
       } catch {
         /* sem conexão: vai à força */
+        calmo = false;
       }
     }
     close();
+    const vivos = processosVivos(processos.map((p) => p.pid));
+    sobraram = processos.filter((p) => vivos.includes(p.pid)).map((p) => p.tipo);
+    const doPerfil = processosComAPasta(vivos, pastaPerfil);
+    for (const pid of doPerfil) encerrar(pid);
+    // encerrar é um pedido ao sistema: espera os encerrados sumirem de fato
+    await esperarSumirem(doPerfil, Math.max(fimDoFechar, Date.now() + 1000));
+    return calmo;
   };
   const fim = Date.now() + TETO_SUBIDA_MS;
   while (Date.now() < fim && !morreu) {
     try {
       // sem prazo, um navegador que aceita a conexão e não responde prenderia o laço para sempre
       const r = await fetch(`http://127.0.0.1:${porta}/json/version`, { signal: prazo(fim, TETO_PEDIDO_MS) });
-      if (r.ok) return { porta, close, fecharComCalma, vivo: () => !morreu, navegador: achado };
+      if (r.ok) return { porta, close, fecharComCalma, ultimoFechamento: () => ({ sobraram }), vivo: () => !morreu, navegador: achado };
     } catch {
       /* subindo */
     }

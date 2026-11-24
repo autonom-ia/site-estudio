@@ -16,7 +16,7 @@ import path from 'node:path';
 import http from 'node:http';
 import { acharNavegador, acharNavegadorComJanela } from '../scripts/lib/chrome.mjs';
 import { abrirLeitor } from '../scripts/lib/leitor.mjs';
-import { launch, conectarNavegador } from '../scripts/lib/cdp.mjs';
+import { launch, conectarNavegador, processosVivos, ehEscritor } from '../scripts/lib/cdp.mjs';
 import { lerFontes } from '../scripts/lib/ler.mjs';
 import { lerInstagramComLogin } from '../scripts/lib/ler-instagram-login.mjs';
 import { esperarEntrar, temLoginSalvo, abrirLeitorComLogin, sairDaConta } from '../scripts/lib/instagram-conta.mjs';
@@ -26,7 +26,8 @@ import { servirInstagramLogado, USUARIO_LOGADO, USUARIO_DESAFIO, USUARIO_SAIU, L
 const SEM_NAVEGADOR = !acharNavegador();
 const opcoes = { skip: SEM_NAVEGADOR ? 'sem Chrome, Edge ou Chromium nesta máquina' : false, timeout: 240000 };
 const CHROME = acharNavegadorComJanela();
-const opcoesDoSistema = { skip: CHROME ? false : 'sem Chrome, Edge ou Chromium instalado', timeout: 120000 };
+// Cada teste abre e fecha o navegador 3 ou 4 vezes; num computador lento, cada fechamento leva até ~30 s.
+const opcoesDoSistema = { skip: CHROME ? false : 'sem Chrome, Edge ou Chromium instalado', timeout: 240000 };
 const QUER_JANELA = process.env.ESTUDIO_TESTAR_JANELA === '1' && !process.env.CI;
 const opcoesDaJanela = { skip: CHROME && QUER_JANELA ? false : 'janela visível só com ESTUDIO_TESTAR_JANELA=1, fora do CI', timeout: 120000 };
 const DATA = '2026-11-24';
@@ -142,8 +143,26 @@ async function gravarLogin(lugar, endereco) {
     await new Promise((r) => setTimeout(r, 200));
   }
   conexao.close();
-  await nav.fecharComCalma();
+  assert.equal(await nav.fecharComCalma(), true, 'o navegador fechou sozinho');
 }
+
+// Num computador lento, o Chrome leva mais de 5 s para fechar (medido: 11 s num Mac sobrecarregado);
+// matar o principal antes perde o login. Fechar com calma espera o principal sair sozinho e, na volta,
+// não deixa nenhum processo do navegador segurando o perfil.
+test('fechar com calma: o principal sai sozinho e nada do navegador sobra segurando o perfil', opcoesDoSistema, async (t) => {
+  const lugar = lugarTemporario(t, 'fechar');
+  fs.mkdirSync(lugar.perfil, { recursive: true });
+  const nav = await launch({ perfil: lugar.perfil, navegador: CHROME, endereco: 'about:blank', largura: 800, altura: 600 });
+  const conexao = await conectarNavegador(nav.porta);
+  const info = (await conexao.send('SystemInfo.getProcessInfo', {})).processInfo;
+  conexao.close();
+  const pids = info.map((p) => p.id);
+  assert.ok(info.some((p) => ehEscritor(p.type)), `serviço de rede na lista: ${info.map((p) => p.type).join(', ')}`);
+  assert.equal(processosVivos(pids).length, pids.length);
+  assert.equal(await nav.fecharComCalma(), true, 'o principal saiu sozinho, sem ser encerrado à força');
+  assert.equal(nav.vivo(), false);
+  assert.deepEqual(processosVivos(pids), [], `nenhum processo do navegador sobrou (encerrados depois: ${nav.ultimoFechamento().sobraram.join(', ') || 'nenhum'})`);
+});
 
 test('login guardado: sobrevive a fechar e abrir o navegador sem janela; sair apaga', opcoesDoSistema, async (t) => {
   const lugar = lugarTemporario(t, 'perfil');
@@ -195,7 +214,7 @@ test('janela visível: abre, percebe a entrada sozinha, fecha, e a leitura sem j
   const entrada = await servirEntrada(1500);
   t.after(() => entrada.fechar());
   const dominio = '127.0.0.1';
-  const r = await esperarEntrar({ lugar, navegador: CHROME, endereco: `${entrada.origem}/`, dominio, prazoMs: 30000, pausaDepoisMs: 200 });
+  const r = await esperarEntrar({ lugar, navegador: CHROME, endereco: `${entrada.origem}/`, dominio, enderecos: [`${entrada.origem}/`], prazoMs: 30000, pausaDepoisMs: 200 });
   assert.deepEqual(r, { estado: 'entrou' });
   assert.equal(await temLoginSalvo({ lugar, navegador: CHROME, dominio, enderecos: [`${entrada.origem}/`] }), true, 'janela e modo escondido usam a mesma chave');
   const prazo = await esperarEntrar({ lugar: outro, navegador: CHROME, endereco: 'about:blank', dominio, prazoMs: 2000 });

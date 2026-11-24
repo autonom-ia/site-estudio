@@ -588,7 +588,7 @@
     "acao": "Não abra de novo sem a pessoa pedir. Se ela quiser tentar, diga de novo o texto de INSTAGRAM_ANTES_DE_ENTRAR e espere o sim. Se não, siga com o que o ler já trouxe e com a reserva de LER_INSTAGRAM_POUCOS."
   },
   "INSTAGRAM_PRAZO_ACABOU": {
-    "texto": "Esperei quase 9 minutos e não vi você entrar, então fechei a janela. Quando quiser, a gente tenta de novo.",
+    "texto": "Esperei quase 7 minutos e não vi você entrar, então fechei a janela. Quando quiser, a gente tenta de novo.",
     "acao": "Pergunte se ela quer tentar agora, com \"Tentar de novo ★\" e \"Seguir sem\". Com o sim, rode ./estudio instagram entrar --confirmar de novo (timeout 600000). Se não, siga com a reserva de LER_INSTAGRAM_POUCOS."
   },
   "INSTAGRAM_ENTRAR_FALHOU": {
