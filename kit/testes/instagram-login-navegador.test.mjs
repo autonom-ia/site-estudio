@@ -13,13 +13,14 @@
 // prazo é dado como falho e o arquivo segue; nada fica esperando para sempre (o CI desiste em 30 min).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { opcoesDoNavegador, TEM_NAVEGADOR, EXIGE_NAVEGADOR, exigirNavegador } from './fixtures/navegador.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { acharNavegador, acharNavegadorComJanela } from '../scripts/lib/chrome.mjs';
+import { acharNavegadorComJanela } from '../scripts/lib/chrome.mjs';
 import { abrirLeitor } from '../scripts/lib/leitor.mjs';
 import { launch, conectarNavegador, processosVivos, ehEscritor } from '../scripts/lib/cdp.mjs';
 import { lerFontes } from '../scripts/lib/ler.mjs';
@@ -29,12 +30,11 @@ import { lugarPadrao } from '../scripts/lib/instagram-lugar.mjs';
 import { EH_WINDOWS } from '../scripts/lib/caminhos.mjs';
 import { servirInstagramLogado, USUARIO_LOGADO, USUARIO_DESAFIO, USUARIO_SAIU, LARGURA_MAIOR, codigoDesafio } from './fixtures/instagram-logado.mjs';
 
-const SEM_NAVEGADOR = !acharNavegador();
 // O arquivo inteiro, no pior caso: bem abaixo dos 30 minutos do CI. Num computador livre leva menos
 // de 1 minuto; num Mac do CI carregado com outros navegadores, alguns minutos.
 const TETO_DO_ARQUIVO_MS = 12 * 60 * 1000;
 // Os testes que usam o leitor já aberto: em segundos, normalmente.
-const opcoes = { skip: SEM_NAVEGADOR ? 'sem Chrome, Edge ou Chromium nesta máquina' : false, timeout: 120000 };
+const opcoes = opcoesDoNavegador(120000);
 const CHROME = acharNavegadorComJanela();
 // Cada teste abre e fecha o navegador 3 ou 4 vezes; num computador carregado, cada fechamento leva
 // de 10 a 30 s (o Chrome demora a sair com a CPU ocupada).
@@ -69,7 +69,11 @@ describe('Instagram com login, no navegador', { timeout: TETO_DO_ARQUIVO_MS }, (
   let pasta;
 
   before(async () => {
-    if (SEM_NAVEGADOR) return;
+    if (!TEM_NAVEGADOR) {
+      // No CI a falta de navegador reprova o arquivo inteiro, com o motivo; fora dele, os testes pulam.
+      if (EXIGE_NAVEGADOR) exigirNavegador();
+      return;
+    }
     srv = await servirInstagramLogado();
     leitor = await abrirLeitor();
     pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-ig-logado-'));
@@ -86,7 +90,7 @@ describe('Instagram com login, no navegador', { timeout: TETO_DO_ARQUIVO_MS }, (
   test('com login: rola a grade e lê 40 publicações das respostas da página, foto de 1440, sem abrir nenhuma', opcoes, async () => {
     srv.pedidos.length = 0;
     const destino = path.join(pasta, 'logado');
-    const r = await lerInstagramComLogin(leitor, USUARIO_LOGADO, { base: srv.origem, pasta: destino, pausa: 50 });
+    const r = await lerInstagramComLogin(leitor, USUARIO_LOGADO, { base: srv.origem, pasta: destino, pausa: 50, permitirEnderecoLocal: true });
     assert.equal(r.bloqueio, '');
     assert.equal(r.comLogin, true);
     assert.equal(r.posts.length, 40);
@@ -118,7 +122,7 @@ describe('Instagram com login, no navegador', { timeout: TETO_DO_ARQUIVO_MS }, (
     const destino = path.join(pasta, 'desafio');
     const fatos = path.join(destino, 'fatos.md');
     fs.mkdirSync(destino, { recursive: true });
-    const r = await lerFontes({ instagram: USUARIO_DESAFIO, posts: 40 }, { pasta: path.join(destino, 'coleta'), fatos, leitor, leitorInstagram: leitor, bases: { instagram: srv.origem }, pausa: 20, data: DATA });
+    const r = await lerFontes({ instagram: USUARIO_DESAFIO, posts: 40 }, { pasta: path.join(destino, 'coleta'), fatos, leitor, leitorInstagram: leitor, bases: { instagram: srv.origem }, pausa: 20, data: DATA, permitirEnderecoLocal: true });
     assert.deepEqual(paginasDePost(), [`/${USUARIO_DESAFIO}/p/${codigoDesafio(3)}/`], 'uma tentativa só');
     const a = r.avisos.find((x) => x.codigo === 'LER_INSTAGRAM_PEDIU_VERIFICACAO');
     assert.deepEqual(a.dados, { motivo: 'verificacao', lidas: 2 });
@@ -132,7 +136,7 @@ describe('Instagram com login, no navegador', { timeout: TETO_DO_ARQUIVO_MS }, (
     srv.pedidos.length = 0;
     const destino = path.join(pasta, 'saiu');
     fs.mkdirSync(destino, { recursive: true });
-    const r = await lerFontes({ instagram: USUARIO_SAIU, posts: 40 }, { pasta: path.join(destino, 'coleta'), fatos: path.join(destino, 'fatos.md'), leitor, leitorInstagram: leitor, bases: { instagram: srv.origem }, pausa: 20, data: DATA });
+    const r = await lerFontes({ instagram: USUARIO_SAIU, posts: 40 }, { pasta: path.join(destino, 'coleta'), fatos: path.join(destino, 'fatos.md'), leitor, leitorInstagram: leitor, bases: { instagram: srv.origem }, pausa: 20, data: DATA, permitirEnderecoLocal: true });
     const a = r.avisos.find((x) => x.codigo === 'LER_INSTAGRAM_PEDIU_VERIFICACAO');
     assert.deepEqual(a.dados, { motivo: 'login', lidas: 0 });
     assert.equal(r.dados.instagram, undefined);

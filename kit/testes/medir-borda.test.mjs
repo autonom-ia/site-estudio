@@ -3,16 +3,16 @@
 // cima": o medidor mede o texto noutra posição. Pula se não houver navegador.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { opcoesDoNavegador } from './fixtures/navegador.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { acharNavegador } from '../scripts/lib/chrome.mjs';
 import { abrirSessao, visitar } from '../scripts/lib/sessao.mjs';
 import { medir } from '../scripts/lib/pagina.mjs';
 import { LIMITES } from '../scripts/comandos/medir.mjs';
 import { TAMANHOS } from '../scripts/lib/site.mjs';
 
-const opcoes = { skip: acharNavegador() ? false : 'sem Chrome, Edge ou Chromium nesta máquina', timeout: 120000 };
+const opcoes = opcoesDoNavegador(120000);
 const CELULAR = TAMANHOS.find((t) => t.nome === 'celular');
 
 // O rótulo é posto de modo que o centro da caixa do texto fique 0,2 px acima do pé da tela, na

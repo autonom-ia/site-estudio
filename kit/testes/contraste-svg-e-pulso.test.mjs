@@ -7,11 +7,11 @@
 // Pula se não houver navegador.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { opcoesDoNavegador } from './fixtures/navegador.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { acharNavegador } from '../scripts/lib/chrome.mjs';
 import { abrirSessao, visitar } from '../scripts/lib/sessao.mjs';
 import { TAMANHOS } from '../scripts/lib/site.mjs';
 import { medir } from '../scripts/lib/pagina.mjs';
@@ -19,7 +19,7 @@ import { LIMITES } from '../scripts/comandos/medir.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const GSAP = path.join(RAIZ, 'kit', 'molde', 'site', 'assets', 'vendor', 'gsap', 'gsap.min.js');
-const opcoes = { skip: acharNavegador() ? false : 'sem Chrome, Edge ou Chromium nesta máquina', timeout: 240000 };
+const opcoes = opcoesDoNavegador(240000);
 
 const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Teste</title>
 <style>

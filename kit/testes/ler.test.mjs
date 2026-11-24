@@ -101,8 +101,9 @@ test('site: só páginas do mesmo endereço, sem arquivo nem âncora; contatos e
   const links = ['https://www.casa.example/a#x', 'https://casa.example/a', 'https://casa.example/menu.PDF', 'https://fora.example/', 'tel:+5500', 'mailto:oi@casa.example', 'https://wa.me/5511?text=oi', 'https://api.whatsapp.com/send?phone=5522'];
   assert.deepEqual(linksDoMesmoSite(links, 'https://casa.example/'), ['https://casa.example/a']);
   assert.deepEqual(contatosDosLinks([...links, 'tel:+5500']).map((c) => `${c.tipo}:${c.valor}`), ['Telefone:+5500', 'E-mail:oi@casa.example', 'WhatsApp:5511', 'WhatsApp:5522']);
-  const ld = JSON.stringify({ '@graph': [{ telephone: '1', address: 'Rua A', openingHours: ['Mo-Fr 08:00-18:00'] }] });
-  assert.deepEqual(fatosDoJsonLd([ld, 'quebrado']).map((f) => f.tipo), ['Telefone', 'Endereço', 'Horário']);
+  const ld = JSON.stringify({ '@graph': [{ '@type': 'LocalBusiness', name: 'Casa', telephone: '1', address: 'Rua A', openingHours: ['Mo-Fr 08:00-18:00'] }] });
+  const ref = { host: 'casa.example', nomes: ['Casa'] };
+  assert.deepEqual(fatosDoJsonLd([ld, 'quebrado'], ref).fatos.map((f) => f.tipo), ['Telefone', 'Endereço', 'Horário']);
 });
 
 test('rede social e conversa não contam como site do negócio', () => {
@@ -110,15 +111,16 @@ test('rede social e conversa não contam como site do negócio', () => {
   for (const u of ['https://www.instagram.com/casa', 'https://wa.me/55', 'https://m.facebook.com/casa', 'tel:1', 'nada']) assert.ok(!ehSiteDoNegocio(u), u);
 });
 
-test('registros entram em fatos.md com fonte e data, sem nome de quem avaliou, e o fatos os aceita', () => {
-  const g = { lugar: { nome: 'Casa', endereco: 'Rua A, 100', telefone: '(00) 0000-1234', site: '', horario: [{ dia: 'terça-feira', horas: '07:00–19:00' }], nota: '4,8', total: '37', fonte: 'https://g.example/maps/place/Casa' }, avaliacoes: [{ estrelas: '5', texto: 'Ótimo | bom', quando: 'há 1 mês' }, { estrelas: '4', texto: '', quando: '' }] };
+test('registros entram em fatos.md com fonte e data; texto de avaliação nunca vira fato (pode citar alguém), a nota sim', () => {
+  const g = { lugar: { nome: 'Casa', endereco: 'Rua A, 100', telefone: '(00) 0000-1234', site: '', horario: [{ dia: 'terça-feira', horas: '07:00–19:00' }], nota: '4,8', total: '37', fonte: 'https://g.example/maps/place/Casa' }, avaliacoes: [{ estrelas: '5', texto: 'A Joana do caixa foi ótima', quando: 'há 1 mês' }, { estrelas: '4', texto: '', quando: '' }] };
   const regs = registrosDoGoogle(g, '2026-11-23');
-  assert.equal(regs.length, 6);
+  assert.equal(regs.length, 5);
   const md = juntarNoFatos('# Fatos\n', secaoLida(regs, '2026-11-23'));
   const linhas = lerTabelaDeFatos(md);
-  assert.equal(linhas.length, 6);
+  assert.equal(linhas.length, 5);
   assert.ok(linhas.every((l) => l.comFonte));
-  assert.ok(linhas.some((l) => l.fato === 'Avaliação no Google (5 estrelas, há 1 mês): "Ótimo / bom"'));
+  assert.ok(!md.includes('Joana') && !md.includes('Avaliação'), 'o texto da avaliação fica fora');
+  assert.ok(linhas.some((l) => l.fato === 'Nota no Google: 4,8 (37 avaliações)'));
   const r = conferirTexto({ texto: 'Ligue (00) 0000-1234, Rua A, 100' }, montarLastro(linhas));
   assert.deepEqual(r.faltam, []);
 });

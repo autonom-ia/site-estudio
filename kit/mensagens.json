@@ -596,8 +596,24 @@
     "acao": "Leia dados.detalhe. Rode de novo uma vez; se repetir, peça à pessoa o link do perfil no Google Maps e rode com --google <link>."
   },
   "LER_SITE_OUTRO_ENDERECO": {
-    "texto": "O endereço do site leva para outra página, que não parece ser do negócio. Não li essa página.",
-    "acao": "Confira com a pessoa se dados.final é o site do próprio negócio. Se for, rode de novo com --site <dados.final>. Se não for (loja de pedidos, link curto, página de links ou rede social), siga sem o site e não use nada dessa página."
+    "texto": "Esse endereço não parece ser o site do próprio negócio, ou leva para outra página. Não li essa página.",
+    "acao": "dados.endereco é o que foi pedido e dados.final é onde ele foi parar (ou o próprio endereço, quando é rede social, página de links, loja de pedidos ou link curto). Confira com a pessoa se dados.final é o site do próprio negócio. Se for, rode de novo com --site <dados.final>. Se não for, siga sem o site e não use nada dessa página."
+  },
+  "LER_SITE_CONTATO_DE_TERCEIRO": {
+    "texto": "Achei no site um contato que pode não ser do negócio. Às vezes é de quem fez o site. Não anotei como certo.",
+    "acao": "dados.contatos lista cada um (tipo, valor, fonte e motivo: \"em-todas-as-paginas\" é contato repetido em toda página lida; \"so-no-rodape\" é, num site de uma página só, contato que só aparece no rodapé; os dois podem ser de quem fez o site, como em \"site feito por\"; \"dados-de-outro\" é dado escondido na página em nome de outra empresa, com o nome em \"de\"). Nada disso está em fatos.md. Pergunte à pessoa se algum é dela; se for, anote na tabela de cima de fatos.md com a fonte \"a própria pessoa disse em <data>\". Sem esse sim, nunca vai para o site."
+  },
+  "LER_SITE_CONTATO_A_CONFERIR": {
+    "texto": "Anotei os contatos do site, mas não tive com o que comparar. Confira se são mesmo do negócio.",
+    "acao": "Sem telefone do perfil do Google e sem contato que o próprio site declara, não dá para saber se um contato repetido em toda página (ou só no rodapé) é do negócio ou de quem fez o site. dados.contatos lista esses (tipo, valor, fonte, motivo); eles ESTÃO em fatos.md. Pergunte à pessoa se são dela; o que não for, apague da parte \"Lido pelo estúdio\" e nunca ponha no site."
+  },
+  "LER_TEMPO_ESGOTADO": {
+    "texto": "A leitura passou do tempo e eu parei. Guardei o que já tinha lido.",
+    "acao": "A leitura tem teto de dados.minutos minutos para caber na espera do assistente. O que foi lido até ali está em arquivos.coleta e na parte \"Lido pelo estúdio\" de fatos.md. Não rode de novo só por isso (a próxima leitura troca a parte lida inteira): siga com o que foi lido e pergunte à pessoa o que faltar."
+  },
+  "LER_FATOS_MARCADOR_QUEBRADO": {
+    "texto": "Li o negócio, mas não mexi na lista de fatos do site: a parte que eu atualizo sozinho está quebrada ali.",
+    "acao": "fatos.md tem as marcas dados.inicio e dados.fim faltando, repetidas ou fora de ordem, e ficou como estava; o que foi lido está em arquivos.coleta (fatos-lidos.json). Para consertar: 1) mostre à pessoa o trecho entre as marcas e peça o sim antes de mexer; 2) com o sim, apague só a marca sobrando (a sem par, ou a repetida), sem apagar texto dela; ou, se a parte lida estiver toda estragada, apague as duas marcas e o que estiver entre elas e reescreva a parte \"Lido pelo estúdio\" a partir de coleta/fatos-lidos.json (Fato | Fonte | Data, uma linha por fato, entre um só par de marcas, início antes do fim); 3) rode o ler de novo e confira que saiu sem este aviso."
   },
   "LER_SITE_FALHOU": {
     "texto": "Não consegui abrir o site atual.",

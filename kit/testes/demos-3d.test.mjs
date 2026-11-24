@@ -5,13 +5,13 @@
 // Os testes de navegador pulam se não houver Chrome, Edge ou Chromium.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { opcoesDoNavegador } from './fixtures/navegador.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { acharNavegador } from '../scripts/lib/chrome.mjs';
 import { esperar } from '../scripts/lib/cdp.mjs';
 import { abrirSessao } from '../scripts/lib/sessao.mjs';
 import { conferir3d, LIMITE_3D } from '../scripts/lib/peso-3d.mjs';
@@ -21,8 +21,7 @@ import { demosDisponiveis } from '../scripts/comandos/novo.mjs';
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DEMO = path.join(RAIZ, 'kit', 'demos', '3d');
 const DESPACHANTE = path.join(RAIZ, 'kit', 'scripts', 'estudio.mjs');
-const SEM_NAVEGADOR = !acharNavegador();
-const opcoes = { skip: SEM_NAVEGADOR ? 'sem Chrome, Edge ou Chromium nesta máquina' : false, timeout: 300000 };
+const opcoes = opcoesDoNavegador(300000);
 // Orçamento das demos, bem abaixo do limite do estúdio: o carregador (o único arquivo de 3D
 // baixado ao abrir a página) e todo o código 3D, comprimidos.
 const CARREGADOR_KB = 3;

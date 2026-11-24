@@ -214,12 +214,13 @@ async function percorrer(leitor, o) {
 
 // Lê o perfil e as publicações com login. Devolve { perfil, posts, fotos, comLogin, bloqueio, prazo,
 // falhas (códigos das publicações que deram erro) }.
-export async function lerInstagramComLogin(leitor, entrada, { base = BASE_INSTAGRAM, maximo = MAXIMO_COM_LOGIN, pasta, pausa = PAUSA_COM_LOGIN_MS, prazoMs = PRAZO_COM_LOGIN_MS, aoAvancar = () => {} } = {}) {
+export async function lerInstagramComLogin(leitor, entrada, { base = BASE_INSTAGRAM, maximo = MAXIMO_COM_LOGIN, pasta, pausa = PAUSA_COM_LOGIN_MS, prazoMs = PRAZO_COM_LOGIN_MS, aoAvancar = () => {}, permitirEnderecoLocal = false, prazo = Number.POSITIVE_INFINITY } = {}) {
   const usuario = usuarioDoInstagram(entrada);
   if (!usuario) throw new Error('o @ do Instagram veio vazio');
   const endereco = `${base}/${encodeURIComponent(usuario)}/`;
   const escuta = leitor.escutarRespostas(respostaDaLeitura(base));
-  const fim = Date.now() + prazoMs;
+  // O prazo próprio (prazoMs) ou o da leitura inteira (prazo), o que vier antes.
+  const fim = Math.min(Date.now() + prazoMs, prazo);
   const acabou = () => Date.now() >= fim;
   let r;
   try {
@@ -228,6 +229,6 @@ export async function lerInstagramComLogin(leitor, entrada, { base = BASE_INSTAG
     escuta.parar();
   }
   if (!pasta || !r.posts.length) return r;
-  const baixados = await baixarFotos(r.posts, path.join(pasta, 'fotos'));
-  return { ...r, posts: baixados.posts, fotos: baixados.fotos };
+  const baixados = await baixarFotos(r.posts, path.join(pasta, 'fotos'), { permitirEnderecoLocal, prazo });
+  return { ...r, posts: baixados.posts, fotos: baixados.fotos, esgotou: baixados.esgotou };
 }

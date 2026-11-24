@@ -3,7 +3,7 @@
 // pública). Os dados saem do JSON que a própria página traz embutido; sem ele, das etiquetas
 // og: e do <time datetime>. Sem expressão regular: JSON.parse, URL e métodos de texto.
 import path from 'node:path';
-import { acharObjetos, jsonOuNada } from './leitor.mjs';
+import { acharObjetos, jsonOuNada, TempoEsgotado } from './leitor.mjs';
 import { baixar } from './baixar.mjs';
 import { esperar } from './cdp.mjs';
 
@@ -200,8 +200,14 @@ async function listarPosts(leitor, maximo, pausa) {
   return { lido, posts: [...vistos.entries()].slice(0, maximo) };
 }
 
-// Lê o perfil e as publicações. pasta: onde salvar as fotos. Devolve { perfil, posts, fotos }.
-export async function lerInstagram(leitor, entrada, { base = BASE_INSTAGRAM, maximo = 24, pasta, pausa = 1500, aoAvancar = () => {} } = {}) {
+// Sem prazo: a leitura não tem hora para acabar (só os testes de uma parte isolada).
+const SEM_PRAZO = Number.POSITIVE_INFINITY;
+
+// Lê o perfil e as publicações. pasta: onde salvar as fotos. prazo: hora (Date.now) em que a leitura
+// inteira acaba (lib/ler.mjs); passou dela, para e devolve o que já leu, com esgotou. Devolve
+// { perfil, posts, fotos, esgotou }. permitirEnderecoLocal: só os testes (que servem as fotos em
+// 127.0.0.1) ligam.
+export async function lerInstagram(leitor, entrada, { base = BASE_INSTAGRAM, maximo = 24, pasta, pausa = 1500, aoAvancar = () => {}, permitirEnderecoLocal = false, prazo = SEM_PRAZO } = {}) {
   const usuario = usuarioDoInstagram(entrada);
   if (!usuario) throw new Error('o @ do Instagram veio vazio');
   const endereco = `${base}/${encodeURIComponent(usuario)}/`;
@@ -209,35 +215,49 @@ export async function lerInstagram(leitor, entrada, { base = BASE_INSTAGRAM, max
   const { lido, posts: lista } = await listarPosts(leitor, maximo, pausa);
   const perfil = { ...dadosDoPerfil(lido, usuario), endereco };
   const posts = [];
+  let esgotou = false;
   for (const [codigo, href] of lista) {
+    if (Date.now() >= prazo) {
+      esgotou = true;
+      break;
+    }
     aoAvancar(`Lendo a publicação ${posts.length + 1} de ${lista.length} do Instagram...`);
     await leitor.ir(href);
     const lidoPost = await leitor.esperarAte(lerPostNaPagina, PRAZO_DA_PAGINA_MS);
     if (!lidoPost) continue;
     posts.push(dadosDoPost(lidoPost, codigo, href));
   }
-  if (!pasta) return { perfil, posts, fotos: [] };
-  const baixados = await baixarFotos(posts, path.join(pasta, 'fotos'));
-  return { perfil, posts: baixados.posts, fotos: baixados.fotos };
+  if (!pasta) return { perfil, posts, fotos: [], esgotou };
+  const baixados = await baixarFotos(posts, path.join(pasta, 'fotos'), { permitirEnderecoLocal, prazo });
+  return { perfil, posts: baixados.posts, fotos: baixados.fotos, esgotou: esgotou || baixados.esgotou };
 }
 
 // Cada foto vai para <pasta>/<código>-<n>.jpg; a publicação volta com o arquivo e o tamanho real.
-export async function baixarFotos(posts, pasta) {
+// O baixar recusa endereço interno do computador ou da rede de casa (lib/baixar.mjs). Passou do
+// prazo, as fotos que faltam ficam sem arquivo (com erro "sem-tempo") e volta esgotou.
+export async function baixarFotos(posts, pasta, { permitirEnderecoLocal = false, prazo = SEM_PRAZO } = {}) {
   const fotos = [];
   const novos = [];
+  let esgotou = false;
   for (const post of posts) {
     const lista = [];
     for (let i = 0; i < post.fotos.length; i += 1) {
       const arquivo = path.join(pasta, `${post.codigo}-${i + 1}.jpg`);
+      if (esgotou || Date.now() >= prazo) {
+        esgotou = true;
+        lista.push({ ...post.fotos[i], erro: 'sem-tempo' });
+        continue;
+      }
       try {
-        const r = await baixar(post.fotos[i].url, arquivo);
+        const r = await baixar(post.fotos[i].url, arquivo, { permitirEnderecoLocal, prazo });
         lista.push({ ...post.fotos[i], arquivo: path.basename(arquivo), largura: r.largura, altura: r.altura });
         fotos.push({ codigo: post.codigo, arquivo, largura: r.largura, altura: r.altura });
       } catch (e) {
-        lista.push({ ...post.fotos[i], erro: String(e.message) });
+        if (e instanceof TempoEsgotado) esgotou = true;
+        lista.push({ ...post.fotos[i], erro: esgotou ? 'sem-tempo' : String(e.message) });
       }
     }
     novos.push({ ...post, fotos: lista });
   }
-  return { posts: novos, fotos };
+  return { posts: novos, fotos, esgotou };
 }

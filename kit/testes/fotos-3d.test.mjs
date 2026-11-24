@@ -4,12 +4,12 @@
 // Os testes de navegador pulam se não houver Chrome, Edge ou Chromium.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { opcoesDoNavegador } from './fixtures/navegador.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { acharNavegador } from '../scripts/lib/chrome.mjs';
 import { argumentosDoNavegador, ARGS_3D, esperar } from '../scripts/lib/cdp.mjs';
 import { abrirLeitor } from '../scripts/lib/leitor.mjs';
 import { abrirSessao, ehLocal } from '../scripts/lib/sessao.mjs';
@@ -17,8 +17,7 @@ import { fotografarPng } from '../scripts/comandos/prints.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DESPACHANTE = path.join(RAIZ, 'kit', 'scripts', 'estudio.mjs');
-const SEM_NAVEGADOR = !acharNavegador();
-const opcoes = { skip: SEM_NAVEGADOR ? 'sem Chrome, Edge ou Chromium nesta máquina' : false, timeout: 240000 };
+const opcoes = opcoesDoNavegador(240000);
 
 // Cores conhecidas: fundo da página, fundo do desenho e a forma desenhada por cima.
 const PAGINA = [255, 255, 255];
