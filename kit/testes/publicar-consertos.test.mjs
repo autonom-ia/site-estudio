@@ -10,6 +10,8 @@
 //    no meio libera só a única versão nova que apareceu, nunca uma publicação de outro lugar depois;
 // 5. PARTE_EM_ANDAMENTO se reenvia; pedidos de espera do painel têm frase própria;
 // 6. aviso de arquivo sem uso compara o nome inteiro ("data.png" não usa "a.png").
+// 7. depois de o painel aceitar abrir o envio, o pendente fica mesmo com erro; no-ar.json guarda o
+//    nome que a pasta usa, não o que a resposta devolveu (autonom-ia/site-estudio#19).
 // Serviço falso só em 127.0.0.1.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -280,4 +282,66 @@ test('6. aviso de arquivo sem uso compara o nome inteiro', () => {
   } finally {
     fs.rmSync(pasta, { recursive: true, force: true });
   }
+});
+
+// autonom-ia/site-estudio#19: depois de o painel aceitar abrir o envio, o registro pendente fica (o
+// concluir pode ter publicado mesmo com erro); no-ar.json guarda o nome que a pasta usa.
+const registroDaPasta = (ctx) => {
+  const arquivo = path.join(ctx.ferr, 'publicar', 'donos.json');
+  if (!fs.existsSync(arquivo)) return null;
+  return JSON.parse(fs.readFileSync(arquivo, 'utf8'))[fs.realpathSync.native(pastaDoSite(ctx))] ?? null;
+};
+const novoConteudo = (ctx, titulo) => escrever(ctx, 'site/index.html', `<title>Meu site</title><h1>${titulo}</h1><img src="assets/foto.txt">`);
+
+test('7a. concluir publica e responde com erro fora da lista: o pendente fica, e a próxima publicação segue', async (t) => {
+  const ctx = await preparar(t);
+  darChave(ctx);
+  const e = ctx.servico.estado;
+  assert.equal((await ctx.publicar()).json.dados.versao, 1);
+  e.erroAoConcluir = { status: 500, codigo: 'FALHA_QUE_NINGUEM_LISTOU' };
+  novoConteudo(ctx, 'Segunda');
+  const falhou = await ctx.publicar();
+  assert.equal(falhou.json.ok, false, falhou.saida);
+  assert.equal(e.noAr.get(NOME), 2, 'o painel publicou mesmo assim');
+  assert.equal(registroDaPasta(ctx)[NOME].pendente, true, 'o registro não foi desfeito');
+  e.erroAoConcluir = null;
+  novoConteudo(ctx, 'Terceira');
+  const r = await ctx.publicar();
+  assert.deepEqual([r.json.codigo, r.json.dados.versao], ['PUBLICADO', 3], r.saida);
+});
+
+test('7b. concluir publica e a resposta vem estranha (sem endereço que sirva): a próxima publicação segue', async (t) => {
+  const ctx = await preparar(t);
+  darChave(ctx);
+  const e = ctx.servico.estado;
+  assert.equal((await ctx.publicar()).json.dados.versao, 1);
+  e.enderecoDoSite = 'javascript:alert(1)';
+  novoConteudo(ctx, 'Segunda');
+  assert.equal((await ctx.publicar()).json.codigo, 'PUBLICAR_RESPOSTA_ESTRANHA');
+  assert.equal(e.noAr.get(NOME), 2);
+  e.enderecoDoSite = null;
+  novoConteudo(ctx, 'Terceira');
+  const r = await ctx.publicar();
+  assert.deepEqual([r.json.codigo, r.json.dados.versao], ['PUBLICADO', 3], r.saida);
+});
+
+test('7c. recusa do painel ao abrir o envio desfaz o registro: nada foi enviado', async (t) => {
+  const ctx = await preparar(t);
+  darChave(ctx);
+  ctx.servico.estado.erroAoAbrir = { status: 409, codigo: 'LIMITE_DE_SITES' };
+  assert.equal((await ctx.publicar()).json.codigo, 'PUBLICAR_LIMITE_DE_SITES');
+  assert.equal(registroDaPasta(ctx), null);
+  assert.equal(fs.existsSync(path.join(pastaDoSite(ctx), 'no-ar.json')), false);
+});
+
+test('7d. o painel devolve outro nome no concluir: no-ar.json guarda o nome que esta pasta usa, e a próxima vai ao mesmo endereço', async (t) => {
+  const ctx = await preparar(t);
+  darChave(ctx);
+  const e = ctx.servico.estado;
+  e.slugNaResposta = 'outro-nome';
+  assert.equal((await ctx.publicar()).json.codigo, 'PUBLICADO');
+  assert.equal(lerNoAr(ctx).nome, NOME);
+  e.slugNaResposta = null;
+  const r = await ctx.publicar();
+  assert.deepEqual([r.json.codigo, r.json.dados.versao, e.publicados.map((p) => p.slug)], ['PUBLICADO', 2, [NOME, NOME]], r.saida);
 });
