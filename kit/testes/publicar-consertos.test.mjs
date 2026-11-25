@@ -280,6 +280,11 @@ test('6. aviso de arquivo sem uso compara o nome inteiro', () => {
     fs.writeFileSync(path.join(pasta, 'assets', 'data.png'), 'x');
     fs.writeFileSync(path.join(pasta, 'assets', 'a.png'), 'x');
     assert.deepEqual(arquivosNaoCitados(pasta, ['index.html', 'assets/a.png', 'assets/data.png']), ['assets/a.png']);
+    fs.mkdirSync(path.join(pasta, 'assets', '3d'));
+    fs.writeFileSync(path.join(pasta, 'assets', '3d', 'peca.gltf'), '{"asset":{"version":"2.0"},"buffers":[{"uri":"peca.bin"}]}');
+    fs.writeFileSync(path.join(pasta, 'assets', '3d', 'peca.bin'), 'x');
+    fs.writeFileSync(path.join(pasta, 'index.html'), '<img src="assets/data.png"><script>carregar("assets/3d/peca.gltf")</script>');
+    assert.deepEqual(arquivosNaoCitados(pasta, ['index.html', 'assets/a.png', 'assets/data.png', 'assets/3d/peca.gltf', 'assets/3d/peca.bin']), ['assets/a.png']);
   } finally {
     fs.rmSync(pasta, { recursive: true, force: true });
   }

@@ -20,7 +20,8 @@ import { ehLicencaDeFonte } from './marca.mjs';
 export const FORA_DO_PACOTE = Object.freeze(['.md', '.psd', '.ai', '.sketch', '.fig', '.xcf', '.afdesign', '.indd']);
 // Arquivos que os serviços de hospedagem leem pelo nome, sem nenhuma página citar.
 const LIDOS_PELO_SERVIDOR = Object.freeze(['robots.txt', 'sitemap.xml', 'favicon.ico', 'cname', '.nojekyll', '_headers', '_redirects', '404.html']);
-const TEXTOS_QUE_CITAM = Object.freeze(['.html', '.css', '.js', '.mjs', '.json', '.webmanifest', '.xml', '.svg']);
+// Textos que citam outros arquivos. O .gltf (modelo 3D em texto) cita os .bin e as texturas dele.
+const TEXTOS_QUE_CITAM = Object.freeze(['.html', '.css', '.js', '.mjs', '.json', '.webmanifest', '.xml', '.svg', '.gltf']);
 
 const extensao = (rel) => {
   const nome = rel.split('/').pop().toLowerCase();
