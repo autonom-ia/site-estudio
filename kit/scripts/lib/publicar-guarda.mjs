@@ -80,16 +80,19 @@ export function gravarPedido(base, pedido, ferr = FERR) {
   gravarPrivado(arquivoPedido(ferr), { servico: base, ...pedido, guardado_em: Date.now() });
 }
 
-// Versão que estava no ar antes do concluir sem resposta ({ versao_antes }), ou null.
+// Envio cujo concluir ficou sem resposta: { versao_antes, impressao } (a versão que estava no ar antes
+// e a impressão do conteúdo mandado, pacote.impressao), ou null. Sem impressão (arquivo antigo) vale
+// como nenhum: a próxima publicação manda de novo.
 export function lerConferir(base, nome, ferr = FERR) {
   const c = lerPrivado(arquivoConferir(nome, ferr));
-  if (c && c.servico === base && (c.versao_antes === null || Number.isInteger(c.versao_antes))) return c;
+  const versaoOk = c && (c.versao_antes === null || Number.isInteger(c.versao_antes));
+  if (versaoOk && c.servico === base && typeof c.impressao === 'string' && c.impressao.length === 64) return c;
   if (c) apagar(arquivoConferir(nome, ferr));
   return null;
 }
 
-export function gravarConferir(base, nome, versaoAntes, ferr = FERR) {
-  gravarPrivado(arquivoConferir(nome, ferr), { servico: base, versao_antes: versaoAntes });
+export function gravarConferir(base, nome, versaoAntes, impressao, ferr = FERR) {
+  gravarPrivado(arquivoConferir(nome, ferr), { servico: base, versao_antes: versaoAntes, impressao });
 }
 
 // --sair: apaga chave e pedido. Devolve o que existia.

@@ -2,6 +2,7 @@
 // A conta reprova acima do limite, e o checar reprova o site (3d-pesado).
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { opcoesDoNavegador } from './fixtures/navegador.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -9,11 +10,9 @@ import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { conferir3d, anotar3d, LIMITE_3D } from '../scripts/lib/peso-3d.mjs';
-import { acharNavegador } from '../scripts/lib/chrome.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DESPACHANTE = path.join(RAIZ, 'kit', 'scripts', 'estudio.mjs');
-const SEM_NAVEGADOR = !acharNavegador();
 const KB = 1024;
 
 let base;
@@ -86,7 +85,7 @@ test('conta toda biblioteca que fala com o WebGL, em qualquer pasta, e soma o .g
   assert.ok(red[0].detalhe.includes('modelos/peca.bin') && red[0].detalhe.includes('modelos/tex/cor.png'), red[0].detalhe);
 });
 
-test('o checar reprova o site com 3D acima do limite (3d-pesado)', { skip: SEM_NAVEGADOR ? 'sem Chrome, Edge ou Chromium nesta máquina' : false, timeout: 200000 }, () => {
+test('o checar reprova o site com 3D acima do limite (3d-pesado)', opcoesDoNavegador(200000), () => {
   const env = { ...process.env, ESTUDIO_SITES: path.join(base, 'sites'), ESTUDIO_MARCA: path.join(base, 'sem-marca'), ESTUDIO_NAO_ABRIR: '1' };
   const estudio = (...args) => {
     const r = spawnSync(process.execPath, [DESPACHANTE, ...args], { encoding: 'utf8', env, timeout: 180000 });

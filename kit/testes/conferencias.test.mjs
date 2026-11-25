@@ -4,13 +4,13 @@
 // tablet). Pula se não houver navegador (menos o de um "prints" por vez, que não abre o navegador).
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { opcoesDoNavegador } from './fixtures/navegador.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { acharNavegador } from '../scripts/lib/chrome.mjs';
 import { crc32 } from '../scripts/lib/zip.mjs';
 import { abrirSessao, visitar } from '../scripts/lib/sessao.mjs';
 import { TAMANHOS } from '../scripts/lib/site.mjs';
@@ -22,7 +22,7 @@ import { FONTE_DE_EXEMPLO } from '../scripts/lib/fatos.mjs';
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DESPACHANTE = path.join(RAIZ, 'kit', 'scripts', 'estudio.mjs');
 const GSAP = path.join(RAIZ, 'kit', 'molde', 'site', 'assets', 'vendor', 'gsap');
-const opcoes = { skip: acharNavegador() ? false : 'sem Chrome, Edge ou Chromium nesta máquina', timeout: 300000 };
+const opcoes = opcoesDoNavegador(300000);
 
 let base;
 let env;

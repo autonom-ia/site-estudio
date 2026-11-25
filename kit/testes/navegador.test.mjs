@@ -3,19 +3,18 @@
 // precisam reprovar. Pula se não houver navegador.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { opcoesDoNavegador } from './fixtures/navegador.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { acharNavegador } from '../scripts/lib/chrome.mjs';
 import { lerZip } from '../scripts/lib/zip.mjs';
 import { FONTE_DE_EXEMPLO } from '../scripts/lib/fatos.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DESPACHANTE = path.join(RAIZ, 'kit', 'scripts', 'estudio.mjs');
-const SEM_NAVEGADOR = !acharNavegador();
-const opcoes = { skip: SEM_NAVEGADOR ? 'sem Chrome, Edge ou Chromium nesta máquina' : false, timeout: 300000 };
+const opcoes = opcoesDoNavegador(300000);
 
 let base;
 let env;

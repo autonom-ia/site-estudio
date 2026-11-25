@@ -1,21 +1,22 @@
 // Leitura sem login, de ponta a ponta no navegador, contra páginas SINTÉTICAS servidas aqui mesmo
 // (fixtures/fontes-sinteticas.mjs): só com o @ e o nome do negócio, os fatos saem com fonte e data,
-// o horário vem do painel do lugar no Google (não do trecho de busca), as avaliações saem sem o nome
-// de quem escreveu e o Instagram dá pelo menos 12 publicações com legenda e data. Pula sem navegador.
+// o horário vem do painel do lugar no Google (não do trecho de busca), o texto das avaliações fica só
+// em coleta/ (sem o nome de quem escreveu, e nunca em fatos.md), o rodapé da agência que fez o site
+// não vira fato e o Instagram dá pelo menos 12 publicações com legenda e data. Sem navegador, pula
+// fora do CI e falha no CI (fixtures/navegador.mjs).
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { opcoesDoNavegador, TEM_NAVEGADOR, EXIGE_NAVEGADOR, exigirNavegador } from './fixtures/navegador.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { acharNavegador } from '../scripts/lib/chrome.mjs';
 import { abrirLeitor } from '../scripts/lib/leitor.mjs';
 import { lerFontes } from '../scripts/lib/ler.mjs';
 import { lerTabelaDeFatos } from '../scripts/lib/fatos.mjs';
 import { MARCA_INICIO } from '../scripts/lib/registros.mjs';
-import { servirFontes, USUARIO, NEGOCIO, AUTORES, TOTAL_DE_POSTS } from './fixtures/fontes-sinteticas.mjs';
+import { servirFontes, USUARIO, NEGOCIO, AUTORES, AGENCIA, TOTAL_DE_POSTS } from './fixtures/fontes-sinteticas.mjs';
 
-const SEM_NAVEGADOR = !acharNavegador();
-const opcoes = { skip: SEM_NAVEGADOR ? 'sem Chrome, Edge ou Chromium nesta máquina' : false, timeout: 240000 };
+const opcoes = opcoesDoNavegador(240000);
 const DATA = '2026-11-23';
 
 let srv;
@@ -25,14 +26,19 @@ let fatos;
 let r;
 
 before(async () => {
-  if (SEM_NAVEGADOR) return;
+  if (!TEM_NAVEGADOR) {
+    // No CI a falta de navegador reprova o arquivo inteiro, com o motivo; fora dele, os testes pulam.
+    if (EXIGE_NAVEGADOR) exigirNavegador();
+    return;
+  }
   srv = await servirFontes();
   leitor = await abrirLeitor();
   pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-ler-'));
   fatos = path.join(pasta, 'fatos.md');
   fs.writeFileSync(fatos, '# Fatos do site\n\n| Fato | Fonte | Data |\n|---|---|---|\n| Fundada em 2015 | a dona, por mensagem | 2026-11-20 |\n');
   const bases = { instagram: srv.origem, google: srv.origem };
-  r = await lerFontes({ instagram: `@${USUARIO}`, negocio: NEGOCIO, posts: 24 }, { pasta: path.join(pasta, 'coleta'), fatos, leitor, bases, pausa: 50, data: DATA });
+  // Páginas e fotos sintéticas são servidas em 127.0.0.1: só aqui, no teste, o endereço local é aceito.
+  r = await lerFontes({ instagram: `@${USUARIO}`, negocio: NEGOCIO, posts: 24 }, { pasta: path.join(pasta, 'coleta'), fatos, leitor, bases, pausa: 50, data: DATA, permitirEnderecoLocal: true });
 });
 
 after(async () => {
@@ -95,17 +101,18 @@ test('Google: horário de cada dia vem do painel do lugar, com a fonte do lugar 
   assert.ok(codigos().includes('LER_GOOGLE_PRIMEIRO_DA_LISTA'), 'dois resultados: pede confirmação');
 });
 
-test('avaliações do Google sem o nome de quem escreveu, em nenhum arquivo', opcoes, () => {
-  const linhas = lerTabelaDeFatos(fs.readFileSync(fatos, 'utf8'));
-  const avaliacoes = linhas.filter((l) => l.fato.startsWith('Avaliação no Google'));
-  assert.equal(avaliacoes.length, 2);
-  assert.ok(avaliacoes[0].fato.includes('5 estrelas, há 2 semanas'));
-  assert.ok(avaliacoes[0].fato.includes('e o atendimento foi ótimo'), 'o "Mais" foi aberto');
-  const tudo = [fatos, path.join(pasta, 'coleta', 'google', 'lugar.json'), path.join(pasta, 'coleta', 'fatos-lidos.json')].map((a) => fs.readFileSync(a, 'utf8')).join('\n');
+test('avaliações do Google: texto inteiro (um clique no "Mais") só em coleta/, nunca em fatos.md; nome de quem escreveu em nenhum arquivo', opcoes, () => {
+  assert.equal(lerTabelaDeFatos(fs.readFileSync(fatos, 'utf8')).filter((l) => l.fato.startsWith('Avaliação')).length, 0);
+  const lugar = JSON.parse(fs.readFileSync(path.join(pasta, 'coleta', 'google', 'lugar.json'), 'utf8'));
+  assert.equal(lugar.avaliacoes.length, 2);
+  assert.equal(lugar.avaliacoes[0].texto, 'Revisão rápida perfeito e o atendimento foi ótimo.', 'o "Mais" abriu uma vez, e não fechou de novo');
+  const doFatos = [fatos, path.join(pasta, 'coleta', 'fatos-lidos.json')].map((a) => fs.readFileSync(a, 'utf8')).join('\n');
+  assert.ok(!doFatos.includes('Revisão rápida') && !doFatos.includes('Entrega no horário'));
+  const tudo = `${doFatos}\n${JSON.stringify(lugar)}`;
   for (const autor of AUTORES) assert.ok(!tudo.includes(autor), autor);
 });
 
-test('site atual achado pelo Google e lido inteiro; arquivo e endereço de fora não são visitados', opcoes, () => {
+test('site atual achado pelo Google e lido inteiro; arquivo e endereço de fora não são visitados; rodapé da agência fica fora dos fatos', opcoes, () => {
   assert.equal(r.dados.site.paginas, 2);
   assert.ok(!srv.pedidos.some((p) => p.includes('tabela-de-precos.pdf')));
   const linhas = lerTabelaDeFatos(fs.readFileSync(fatos, 'utf8')).map((l) => l.fato);
@@ -114,6 +121,11 @@ test('site atual achado pelo Google e lido inteiro; arquivo e endereço de fora 
   assert.ok(linhas.includes('E-mail no site atual: ola@casa.example'));
   assert.ok(linhas.includes('WhatsApp na bio do Instagram: 5500900001111'));
   assert.ok(linhas.includes(`Instagram: @${USUARIO}`));
+  const md = fs.readFileSync(fatos, 'utf8');
+  for (const deOutro of [AGENCIA.whatsapp, AGENCIA.telefone, AGENCIA.nome]) assert.ok(!md.includes(deOutro), deOutro);
+  const a = r.avisos.find((x) => x.codigo === 'LER_SITE_CONTATO_DE_TERCEIRO');
+  assert.ok(a, codigos().join(', '));
+  assert.deepEqual(a.dados.contatos.map((c) => c.valor).sort(), [AGENCIA.telefone, AGENCIA.whatsapp].sort());
   assert.equal(r.dados.site.fotos, 1, 'só a foto com 600 pontos ou mais');
   assert.ok(fs.readFileSync(path.join(pasta, 'coleta', 'site', 'texto.md'), 'utf8').includes('Fale com a gente.'));
 });

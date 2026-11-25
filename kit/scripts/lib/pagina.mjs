@@ -17,7 +17,7 @@ export async function pronta() {
 // Põe a página no estado que a pessoa vê depois que tudo assenta.
 // Lições: foto só do topo esconde metade da página; congelar a animação no começo fotografa texto
 // invisível. Então: rola a página inteira (dispara o que entra com a rolagem), completa as animações
-// finitas, pausa as infinitas, espera as imagens e volta ao topo.
+// finitas, leva as infinitas ao instante zero e pausa, espera as imagens e volta ao topo.
 export async function assentar() {
   const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
   const quadro = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -50,21 +50,38 @@ export async function assentar() {
       }
     }
   } catch (e) {}
+  // GSAP: o que tem fim termina; o que repete sem fim (repeat -1, ou dentro de uma linha do tempo
+  // assim) vai ao instante zero e para ali. Parar "onde está" dependeria do relógio: um botão que pulsa
+  // de cor sairia em outra fase em cada rodada, e o contraste e as fotos mudariam sem o site mudar.
   try {
     if (window.gsap && window.gsap.globalTimeline) {
-      for (const t of window.gsap.globalTimeline.getChildren(true, true, true)) {
+      const linha = window.gsap.globalTimeline;
+      const semFim = (t) => Boolean(t && t.repeat && t.repeat() === -1);
+      const dentroDeSemFim = (t) => {
+        for (let p = t; p && p !== linha; p = p.parent) if (semFim(p)) return true;
+        return false;
+      };
+      const todas = linha.getChildren(true, true, true);
+      for (const t of todas) {
         try {
-          if (t.repeat && t.repeat() === -1) t.pause();
-          else t.progress(1);
+          if (!dentroDeSemFim(t)) t.progress(1);
+        } catch (e) {}
+      }
+      for (const t of todas) {
+        try {
+          if (semFim(t)) t.pause(0);
         } catch (e) {}
       }
     }
   } catch (e) {}
+  // CSS e WAAPI: a finita termina; a infinita (um pulso) vai ao instante zero e para, pelo mesmo motivo.
   for (const a of document.getAnimations()) {
     try {
       const tempo = a.effect && a.effect.getComputedTiming ? a.effect.getComputedTiming() : null;
-      if (tempo && tempo.endTime === Infinity) a.pause();
-      else a.finish();
+      if (tempo && tempo.endTime === Infinity) {
+        a.pause();
+        a.currentTime = 0;
+      } else a.finish();
     } catch (e) {}
   }
   for (const v of document.querySelectorAll('video')) {
@@ -331,18 +348,21 @@ export async function medir(L) {
   const hex = (c) => `#${[c.r, c.g, c.b].map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('')}`;
 
   // os textos da página, cada um com as caixas reais das linhas (Range), em coordenadas do documento
+  // Texto dentro de desenho (SVG) fica numa lista à parte: entra só na medida de contraste (logo e
+  // ilustração podem ter letra sobreposta ou vazando de propósito, e o SVG é pintado pelo fill).
   const itens = [];
+  const itensSvg = [];
   const porElemento = new Map();
   const andar = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   for (let n = andar.nextNode(); n; n = andar.nextNode()) {
     if (!n.textContent.trim()) continue;
     const el = n.parentElement;
-    if (!el || el.closest('script, style, noscript, template, svg, [data-medir-nao]')) continue;
+    if (!el || el.closest('script, style, noscript, template, [data-medir-nao]')) continue;
     let it = porElemento.get(el);
     if (!it) {
-      it = { el, nos: [], texto: '' };
+      it = { el, nos: [], texto: '', svg: Boolean(el.closest('svg')) };
       porElemento.set(el, it);
-      itens.push(it);
+      (it.svg ? itensSvg : itens).push(it);
     }
     it.nos.push(n);
     it.texto += n.textContent;
@@ -353,6 +373,11 @@ export async function medir(L) {
       const r = document.createRange();
       r.selectNodeContents(n);
       for (const q of r.getClientRects()) if (q.width > 1 && q.height > 1) lista.push({ left: q.left, top: q.top, right: q.right, bottom: q.bottom });
+    }
+    // texto de SVG que o navegador não mede pela linha: a caixa do elemento
+    if (!lista.length && it.svg) {
+      const q = it.el.getBoundingClientRect();
+      if (q.width > 1 && q.height > 1) lista.push({ left: q.left, top: q.top, right: q.right, bottom: q.bottom });
     }
     return lista;
   };
@@ -395,7 +420,7 @@ export async function medir(L) {
   };
   ir(0);
   await quadro();
-  for (const it of itens) {
+  for (const it of [...itens, ...itensSvg]) {
     const cs = getComputedStyle(it.el);
     it.soLeitor = soLeitor(it.el);
     it.decorativo = Boolean(it.el.closest('[aria-hidden="true"]'));
@@ -428,7 +453,9 @@ export async function medir(L) {
       if (vaza > it.cortado) it.cortado = vaza;
     }
   }
-  const validos = itens.filter((it) => it.visivel && !it.sumido && !it.soLeitor && it.caixas.length && it.texto.length > 0);
+  const valido = (it) => it.visivel && !it.sumido && !it.soLeitor && it.caixas.length && it.texto.length > 0;
+  const validos = itens.filter(valido);
+  const validosSvg = itensSvg.filter(valido);
 
   // 2. texto cortado por um recorte
   for (const it of validos) {
@@ -517,7 +544,13 @@ export async function medir(L) {
       if (y >= 0 && y < vh) naBorda.add(it);
       return false;
     }
-    const preenchimento = cor(it.cs.webkitTextFillColor || it.cs.color);
+    // texto de SVG é pintado pelo fill, não pelo color; degradê ou padrão (url(...)) não dá para medir
+    const tinta = it.svg ? it.cs.fill : (it.cs.webkitTextFillColor || it.cs.color);
+    if (it.svg && String(tinta).startsWith('url')) {
+      semMedir.push(`${nomeDe(it.el, it.texto)}: texto de desenho (SVG) pintado com degradê ou padrão`);
+      return true;
+    }
+    const preenchimento = cor(tinta === 'none' ? 'transparent' : tinta);
     if (preenchimento.a < 0.05) {
       semMedir.push(`${nomeDe(it.el, it.texto)}: texto pintado com fundo (transparente)`);
       return true;
@@ -542,6 +575,24 @@ export async function medir(L) {
     for (; k < pilha.length; k += 1) {
       const e = pilha[k];
       if (e !== it.el && it.el.contains(e)) continue;
+      // texto de SVG sobre uma forma do próprio desenho (o retângulo de um selo): a forma é o fundo,
+      // pintada pelo fill
+      if (it.svg && e !== it.el && !e.contains(it.el) && typeof SVGElement !== 'undefined' && e instanceof SVGElement) {
+        const ce = getComputedStyle(e);
+        if (!ce.fill || ce.fill === 'none') continue;
+        if (String(ce.fill).startsWith('url')) {
+          semMedir.push(`${nomeDe(it.el, it.texto)}: desenho com degradê atrás do texto`);
+          return true;
+        }
+        const f = cor(ce.fill);
+        const o = parseFloat(ce.fillOpacity);
+        const a = f.a * (Number.isFinite(o) ? o : 1) * parseFloat(ce.opacity || '1');
+        if (a > 0.001) {
+          camadas.push({ r: f.r, g: f.g, b: f.b, a });
+          if (a >= 0.999) break;
+        }
+        continue;
+      }
       if (MIDIA.includes(e.tagName) && !e.contains(it.el)) {
         semMedir.push(`${nomeDe(it.el, it.texto)}: imagem ou vídeo atrás do texto`);
         return true;
@@ -570,7 +621,7 @@ export async function medir(L) {
     }
     return true;
   };
-  const contaveis = validos.filter((it) => it.op >= 0.05);
+  const contaveis = [...validos, ...validosSvg].filter((it) => it.op >= 0.05);
   const fimDoc = raiz.scrollHeight;
   for (let topo = 0, k = 0; k < 400; k += 1) {
     ir(topo);

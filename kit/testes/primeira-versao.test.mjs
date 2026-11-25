@@ -49,8 +49,12 @@ const RASTROS = [
 ];
 
 // Nomes reais que contêm um rastro e não vêm do exemplo: o domínio de cardápio de terceiros que o
-// `ler` recusa (lib/ler-site.mjs). Cada um vale só no arquivo dito aqui.
-const NOMES_REAIS = Object.freeze([{ arquivo: 'kit/scripts/lib/ler-site.mjs', texto: 'cardapioweb.com' }]);
+// `ler` recusa e o tipo de negócio do schema.org ("Bakery") que ele reconhece no JSON-LD
+// (lib/ler-site.mjs). Cada um vale só no arquivo dito aqui.
+const NOMES_REAIS = Object.freeze([
+  { arquivo: 'kit/scripts/lib/ler-site.mjs', texto: 'cardapioweb.com' },
+  { arquivo: 'kit/scripts/lib/ler-site.mjs', texto: "'bakery'" },
+]);
 // As fichas do repertório descrevem sites reais, e alguns são de comida: a palavra vem do site de
 // verdade, não do exemplo antigo. Cada par vale só naquele arquivo e só para aquela palavra.
 const RASTROS_DE_SITE_REAL = Object.freeze([

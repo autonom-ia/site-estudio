@@ -239,6 +239,10 @@
     "texto": "O site ainda não tem a lista de fatos com a fonte de cada um. Vou montar.",
     "acao": "Crie fatos.md com a tabela Fato | Fonte | Data, a partir do que a pessoa informou."
   },
+  "FATOS_TABELA_ILEGIVEL": {
+    "texto": "Não consegui ler uma das listas de fatos do site. Vou arrumar o jeito dela.",
+    "acao": "Veja dados.arquivo. Há uma linha com Fato e Fonte que não vira tabela: logo abaixo do cabeçalho precisa vir a linha separadora (|---|---|---|), e cada linha de fato com as colunas separadas por barra. Arrume e rode fatos de novo. Enquanto ela não for lida, os números dela contam como sem fonte."
+  },
   "PREFLIGHT_OK": {
     "texto": "O site passou em todas as conferências.",
     "acao": "Siga para os prints e leia cada um."
@@ -301,11 +305,11 @@
   },
   "ANTES_GUARDADO": {
     "texto": "Guardei como o site está agora, para mostrar o antes e o depois.",
-    "acao": "Faça as 2 ou 3 mudanças concretas, rode montar e escreva arquivos.mudancas com {\"pedido\": \"as palavras da pessoa\", \"mudancas\": [{\"titulo\": \"o que mudou, em palavras do dia a dia\", \"porque\": \"como isso atende o pedido\"}]}. Depois rode ./estudio comparar <nome>. O antes fica em aberto até ./estudio escolher <nome> depois|antes|outro."
+    "acao": "Faça as 2 ou 3 mudanças concretas, rode montar e escreva arquivos.mudancas com {\"pedido\": \"as palavras da pessoa\", \"mudancas\": [{\"titulo\": \"o que mudou, em palavras do dia a dia\", \"porque\": \"como isso atende o pedido\"}]}. Depois rode ./estudio comparar <nome>. O antes fica em aberto até ./estudio escolher <nome> depois|antes|outro. dados.apagados diz o que da comparação anterior saiu (o antes, a página do depois e a versão vista), quando havia uma."
   },
   "ANTES_NAO_GUARDADO": {
-    "texto": "Esqueci de guardar como o site estava antes. Vou refazer do jeito certo.",
-    "acao": "Desfaça a mudança, rode ./estudio antes <nome>, refaça a mudança, monte e rode comparar de novo."
+    "texto": "Esqueci de guardar como o site estava antes, então desta vez não dá para mostrar o antes e o depois. Daqui em diante, guardo antes de mudar.",
+    "acao": "Não desfaça de memória: o que você lembra não é o que estava. Diga à pessoa que desta vez não dá para comparar e siga a partir de agora: rode ./estudio antes <nome> para guardar o site como está, refaça a mudança a partir daí, monte e rode ./estudio comparar <nome>."
   },
   "POUCAS_MUDANCAS": {
     "texto": "Ainda falta mostrar pelo menos duas mudanças concretas.",
@@ -325,7 +329,11 @@
   },
   "ANTES_EM_ABERTO": {
     "texto": "Ainda falta você escolher entre o antes e o depois da última mudança.",
-    "acao": "A pessoa ainda não respondeu o \"Qual fica?\". Não guarde um antes novo por cima: rode ./estudio escolher <nome> com depois, antes ou outro, conforme a resposta. Só use --de-novo se a pessoa pediu para partir do site como está agora."
+    "acao": "A pessoa ainda não respondeu o \"Qual fica?\". Não guarde um antes novo por cima: rode ./estudio escolher <nome> com depois, antes ou outro, conforme a resposta. Só use --de-novo se a pessoa pediu para partir do site como está agora. Se dados.restauracao_pendente for true, nem --de-novo serve: uma volta ao antes parou no meio e a versão vista inteira só está em tentativa/. Termine a volta com o mesmo ./estudio escolher <nome> que parou (ou escolher depois, para ficar com a versão vista) antes de guardar outro antes."
+  },
+  "ANTES_NAO_TROCADO": {
+    "texto": "Não consegui guardar a versão de antes agora. O site não mudou.",
+    "acao": "dados.erro diz por quê (no Windows, quase sempre um arquivo da comparação anterior aberto em outro programa, como a página do antes e depois no navegador ou uma foto num editor). A comparação anterior foi fechada e não serve mais para o escolher. Peça para fechar o que estiver usando esses arquivos e rode ./estudio antes <nome> de novo antes de mudar qualquer coisa no site. Não apague nada com final .guardando, .trocando ou .descartando."
   },
   "ANTES_JA_RESOLVIDO": {
     "texto": "Essa comparação já foi resolvida. Vou guardar o site de agora antes de mudar de novo.",
@@ -336,12 +344,28 @@
     "acao": "Grave no andamento.md o pedido e as mudanças que ficaram. O próximo pedido vago começa com ./estudio antes <nome>."
   },
   "VOLTOU_COMO_ESTAVA": {
-    "texto": "Voltei o site para como estava antes.",
-    "acao": "O site e o _gerador/ voltaram ao que o antes guardou (dados.gerador_restaurado diz se o _gerador/ tinha cópia). Rode ./estudio abrir <nome> para a pessoa ver."
+    "texto": "Voltei o site para como estava antes. A versão que você viu fica guardada até a próxima mudança.",
+    "acao": "O site e o _gerador/ voltaram ao que o antes guardou (dados.restauradas). A versão vista ficou em arquivos.tentativa até o próximo ./estudio antes: se a pessoa mudar de ideia antes disso, copie de lá site/ e _gerador/ de volta e rode montar. Rode ./estudio abrir <nome> para a pessoa ver."
   },
   "PRONTO_PARA_OUTRO_CAMINHO": {
-    "texto": "Voltei para o ponto de partida. Vou tentar outro caminho.",
-    "acao": "O site e o _gerador/ voltaram ao original e o antes continua guardado. Não rode ./estudio antes: faça 2 ou 3 mudanças diferentes, monte, preencha arquivos.mudancas e rode ./estudio comparar <nome>."
+    "texto": "Voltei para o ponto de partida. Vou tentar outro caminho. A versão que você viu fica guardada até a próxima mudança.",
+    "acao": "O site e o _gerador/ voltaram ao original e o antes continua guardado. A versão vista ficou em arquivos.tentativa até a próxima escolha ou o próximo ./estudio antes. Só uma fica guardada: com o aviso TENTATIVA_SUBSTITUIDA, a versão vista na tentativa anterior foi trocada por esta. Não rode ./estudio antes: faça 2 ou 3 mudanças diferentes, monte, preencha arquivos.mudancas e rode ./estudio comparar <nome>."
+  },
+  "RESTAURACAO_FALHOU": {
+    "texto": "Não consegui voltar o site agora. Nada se perdeu: a versão de antes e a que você viu continuam guardadas. Vou tentar de novo.",
+    "acao": "dados.pasta não trocou; dados.erro diz por quê (no Windows, quase sempre um arquivo do site aberto em outro programa, como uma foto num editor). Peça para fechar o que estiver usando os arquivos do site e rode o mesmo ./estudio escolher <nome> dados.escolha de novo: ele continua de onde parou e não guarda o site pela metade por cima da versão vista (dados.tentativa). Se a pessoa preferir ficar com a versão vista, rode escolher depois: ela volta inteira. Não desfaça de memória e não apague nada com final .trocando ou .descartando."
+  },
+  "SOBRA_DA_TROCA": {
+    "texto": "Troquei a versão do site. Ficou uma cópia velha ao lado que eu não consegui apagar agora.",
+    "acao": "A troca valeu: o site já está como a pessoa escolheu. dados.sobra é a cópia que saiu do lugar e não pôde ser apagada (no Windows, quase sempre um arquivo dela aberto em outro programa). Não use nada dela e não a ponha de volta: a próxima troca apaga sozinha. Se a pessoa quiser liberar o espaço já, peça para fechar o que estiver usando os arquivos e apagar a pasta dados.sobra."
+  },
+  "SITE_POSTO_DE_VOLTA": {
+    "texto": "Uma troca anterior tinha parado no meio. Pus o site de volta inteiro antes de continuar.",
+    "acao": "dados.pastas estavam fora do lugar (uma volta do antes e depois parou entre os dois passos) e voltaram como estavam antes dela. Se o antes e depois ainda está em aberto, rode o mesmo ./estudio escolher <nome> de novo para terminar a volta; nada se perdeu."
+  },
+  "TENTATIVA_SUBSTITUIDA": {
+    "texto": "A versão que você viu na tentativa anterior foi trocada por esta.",
+    "acao": "Só uma versão vista fica guardada. Se a pessoa perguntar pela anterior, diga que ela foi trocada pela desta tentativa."
   },
   "COMPARACAO_PRONTA": {
     "texto": "Abri o antes e o depois lado a lado, com cada mudança numerada.",
@@ -441,7 +465,7 @@
   },
   "PUBLICAR_SITE_GRANDE_DEMAIS": {
     "texto": "O site ficou grande demais para publicar aqui.",
-    "acao": "Veja dados.detalhe. Reduza fotos e vídeos (o desempenho mostra os arquivos mais pesados) e tire de site/ o que nenhuma página usa. Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
+    "acao": "Veja dados.mb e dados.mb_max (ou dados.detalhe, quando quem recusou foi o serviço). Reduza fotos e vídeos (o desempenho mostra os arquivos mais pesados) e tire de site/ o que nenhuma página usa. Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar. Pelo pacote (./estudio pacote) para outro serviço não há esse teto."
   },
   "PUBLICAR_LIMITE_DO_DIA": {
     "texto": "Você já publicou muitas vezes hoje. Amanhã dá para publicar de novo.",
@@ -490,6 +514,34 @@
   "PUBLICAR_NO_AR_AJUSTANDO": {
     "texto": "A mudança já foi para o ar, mas um passo final do serviço falhou. Ele acerta sozinho em alguns minutos.",
     "acao": "Não publique de novo por isso. Peça para a pessoa abrir o endereço do site daqui a uns minutos e conferir. Se depois de 15 minutos ainda estiver estranho, diga para avisar em sites.autonomia.site."
+  },
+  "PUBLICAR_TIPO_NAO_ACEITO": {
+    "texto": "Há arquivos no site de um tipo que o serviço de publicação não aceita.",
+    "acao": "Veja dados.arquivos. O serviço aceita página, estilo, script, imagem (png, jpg, gif, webp, avif, svg, ico), letra (woff2, woff, ttf, otf), vídeo mp4 ou webm, áudio mp3, ogg ou wav, pdf, txt, json e xml. Arquivo de texto sem extensão (como LICENSE): renomeie para o mesmo nome com .txt (LICENSE.txt), sem perguntar, porque nenhuma página o usa. Vídeo .mov ou .m4v: converta para mp4. Modelo 3D (.glb, .gltf): hoje não vai por este serviço; diga isso à pessoa e ofereça o pacote (./estudio pacote) para outro serviço. Se o arquivo não é do site, tire-o de site/ (o que for dela vai para material/). Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
+  },
+  "PUBLICAR_NOME_DE_ARQUIVO_RECUSADO": {
+    "texto": "Há arquivos no site com um nome que o serviço de publicação não aceita.",
+    "acao": "Veja dados.arquivos. O serviço recusa nome com barra invertida, dois-pontos, caractere invisível ou de direção de texto, nome escondido (começa com ponto, fora a pasta .well-known/ na raiz) e nome comprido demais. Renomeie o arquivo (letras, números e hífen) e troque o nome também onde a página o usa. Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
+  },
+  "PUBLICAR_NOMES_REPETIDOS": {
+    "texto": "Há dois arquivos no site com o mesmo nome, mudando só maiúsculas e minúsculas. O serviço de publicação não aceita.",
+    "acao": "Veja dados.pares. Renomeie um de cada par e troque o nome também onde a página o usa (no Windows e no Mac os dois podem até parecer o mesmo arquivo). Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
+  },
+  "PUBLICAR_ARQUIVOS_DEMAIS": {
+    "texto": "O site tem arquivos demais para publicar aqui.",
+    "acao": "Veja dados.arquivos e dados.maximo (10.000). Tire de site/ o que nenhuma página usa (o aviso ARQUIVO_NAO_USADO lista) e rode a conferência completa do passo 1 da skill hospedar de novo. Pelo pacote (./estudio pacote) para outro serviço não há esse limite."
+  },
+  "PUBLICAR_ESPERE_UM_POUCO": {
+    "texto": "O serviço de publicação pediu para esperar um pouco antes de tentar de novo.",
+    "acao": "Veja dados.detalhe. Espere uns 2 minutos e rode a mesma publicação de novo, sem perguntar outra vez à pessoa. Se repetir três vezes, diga a ela que o serviço está ocupado e tente mais tarde."
+  },
+  "PUBLICAR_ENDERECO_JA_EM_USO": {
+    "texto": "Nesse endereço está no ar algo que não foi este site que pôs ali daqui: outro site seu, uma apresentação, ou uma versão publicada de outro computador. Se eu publicar, este site toma o lugar do que está no ar.",
+    "acao": "Veja dados.nome, dados.versao_no_ar e dados.versao_desta. Pergunte à pessoa, com duas opções: \"Usar outro endereço ★\" (proponha um nome curto e livre e, com o sim dela, rode ./estudio publicar <nome> --no-ar <outro>) ou \"Trocar o que está lá por este site\" (rode de novo com --por-cima; as versões de antes ficam guardadas por um tempo e dá para voltar com --voltar). Nunca use --por-cima sem esse sim, dado para este endereço."
+  },
+  "PUBLICAR_PASTA_MUDOU": {
+    "texto": "Este site está num lugar diferente de onde eu o pus no ar da última vez. Pode ser que você tenha movido ou copiado o site. Antes de trocar o que está no ar, preciso que você confirme.",
+    "acao": "Veja dados.lugar (onde ele está agora), dados.lugar_anterior (de onde foi publicado) e dados.anterior_existe. Se anterior_existe é false, ele foi movido: diga isso em uma frase e pergunte \"Posso pôr este no lugar do que está no ar? ★\"; com o sim, rode de novo com --por-cima (só desta vez: daí em diante este lugar é o dele). Se anterior_existe é true, há duas cópias: pergunte qual deve ficar no ar. Se for esta, com o sim rode com --por-cima; se as duas devem ficar no ar, proponha outro endereço para esta e rode com --no-ar <outro>. Nunca use --por-cima sem esse sim."
   },
   "PUBLICAR_SITE_AINDA_NAO_PUBLICADO": {
     "texto": "Esse site ainda não foi publicado em sites.autonomia.site, então não há versão anterior para voltar.",
@@ -552,8 +604,24 @@
     "acao": "Leia dados.detalhe. Rode de novo uma vez; se repetir, peça à pessoa o link do perfil no Google Maps e rode com --google <link>."
   },
   "LER_SITE_OUTRO_ENDERECO": {
-    "texto": "O endereço do site leva para outra página, que não parece ser do negócio. Não li essa página.",
-    "acao": "Confira com a pessoa se dados.final é o site do próprio negócio. Se for, rode de novo com --site <dados.final>. Se não for (loja de pedidos, link curto, página de links ou rede social), siga sem o site e não use nada dessa página."
+    "texto": "Esse endereço não parece ser o site do próprio negócio, ou leva para outra página. Não li essa página.",
+    "acao": "dados.endereco é o que foi pedido e dados.final é onde ele foi parar (ou o próprio endereço, quando é rede social, página de links, loja de pedidos ou link curto). Confira com a pessoa se dados.final é o site do próprio negócio. Se for, rode de novo com --site <dados.final>. Se não for, siga sem o site e não use nada dessa página."
+  },
+  "LER_SITE_CONTATO_DE_TERCEIRO": {
+    "texto": "Achei no site um contato que pode não ser do negócio. Às vezes é de quem fez o site. Não anotei como certo.",
+    "acao": "dados.contatos lista cada um (tipo, valor, fonte e motivo: \"em-todas-as-paginas\" é contato repetido em toda página lida; \"so-no-rodape\" é, num site de uma página só, contato que só aparece no rodapé; os dois podem ser de quem fez o site, como em \"site feito por\"; \"dados-de-outro\" é dado escondido na página em nome de outra empresa, com o nome em \"de\"). Nada disso está em fatos.md. Pergunte à pessoa se algum é dela; se for, anote na tabela de cima de fatos.md com a fonte \"a própria pessoa disse em <data>\". Sem esse sim, nunca vai para o site."
+  },
+  "LER_SITE_CONTATO_A_CONFERIR": {
+    "texto": "Anotei os contatos do site, mas não tive com o que comparar. Confira se são mesmo do negócio.",
+    "acao": "Sem telefone do perfil do Google e sem contato que o próprio site declara, não dá para saber se um contato repetido em toda página (ou só no rodapé) é do negócio ou de quem fez o site. dados.contatos lista esses (tipo, valor, fonte, motivo); eles ESTÃO em fatos.md. Pergunte à pessoa se são dela; o que não for, apague da parte \"Lido pelo estúdio\" e nunca ponha no site."
+  },
+  "LER_TEMPO_ESGOTADO": {
+    "texto": "A leitura passou do tempo e eu parei. Guardei o que já tinha lido.",
+    "acao": "A leitura tem teto de dados.minutos minutos para caber na espera do assistente. O que foi lido até ali está em arquivos.coleta e na parte \"Lido pelo estúdio\" de fatos.md. Não rode de novo só por isso (a próxima leitura troca a parte lida inteira): siga com o que foi lido e pergunte à pessoa o que faltar."
+  },
+  "LER_FATOS_MARCADOR_QUEBRADO": {
+    "texto": "Li o negócio, mas não mexi na lista de fatos do site: a parte que eu atualizo sozinho está quebrada ali.",
+    "acao": "fatos.md tem as marcas dados.inicio e dados.fim faltando, repetidas ou fora de ordem, e ficou como estava; o que foi lido está em arquivos.coleta (fatos-lidos.json). Para consertar: 1) mostre à pessoa o trecho entre as marcas e peça o sim antes de mexer; 2) com o sim, apague só a marca sobrando (a sem par, ou a repetida), sem apagar texto dela; ou, se a parte lida estiver toda estragada, apague as duas marcas e o que estiver entre elas e reescreva a parte \"Lido pelo estúdio\" a partir de coleta/fatos-lidos.json (Fato | Fonte | Data, uma linha por fato, entre um só par de marcas, início antes do fim); 3) rode o ler de novo e confira que saiu sem este aviso."
   },
   "LER_SITE_FALHOU": {
     "texto": "Não consegui abrir o site atual.",

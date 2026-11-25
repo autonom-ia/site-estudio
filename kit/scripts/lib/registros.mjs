@@ -15,7 +15,9 @@ export function celula(texto, teto = TETO_DA_CELULA) {
     else t += ch;
   }
   t = t.split(' ').filter(Boolean).join(' ');
-  return t.length > teto ? `${t.slice(0, teto - 1)}…` : t;
+  // Corta por caractere inteiro (Array.from), nunca no meio de um emoji.
+  const letras = Array.from(t);
+  return letras.length > teto ? `${letras.slice(0, teto - 1).join('')}…` : t;
 }
 
 const registro = (fato, fonte, data) => ({ fato: celula(fato), fonte: celula(fonte), data });
@@ -29,7 +31,9 @@ export function registrosDoInstagram({ perfil }, data) {
   return lista;
 }
 
-export function registrosDoGoogle({ lugar, avaliacoes }, data) {
+// O texto das avaliações NÃO vira fato: pode citar o nome de um funcionário ou de outro cliente.
+// Ele fica só em coleta/google/lugar.json; a nota e a quantidade de avaliações continuam como fato.
+export function registrosDoGoogle({ lugar }, data) {
   const fonte = `Perfil do Google, ${lugar.fonte}`;
   const lista = [];
   if (lugar.nome) lista.push(registro(`Nome no Google: ${lugar.nome}`, fonte, data));
@@ -38,11 +42,6 @@ export function registrosDoGoogle({ lugar, avaliacoes }, data) {
   if (lugar.site) lista.push(registro(`Site: ${lugar.site}`, fonte, data));
   for (const h of lugar.horario) lista.push(registro(`Horário de ${h.dia}: ${h.horas}`, fonte, data));
   if (lugar.nota) lista.push(registro(`Nota no Google: ${lugar.nota}${lugar.total ? ` (${lugar.total} avaliações)` : ''}`, fonte, data));
-  for (const a of avaliacoes) {
-    if (!a.texto) continue;
-    const quando = a.quando ? `, ${a.quando}` : '';
-    lista.push(registro(`Avaliação no Google (${a.estrelas} estrelas${quando}): "${a.texto}"`, `${fonte} (sem o nome de quem escreveu)`, data));
-  }
   return lista;
 }
 
@@ -80,14 +79,84 @@ export function secaoLida(registros, data) {
   return linhas.join('\n');
 }
 
-// Põe a parte lida no fim de fatos.md, ou troca a que já existe no lugar dela.
-export function juntarNoFatos(markdown, secao) {
+const vezes = (texto, trecho) => texto.split(trecho).length - 1;
+
+// As marcas da parte lida estão inteiras? Nenhuma marca, ou um início e um fim, nessa ordem.
+// Marca sem par, repetida ou fora de ordem: trocar a parte apagaria texto que a pessoa escreveu
+// entre uma marca velha e a nova.
+export function marcasInteiras(markdown) {
   const texto = String(markdown || '');
-  const ini = texto.indexOf(MARCA_INICIO);
-  const fim = texto.indexOf(MARCA_FIM);
-  if (ini !== -1 && fim > ini) return `${texto.slice(0, ini)}${secao}${texto.slice(fim + MARCA_FIM.length)}`;
-  const base = texto.trimEnd();
-  return `${base ? `${base}\n\n` : ''}${secao}\n`;
+  const ini = vezes(texto, MARCA_INICIO);
+  const fim = vezes(texto, MARCA_FIM);
+  if (ini === 0 && fim === 0) return true;
+  return ini === 1 && fim === 1 && texto.indexOf(MARCA_INICIO) < texto.indexOf(MARCA_FIM);
+}
+
+// O texto em linhas, cada uma com o próprio fim ('\r\n', '\n' ou '' na última).
+function emLinhas(texto) {
+  const linhas = [];
+  let ini = 0;
+  for (;;) {
+    const i = texto.indexOf('\n', ini);
+    if (i === -1) {
+      linhas.push({ texto: texto.slice(ini), fim: '' });
+      return linhas;
+    }
+    const crlf = i > ini && texto[i - 1] === '\r';
+    linhas.push({ texto: texto.slice(ini, crlf ? i - 1 : i), fim: crlf ? '\r\n' : '\n' });
+    ini = i + 1;
+  }
+}
+
+// O fim de linha que o arquivo mais usa: é o das linhas novas.
+function fimMaisUsado(linhas) {
+  const crlf = linhas.filter((l) => l.fim === '\r\n').length;
+  const lf = linhas.filter((l) => l.fim === '\n').length;
+  return crlf > lf ? '\r\n' : '\n';
+}
+
+// Junta as linhas: cada linha que já existia mantém o fim dela; linha nova (fim null) e a que era a
+// última e deixou de ser ganham o fim mais usado do arquivo.
+function juntarLinhas(linhas, novo) {
+  return linhas
+    .map((l, i) => {
+      const ultima = i === linhas.length - 1;
+      const fim = ultima ? (l.fim ?? '') : l.fim || novo;
+      return `${l.texto}${fim}`;
+    })
+    .join('');
+}
+
+const VAZIA = Object.freeze({ texto: '', fim: null });
+
+// Põe a parte lida no lugar da que já existe; senão, no fim de fatos.md. Cada linha que já existia
+// mantém o próprio fim de linha (CRLF no Windows, LF, ou os dois misturados); as novas usam o que o
+// arquivo mais usa. Devolve null, sem mexer em nada, se as marcas estão quebradas (marcasInteiras).
+export function juntarNoFatos(markdown, secao) {
+  const original = String(markdown || '');
+  if (!marcasInteiras(original)) return null;
+  const linhas = emLinhas(original);
+  const novas = emLinhas(String(secao).split('\r\n').join('\n')).map((l) => ({ texto: l.texto, fim: null }));
+  const iIni = linhas.findIndex((l) => l.texto.includes(MARCA_INICIO));
+  let juntas;
+  if (iIni !== -1) {
+    const iFim = linhas.findIndex((l, i) => i >= iIni && l.texto.includes(MARCA_FIM));
+    const primeira = linhas[iIni].texto;
+    const ultima = linhas[iFim];
+    const antes = primeira.slice(0, primeira.indexOf(MARCA_INICIO));
+    const depois = ultima.texto.slice(ultima.texto.indexOf(MARCA_FIM) + MARCA_FIM.length);
+    const meio = novas.map((l, i) => ({
+      texto: `${i === 0 ? antes : ''}${l.texto}${i === novas.length - 1 ? depois : ''}`,
+      fim: i === novas.length - 1 ? ultima.fim : null,
+    }));
+    juntas = [...linhas.slice(0, iIni), ...meio, ...linhas.slice(iFim + 1)];
+  } else {
+    let n = linhas.length;
+    while (n > 0 && !linhas[n - 1].texto.trim()) n -= 1;
+    const base = linhas.slice(0, n);
+    juntas = [...base, ...(base.length ? [VAZIA] : []), ...novas, { texto: '', fim: '' }];
+  }
+  return juntarLinhas(juntas, fimMaisUsado(linhas));
 }
 
 // As publicações do Instagram numa tabela: data, legenda, fotos baixadas e o endereço (a fonte).

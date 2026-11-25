@@ -3,7 +3,9 @@
 // Lê sozinho as páginas públicas do negócio: o Instagram (legenda, data e foto de cada
 // publicação), o perfil do Google (endereço, telefone, horário, nota e avaliações sem o nome de quem
 // escreveu) e o site atual inteiro. Salva tudo em sites/<nome>/coleta/ e põe cada fato, com a fonte e
-// a data, numa parte própria de fatos.md. Basta o @ e o nome: o site atual vem do Google ou da bio.
+// a data, numa parte própria de fatos.md (o texto das avaliações fica só em coleta/, nunca em
+// fatos.md). Basta o @ e o nome: o site atual vem do Google ou da bio. A leitura inteira tem teto
+// (lib/ler.mjs): passou dele, para e grava o que já leu, com aviso.
 // Se a pessoa entrou no Instagram pela janela do estúdio (./estudio instagram entrar), o Instagram é
 // lido com esse login (até 40 publicações); o Google e o site, sempre sem login. Se o Instagram pedir
 // verificação, a leitura para e o login fica de lado até o dia seguinte. --sem-login ignora o login.
@@ -39,6 +41,7 @@ async function loginGuardado(pedido, opcoes, lugar) {
 }
 
 export default async function ler(args) {
+  const inicio = Date.now(); // o teto da leitura conta daqui, com a abertura do navegador dentro
   const nome = nomeDoSite(args);
   const c = abrirPastaDoSite(nome);
   const o = args.opcoes;
@@ -60,7 +63,7 @@ export default async function ler(args) {
   let r;
   try {
     leitor = await abrirLeitor();
-    r = await lerFontes(pedido, { pasta, fatos: c.fatos, leitor, leitorInstagram: login.leitor, aoAvancar: progresso });
+    r = await lerFontes(pedido, { pasta, fatos: c.fatos, leitor, leitorInstagram: login.leitor, aoAvancar: progresso, inicio });
   } finally {
     leitor?.fechar();
     await login.leitor?.fecharComCalma();

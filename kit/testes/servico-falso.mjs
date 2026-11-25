@@ -4,6 +4,9 @@
 // expira_em no passado (relógio diferente), aprovação no meio da espera, resposta do concluir que se
 // perde (socket cai ou o proxy devolve 504) e códigos de erro que o contrato não listava.
 // Toda resposta é JSON; erro é {"ok":false,"codigo","mensagem"}. Só escuta em 127.0.0.1.
+// A versão no ar de cada endereço muda com o voltar (como no painel), endereço só reservado por um
+// envio que não publicou aparece sem versão (sitesVazios), e uma parte pode responder
+// PARTE_EM_ANDAMENTO na primeira vez (parteEmAndamento). O mesmo serviço falso está no View Estúdio.
 import http from 'node:http';
 import crypto from 'node:crypto';
 
@@ -34,6 +37,9 @@ export async function subirServicoFalso({ parteMax = 1000 } = {}) {
     envios: new Map(),
     tentativasDaParte: new Map(),
     derrubarParte: new Set(),
+    parteEmAndamento: new Set(),
+    noAr: new Map(), // endereço -> versão no ar
+    sitesVazios: [],
     publicados: [],
     voltas: [],
     autorizacoes: [],
@@ -78,6 +84,10 @@ export async function subirServicoFalso({ parteMax = 1000 } = {}) {
     if (!envio) return erro(res, 404, 'ENVIO_INEXISTENTE');
     const vez = (e.tentativasDaParte.get(n) || 0) + 1;
     e.tentativasDaParte.set(n, vez);
+    if (vez === 1 && e.parteEmAndamento.has(n)) {
+      await lerCorpo(req);
+      return erro(res, 409, 'PARTE_EM_ANDAMENTO');
+    }
     if (vez === 1 && e.derrubarParte.has(n)) {
       req.socket.destroy(); // queda de rede no meio do envio
       return undefined;
@@ -96,6 +106,7 @@ export async function subirServicoFalso({ parteMax = 1000 } = {}) {
   function publicarNoDisco(slug, zip) {
     const versao = e.publicados.filter((p) => p.slug === slug).length + 1;
     e.publicados.push({ slug, versao, zip });
+    e.noAr.set(slug, versao);
     return versao;
   }
 
@@ -128,8 +139,9 @@ export async function subirServicoFalso({ parteMax = 1000 } = {}) {
     const slugs = [...new Set(e.publicados.map((p) => p.slug))];
     const sites = slugs.map((slug) => {
       const versoes = e.publicados.filter((p) => p.slug === slug).map((p) => ({ versao: p.versao, quando: Date.now(), bytes: p.zip.length }));
-      return { slug, endereco: enderecoDe(slug), estado: 'no_ar', versao: versoes[versoes.length - 1].versao, versoes };
+      return { slug, endereco: enderecoDe(slug), estado: 'no_ar', versao: e.noAr.get(slug) ?? versoes[versoes.length - 1].versao, versoes };
     });
+    for (const slug of e.sitesVazios) sites.push({ slug, endereco: enderecoDe(slug), estado: 'fora_do_ar', versao: null, versoes: [] });
     const limites = { sites_max: 5, sites_usados: sites.length, publicacoes_hoje: e.publicados.length, publicacoes_max_dia: 20, mb_max: 50 };
     return responder(res, 200, { ok: true, sites, limites });
   }
@@ -146,7 +158,9 @@ export async function subirServicoFalso({ parteMax = 1000 } = {}) {
       e.voltas.push(dados);
       if (e.erroAoVoltar) return erro(res, e.erroAoVoltar.status, e.erroAoVoltar.codigo);
       if (dados.versao === 99) return erro(res, 404, 'VERSAO_INEXISTENTE');
-      return responder(res, 200, { ok: true, versao: dados.versao ?? 1 });
+      const versao = dados.versao ?? 1;
+      if (e.publicados.some((p) => p.slug === partes[1] && p.versao === versao)) e.noAr.set(partes[1], versao);
+      return responder(res, 200, { ok: true, versao });
     }
     if (partes[0] === 'sites' && partes[2] === 'envios') {
       e.aberturas += 1;

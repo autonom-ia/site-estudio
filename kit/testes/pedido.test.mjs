@@ -7,12 +7,12 @@
 // A parte com navegador pula se não houver Chrome, Edge ou Chromium.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { opcoesDoNavegador } from './fixtures/navegador.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
-import { acharNavegador } from '../scripts/lib/chrome.mjs';
 import { abrirSessao, visitar } from '../scripts/lib/sessao.mjs';
 import { TAMANHOS } from '../scripts/lib/site.mjs';
 import { pedidos } from '../scripts/lib/pagina-leitura.mjs';
@@ -173,7 +173,7 @@ const PAGINA = `<!doctype html>
 </body></html>
 `;
 
-const opcoes = { skip: acharNavegador() ? false : 'sem Chrome, Edge ou Chromium nesta máquina', timeout: 120000 };
+const opcoes = opcoesDoNavegador(120000);
 
 test('pedido no navegador: digitar não fala a cada letra; terminar o campo fala a mensagem pronta uma vez', opcoes, async () => {
   const pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-pedido-'));
