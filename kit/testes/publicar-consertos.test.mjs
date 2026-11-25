@@ -12,6 +12,8 @@
 // 6. aviso de arquivo sem uso compara o nome inteiro ("data.png" não usa "a.png").
 // 7. depois de o painel aceitar abrir o envio, o pendente fica mesmo com erro; no-ar.json guarda o
 //    nome que a pasta usa, não o que a resposta devolveu (autonom-ia/site-estudio#19).
+//    Queda ao abrir o envio desfaz tudo; --voltar registra o pedido antes de mandar, e a resposta
+//    perdida não faz a próxima publicação pedir --por-cima.
 // Serviço falso só em 127.0.0.1.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -344,4 +346,59 @@ test('7d. o painel devolve outro nome no concluir: no-ar.json guarda o nome que 
   e.slugNaResposta = null;
   const r = await ctx.publicar();
   assert.deepEqual([r.json.codigo, r.json.dados.versao, e.publicados.map((p) => p.slug)], ['PUBLICADO', 2, [NOME, NOME]], r.saida);
+});
+
+const semEm = (registro) => Object.fromEntries(Object.entries(registro).filter(([chave]) => chave !== 'em'));
+
+test('7e. queda de conexão ao abrir o envio: o registro e o no-ar.json voltam exatamente ao que eram', async (t) => {
+  const ctx = await preparar(t);
+  darChave(ctx);
+  const e = ctx.servico.estado;
+  assert.equal((await ctx.publicar()).json.dados.versao, 1);
+  const lembreteAntes = lerNoAr(ctx);
+  assert.deepEqual(semEm(registroDaPasta(ctx)[NOME]), { versao: 1 });
+  e.abrirCai = true;
+  novoConteudo(ctx, 'Segunda');
+  const r = await ctx.publicar();
+  assert.equal(r.json.codigo, 'PUBLICAR_SEM_CONEXAO', r.saida);
+  assert.equal(e.aberturas, 2, 'o pedido de abrir chegou');
+  assert.deepEqual(semEm(registroDaPasta(ctx)[NOME]), { versao: 1 }, 'sem pendente');
+  assert.deepEqual(lerNoAr(ctx), lembreteAntes);
+});
+
+test('7f. --voltar com a resposta perdida: o painel voltou, e a próxima publicação segue sem pedir --por-cima', async (t) => {
+  const ctx = await preparar(t);
+  darChave(ctx);
+  const e = ctx.servico.estado;
+  for (const titulo of ['Um', 'Dois', 'Três']) {
+    novoConteudo(ctx, titulo);
+    assert.equal((await ctx.publicar()).json.codigo, 'PUBLICADO');
+  }
+  e.voltarCai = true;
+  assert.equal((await ctx.publicar('--voltar', '2')).json.codigo, 'PUBLICAR_SEM_CONEXAO');
+  assert.equal(e.noAr.get(NOME), 2, 'o painel voltou mesmo assim');
+  novoConteudo(ctx, 'Quatro');
+  const r = await ctx.publicar();
+  assert.deepEqual([r.json.codigo, r.json.dados.versao], ['PUBLICADO', 4], r.saida);
+});
+
+test('7g. --voltar sem número com a resposta perdida: vale a anterior; outra versão no ar pede --por-cima', async (t) => {
+  const ctx = await preparar(t);
+  darChave(ctx);
+  const e = ctx.servico.estado;
+  for (const titulo of ['Um', 'Dois']) {
+    novoConteudo(ctx, titulo);
+    assert.equal((await ctx.publicar()).json.codigo, 'PUBLICADO');
+  }
+  e.voltarCai = true;
+  assert.equal((await ctx.publicar('--voltar')).json.codigo, 'PUBLICAR_SEM_CONEXAO');
+  assert.equal(e.noAr.get(NOME), 1);
+  novoConteudo(ctx, 'Três');
+  assert.deepEqual((await ctx.publicar()).json.dados.versao, 3);
+  // pediu a 2 e a resposta se perdeu, mas o que está no ar é a 1 (outra pessoa voltou): não é desta pasta
+  e.voltarCai = true;
+  assert.equal((await ctx.publicar('--voltar', '2')).json.codigo, 'PUBLICAR_SEM_CONEXAO');
+  e.noAr.set(NOME, 1);
+  const r = await ctx.publicar();
+  assert.deepEqual([r.json.codigo, r.json.dados.versao_no_ar], ['PUBLICAR_ENDERECO_JA_EM_USO', 1], r.saida);
 });
