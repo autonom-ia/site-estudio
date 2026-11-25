@@ -94,7 +94,10 @@ test('2. regras do painel: tipo, nome, repetidos, quantidade, index e teto, ante
   for (const ruim of ruins) assert.equal(nomeAceito(ruim), false, JSON.stringify(ruim));
   assert.equal(tipoAceito('assets/vendor/lenis/LICENSE'), false);
   assert.equal(tipoAceito('assets/vendor/lenis/LICENSE.txt'), true);
-  assert.equal(tipoAceito('assets/3d/cena.glb'), false);
+  for (const rel of ['assets/3d/cena.glb', 'assets/3d/cena.gltf', 'assets/3d/cena.bin', 'assets/3d/draco.wasm', 'assets/3d/CENA.GLB']) {
+    assert.equal(tipoAceito(rel), true, rel);
+  }
+  assert.equal(tipoAceito('assets/3d/cena.fbx'), false);
   assert.deepEqual(nomesRepetidos(['index.html', 'assets/Foto.png', 'assets/foto.png']), [['assets/Foto.png', 'assets/foto.png']]);
   assert.deepEqual(nomesRepetidos(['assets', 'assets/x.png']), [['assets/', 'assets']]);
   const codigo = (nomes, bytes = 10) => {
@@ -270,7 +273,7 @@ test('5. PARTE_EM_ANDAMENTO se reenvia; pedidos de espera do painel viram PUBLIC
   }
 });
 
-test('6. aviso de arquivo sem uso compara o nome inteiro', () => {
+test('6. aviso de arquivo sem uso compara o nome inteiro; o .gltf cita o .bin dele', () => {
   assert.equal(citaNome('<img src="assets/data.png">', 'a.png'), false);
   assert.equal(citaNome('<img src="assets/a.png">', 'a.png'), true);
   assert.equal(citaNome("url('a.png?v=2')", 'a.png'), true);
@@ -282,6 +285,16 @@ test('6. aviso de arquivo sem uso compara o nome inteiro', () => {
     fs.writeFileSync(path.join(pasta, 'assets', 'data.png'), 'x');
     fs.writeFileSync(path.join(pasta, 'assets', 'a.png'), 'x');
     assert.deepEqual(arquivosNaoCitados(pasta, ['index.html', 'assets/a.png', 'assets/data.png']), ['assets/a.png']);
+    fs.mkdirSync(path.join(pasta, 'assets', '3d'));
+    fs.writeFileSync(path.join(pasta, 'assets', '3d', 'peca.gltf'), '{"asset":{"version":"2.0"},"buffers":[{"uri":"peca.bin"}]}');
+    fs.writeFileSync(path.join(pasta, 'assets', '3d', 'peca.bin'), 'x');
+    fs.writeFileSync(path.join(pasta, 'index.html'), '<img src="assets/data.png"><script>carregar("assets/3d/peca.gltf")</script>');
+    assert.deepEqual(arquivosNaoCitados(pasta, ['index.html', 'assets/a.png', 'assets/data.png', 'assets/3d/peca.gltf', 'assets/3d/peca.bin']), ['assets/a.png']);
+    fs.writeFileSync(path.join(pasta, 'assets', '3d', 'peca.gltf'), '{"asset":{"version":"2.0"},"meshes":[{"name":"100%"}],"buffers":[{"uri":"peca%20a.bin"}]}');
+    fs.renameSync(path.join(pasta, 'assets', '3d', 'peca.bin'), path.join(pasta, 'assets', '3d', 'peca a.bin'));
+    assert.deepEqual(arquivosNaoCitados(pasta, ['index.html', 'assets/a.png', 'assets/data.png', 'assets/3d/peca.gltf', 'assets/3d/peca a.bin']), ['assets/a.png']);
+    fs.writeFileSync(path.join(pasta, 'assets', '3d', 'peca.gltf'), '\uFEFF{"asset":{"version":"2.0"},"extensions":{"x":{"uri":"peca%20a.bin"}}}');
+    assert.deepEqual(arquivosNaoCitados(pasta, ['index.html', 'assets/a.png', 'assets/data.png', 'assets/3d/peca.gltf', 'assets/3d/peca a.bin']), ['assets/a.png']);
   } finally {
     fs.rmSync(pasta, { recursive: true, force: true });
   }

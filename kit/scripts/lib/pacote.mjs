@@ -20,7 +20,8 @@ import { ehLicencaDeFonte } from './marca.mjs';
 export const FORA_DO_PACOTE = Object.freeze(['.md', '.psd', '.ai', '.sketch', '.fig', '.xcf', '.afdesign', '.indd']);
 // Arquivos que os serviços de hospedagem leem pelo nome, sem nenhuma página citar.
 const LIDOS_PELO_SERVIDOR = Object.freeze(['robots.txt', 'sitemap.xml', 'favicon.ico', 'cname', '.nojekyll', '_headers', '_redirects', '404.html']);
-const TEXTOS_QUE_CITAM = Object.freeze(['.html', '.css', '.js', '.mjs', '.json', '.webmanifest', '.xml', '.svg']);
+// Textos que citam outros arquivos. O .gltf (modelo 3D em texto) cita os .bin e as texturas dele.
+const TEXTOS_QUE_CITAM = Object.freeze(['.html', '.css', '.js', '.mjs', '.json', '.webmanifest', '.xml', '.svg', '.gltf']);
 
 const extensao = (rel) => {
   const nome = rel.split('/').pop().toLowerCase();
@@ -84,11 +85,40 @@ export function citaNome(texto, nome) {
   return false;
 }
 
+// O .gltf cita os arquivos dele como endereço ("roda%20dianteira.bin"): vale também o nome decodificado.
+// Cada texto do JSON é decodificado sozinho (buffers, imagens e extensões), para um "%" solto num campo
+// não estragar os outros. O BOM do começo não conta; JSON quebrado tenta o texto inteiro.
+const BOM = '\uFEFF';
+const decodificado = (texto) => {
+  try {
+    return decodeURIComponent(texto);
+  } catch {
+    return texto;
+  }
+};
+const textosDoJson = (valor) => {
+  if (typeof valor === 'string') return [valor];
+  if (valor && typeof valor === 'object') return Object.values(valor).flatMap(textosDoJson);
+  return [];
+};
+function comoCita(rel, texto) {
+  if (extensao(rel) !== '.gltf') return texto;
+  const semBom = texto.startsWith(BOM) ? texto.slice(BOM.length) : texto;
+  let modelo;
+  try {
+    modelo = JSON.parse(semBom);
+  } catch {
+    return `${texto}\n${decodificado(semBom)}`;
+  }
+  const nomes = textosDoJson(modelo).filter((t) => t.includes('%') && !t.startsWith('data:')).map(decodificado);
+  return [texto, ...nomes].join('\n');
+}
+
 // Arquivos (fora as páginas) cujo nome não aparece em nenhuma página, CSS, script ou manifesto.
 export function arquivosNaoCitados(pasta, arquivos) {
   const textos = arquivos
     .filter((rel) => TEXTOS_QUE_CITAM.includes(extensao(rel)))
-    .map((rel) => ({ rel, texto: fs.readFileSync(path.join(pasta, ...rel.split('/')), 'utf8') }));
+    .map((rel) => ({ rel, texto: comoCita(rel, fs.readFileSync(path.join(pasta, ...rel.split('/')), 'utf8')) }));
   const soltos = [];
   for (const rel of arquivos) {
     const nome = rel.split('/').pop();

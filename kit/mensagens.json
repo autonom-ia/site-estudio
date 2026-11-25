@@ -497,7 +497,19 @@
   },
   "PUBLICAR_PACOTE_RECUSADO": {
     "texto": "O serviço recusou o site por causa de um arquivo que não pode ir para a internet.",
-    "acao": "Veja dados.detalhe e dados.codigo_do_servico, mostre à pessoa o arquivo citado e tire-o de site/ (guarde em material/, se for dela). Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
+    "acao": "Veja dados.arquivo (o arquivo recusado), dados.detalhe e dados.codigo_do_servico. Se dados.arquivo não vier, ou não for o nome de um arquivo de site/, mostre à pessoa a frase de dados.detalhe e pergunte qual arquivo é. Mostre à pessoa o arquivo e tire-o de site/ (guarde em material/, se for dela). Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
+  },
+  "PUBLICAR_3D_INVALIDO": {
+    "texto": "Um arquivo de 3D do site não é o que o nome diz, e o serviço recusou o site.",
+    "acao": "Veja dados.arquivo: é o arquivo recusado. Se dados.arquivo não vier, ou não for o nome de um arquivo de site/, procure em site/ o arquivo do tipo da recusa e pergunte à pessoa qual é. Não tire do site, porque o modelo precisa dele. Se é .glb ou .gltf, exporte o modelo de novo pela ferramenta de 3D e troque em site/. Se é .wasm, copie de novo o decodificador original da biblioteca de onde ele veio (nunca renomeie outro arquivo para .wasm). Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
+  },
+  "PUBLICAR_3D_GRANDE": {
+    "texto": "Um modelo 3D do site passa do tamanho que o serviço aceita nesse formato.",
+    "acao": "Veja dados.arquivo: é o modelo .gltf grande demais. Se dados.arquivo não vier, ou não for o nome de um arquivo de site/, procure em site/ o arquivo do tipo da recusa e pergunte à pessoa qual é. Exporte esse modelo como .glb (um arquivo só, menor), troque o nome dele na página e tire de site/ o .gltf antigo (guarde em material/). Tire também os .bin que só ele usa: os que ele cita e que nenhum outro .gltf de site/ cita. Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
+  },
+  "PUBLICAR_BIN_SOLTO": {
+    "texto": "O serviço recusou um arquivo de dados de 3D que nenhum modelo do site usa.",
+    "acao": "Veja dados.arquivo: é o arquivo .bin recusado. Se dados.arquivo não vier, ou não for o nome de um arquivo de site/, procure em site/ o arquivo do tipo da recusa e pergunte à pessoa qual é. Se ele é de um modelo .gltf do site, exporte o modelo de novo, porque o modelo tem que citar esse nome e o tamanho certo do arquivo. Se não é de nenhum modelo, tire-o de site/ (guarde em material/, se for dela). Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
   },
   "PUBLICAR_RECUSADO": {
     "texto": "O serviço de publicação não aceitou o pedido agora.",
@@ -517,7 +529,7 @@
   },
   "PUBLICAR_TIPO_NAO_ACEITO": {
     "texto": "Há arquivos no site de um tipo que o serviço de publicação não aceita.",
-    "acao": "Veja dados.arquivos. O serviço aceita página, estilo, script, imagem (png, jpg, gif, webp, avif, svg, ico), letra (woff2, woff, ttf, otf), vídeo mp4 ou webm, áudio mp3, ogg ou wav, pdf, txt, json e xml. Arquivo de texto sem extensão (como LICENSE): renomeie para o mesmo nome com .txt (LICENSE.txt), sem perguntar, porque nenhuma página o usa. Vídeo .mov ou .m4v: converta para mp4. Modelo 3D (.glb, .gltf): hoje não vai por este serviço; diga isso à pessoa e ofereça o pacote (./estudio pacote) para outro serviço. Se o arquivo não é do site, tire-o de site/ (o que for dela vai para material/). Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
+    "acao": "Veja dados.arquivos. O serviço aceita página, estilo, script, imagem (png, jpg, gif, webp, avif, svg, ico), letra (woff2, woff, ttf, otf), vídeo mp4 ou webm, áudio mp3, ogg ou wav, modelo 3D (glb, gltf com o .bin dele, e wasm), pdf, txt, json e xml. Arquivo de texto sem extensão (como LICENSE): renomeie para o mesmo nome com .txt (LICENSE.txt), sem perguntar, porque nenhuma página o usa. Vídeo .mov ou .m4v: converta para mp4. Se o arquivo não é do site, tire-o de site/ (o que for dela vai para material/). Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
   },
   "PUBLICAR_NOME_DE_ARQUIVO_RECUSADO": {
     "texto": "Há arquivos no site com um nome que o serviço de publicação não aceita.",
