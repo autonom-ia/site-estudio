@@ -89,7 +89,10 @@ test('2. regras do painel: tipo, nome, repetidos, quantidade, index e teto, ante
   for (const ruim of ruins) assert.equal(nomeAceito(ruim), false, JSON.stringify(ruim));
   assert.equal(tipoAceito('assets/vendor/lenis/LICENSE'), false);
   assert.equal(tipoAceito('assets/vendor/lenis/LICENSE.txt'), true);
-  assert.equal(tipoAceito('assets/3d/cena.glb'), false);
+  for (const rel of ['assets/3d/cena.glb', 'assets/3d/cena.gltf', 'assets/3d/cena.bin', 'assets/3d/draco.wasm', 'assets/3d/CENA.GLB']) {
+    assert.equal(tipoAceito(rel), true, rel);
+  }
+  assert.equal(tipoAceito('assets/3d/cena.fbx'), false);
   assert.deepEqual(nomesRepetidos(['index.html', 'assets/Foto.png', 'assets/foto.png']), [['assets/Foto.png', 'assets/foto.png']]);
   assert.deepEqual(nomesRepetidos(['assets', 'assets/x.png']), [['assets/', 'assets']]);
   const codigo = (nomes, bytes = 10) => {

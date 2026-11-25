@@ -517,7 +517,7 @@
   },
   "PUBLICAR_TIPO_NAO_ACEITO": {
     "texto": "Há arquivos no site de um tipo que o serviço de publicação não aceita.",
-    "acao": "Veja dados.arquivos. O serviço aceita página, estilo, script, imagem (png, jpg, gif, webp, avif, svg, ico), letra (woff2, woff, ttf, otf), vídeo mp4 ou webm, áudio mp3, ogg ou wav, pdf, txt, json e xml. Arquivo de texto sem extensão (como LICENSE): renomeie para o mesmo nome com .txt (LICENSE.txt), sem perguntar, porque nenhuma página o usa. Vídeo .mov ou .m4v: converta para mp4. Modelo 3D (.glb, .gltf): hoje não vai por este serviço; diga isso à pessoa e ofereça o pacote (./estudio pacote) para outro serviço. Se o arquivo não é do site, tire-o de site/ (o que for dela vai para material/). Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
+    "acao": "Veja dados.arquivos. O serviço aceita página, estilo, script, imagem (png, jpg, gif, webp, avif, svg, ico), letra (woff2, woff, ttf, otf), vídeo mp4 ou webm, áudio mp3, ogg ou wav, modelo 3D (glb, gltf com o .bin dele, e wasm), pdf, txt, json e xml. Arquivo de texto sem extensão (como LICENSE): renomeie para o mesmo nome com .txt (LICENSE.txt), sem perguntar, porque nenhuma página o usa. Vídeo .mov ou .m4v: converta para mp4. Se o arquivo não é do site, tire-o de site/ (o que for dela vai para material/). Depois rode a conferência completa do passo 1 da skill hospedar e pergunte de novo antes de publicar."
   },
   "PUBLICAR_NOME_DE_ARQUIVO_RECUSADO": {
     "texto": "Há arquivos no site com um nome que o serviço de publicação não aceita.",

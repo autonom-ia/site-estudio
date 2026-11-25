@@ -24,6 +24,8 @@ export const TIPOS_ACEITOS = Object.freeze([
   'woff', 'woff2', 'ttf', 'otf',
   'mp4', 'webm', 'mp3', 'ogg', 'wav',
   'pdf', 'webmanifest', 'map',
+  // 3D: modelo (glb, ou gltf com os buffers .bin) e decodificador de modelo comprimido (wasm).
+  'glb', 'gltf', 'bin', 'wasm',
 ]);
 
 export const tipoAceito = (rel) => {
