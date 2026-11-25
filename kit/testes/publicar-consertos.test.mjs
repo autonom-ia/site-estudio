@@ -268,7 +268,7 @@ test('5. PARTE_EM_ANDAMENTO se reenvia; pedidos de espera do painel viram PUBLIC
   }
 });
 
-test('6. aviso de arquivo sem uso compara o nome inteiro', () => {
+test('6. aviso de arquivo sem uso compara o nome inteiro; o .gltf cita o .bin dele', () => {
   assert.equal(citaNome('<img src="assets/data.png">', 'a.png'), false);
   assert.equal(citaNome('<img src="assets/a.png">', 'a.png'), true);
   assert.equal(citaNome("url('a.png?v=2')", 'a.png'), true);
@@ -285,6 +285,9 @@ test('6. aviso de arquivo sem uso compara o nome inteiro', () => {
     fs.writeFileSync(path.join(pasta, 'assets', '3d', 'peca.bin'), 'x');
     fs.writeFileSync(path.join(pasta, 'index.html'), '<img src="assets/data.png"><script>carregar("assets/3d/peca.gltf")</script>');
     assert.deepEqual(arquivosNaoCitados(pasta, ['index.html', 'assets/a.png', 'assets/data.png', 'assets/3d/peca.gltf', 'assets/3d/peca.bin']), ['assets/a.png']);
+    fs.writeFileSync(path.join(pasta, 'assets', '3d', 'peca.gltf'), '{"asset":{"version":"2.0"},"buffers":[{"uri":"peca%20a.bin"}]}');
+    fs.renameSync(path.join(pasta, 'assets', '3d', 'peca.bin'), path.join(pasta, 'assets', '3d', 'peca a.bin'));
+    assert.deepEqual(arquivosNaoCitados(pasta, ['index.html', 'assets/a.png', 'assets/data.png', 'assets/3d/peca.gltf', 'assets/3d/peca a.bin']), ['assets/a.png']);
   } finally {
     fs.rmSync(pasta, { recursive: true, force: true });
   }

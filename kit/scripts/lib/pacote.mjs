@@ -85,11 +85,21 @@ export function citaNome(texto, nome) {
   return false;
 }
 
+// O .gltf cita os arquivos dele como endereço ("roda%20dianteira.bin"): vale também o nome decodificado.
+function comoCita(rel, texto) {
+  if (extensao(rel) !== '.gltf') return texto;
+  try {
+    return `${texto}\n${decodeURIComponent(texto)}`;
+  } catch {
+    return texto;
+  }
+}
+
 // Arquivos (fora as páginas) cujo nome não aparece em nenhuma página, CSS, script ou manifesto.
 export function arquivosNaoCitados(pasta, arquivos) {
   const textos = arquivos
     .filter((rel) => TEXTOS_QUE_CITAM.includes(extensao(rel)))
-    .map((rel) => ({ rel, texto: fs.readFileSync(path.join(pasta, ...rel.split('/')), 'utf8') }));
+    .map((rel) => ({ rel, texto: comoCita(rel, fs.readFileSync(path.join(pasta, ...rel.split('/')), 'utf8')) }));
   const soltos = [];
   for (const rel of arquivos) {
     const nome = rel.split('/').pop();
