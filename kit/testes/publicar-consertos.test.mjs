@@ -288,6 +288,8 @@ test('6. aviso de arquivo sem uso compara o nome inteiro; o .gltf cita o .bin de
     fs.writeFileSync(path.join(pasta, 'assets', '3d', 'peca.gltf'), '{"asset":{"version":"2.0"},"meshes":[{"name":"100%"}],"buffers":[{"uri":"peca%20a.bin"}]}');
     fs.renameSync(path.join(pasta, 'assets', '3d', 'peca.bin'), path.join(pasta, 'assets', '3d', 'peca a.bin'));
     assert.deepEqual(arquivosNaoCitados(pasta, ['index.html', 'assets/a.png', 'assets/data.png', 'assets/3d/peca.gltf', 'assets/3d/peca a.bin']), ['assets/a.png']);
+    fs.writeFileSync(path.join(pasta, 'assets', '3d', 'peca.gltf'), '\uFEFF{"asset":{"version":"2.0"},"extensions":{"x":{"uri":"peca%20a.bin"}}}');
+    assert.deepEqual(arquivosNaoCitados(pasta, ['index.html', 'assets/a.png', 'assets/data.png', 'assets/3d/peca.gltf', 'assets/3d/peca a.bin']), ['assets/a.png']);
   } finally {
     fs.rmSync(pasta, { recursive: true, force: true });
   }
