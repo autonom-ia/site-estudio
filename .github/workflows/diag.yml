@@ -29,12 +29,14 @@ jobs:
         run: |
           node -e "console.log('nucleos', require('os').availableParallelism())"
           nohup node .github/diag/amostra.mjs "$RUNNER_TEMP/amostras.jsonl" "$RUNNER_TEMP/parar" > /dev/null 2>&1 &
+      - name: Caminho absoluto do registrador (testes que mudam de pasta)
+        shell: bash
+        run: echo "NODE_OPTIONS=--import=$(node -p "require('url').pathToFileURL(require('path').resolve('.github/diag/tempo.mjs')).href")" >> "$GITHUB_ENV"
       - name: Testes
         shell: bash
         run: node --test --test-concurrency=${{ matrix.conc }} "kit/testes/*.test.mjs"
         env:
           ESTUDIO_TESTES_EXIGEM_NAVEGADOR: '1'
-          NODE_OPTIONS: --import=./.github/diag/tempo.mjs
           DIAG_LINHA: ${{ runner.temp }}/linha.jsonl
       - name: Guardar medidas
         if: always()
