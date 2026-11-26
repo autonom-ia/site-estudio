@@ -213,6 +213,7 @@ test('demo 3D: conferências passam e as fotos mostram as duas cenas abertas, no
   assert.ok(med.json.dados.tamanhos.includes(390), JSON.stringify(med.json.dados.tamanhos));
   // o checar só reprova porque a demo é do negócio fictício (molde: true), e nunca por erro ou peso
   const ch = estudio('checar', 'demo');
+  assert.ok(Array.isArray(ch.json?.dados?.vermelhos), JSON.stringify(ch.json));
   assert.deepEqual([...new Set(ch.json.dados.vermelhos.map((v) => v.tipo))], ['resto-do-molde']);
 });
 
