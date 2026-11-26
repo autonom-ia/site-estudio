@@ -9,16 +9,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: windows-latest, conc: 3, aquecer: 'sim', rep: 1 }
-          - { os: windows-latest, conc: 3, aquecer: 'sim', rep: 2 }
-          - { os: windows-latest, conc: 3, aquecer: 'sim', rep: 3 }
-          - { os: windows-latest, conc: 3, aquecer: 'nao', rep: 1 }
-          - { os: windows-latest, conc: 3, aquecer: 'nao', rep: 2 }
-          - { os: windows-latest, conc: 2, aquecer: 'sim', rep: 1 }
-          - { os: windows-latest, conc: 2, aquecer: 'sim', rep: 2 }
-          - { os: windows-latest, conc: 2, aquecer: 'sim', rep: 3 }
-          - { os: ubuntu-latest, conc: 3, aquecer: 'sim', rep: 1 }
-    name: diag ${{ matrix.os }} c${{ matrix.conc }} a${{ matrix.aquecer }} r${{ matrix.rep }}
+          - { os: windows-latest, conc: 3, temp: 'C', rep: 1 }
+          - { os: windows-latest, conc: 3, temp: 'C', rep: 2 }
+          - { os: windows-latest, conc: 3, temp: 'C', rep: 3 }
+          - { os: windows-latest, conc: 3, temp: 'D', rep: 1 }
+          - { os: windows-latest, conc: 3, temp: 'D', rep: 2 }
+          - { os: windows-latest, conc: 3, temp: 'D', rep: 3 }
+          - { os: windows-latest, conc: 2, temp: 'D', rep: 1 }
+          - { os: windows-latest, conc: 2, temp: 'D', rep: 2 }
+    name: diag ${{ matrix.os }} c${{ matrix.conc }} t${{ matrix.temp }} r${{ matrix.rep }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     steps:
@@ -26,19 +25,34 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Primeiras aberturas do Chrome
-        if: matrix.aquecer == 'sim'
+      - name: Temp no disco de trabalho (D:)
+        if: matrix.temp == 'D'
         shell: bash
-        run: node .github/diag/aquecer.mjs
+        run: |
+          echo "TEMP=$RUNNER_TEMP" >> "$GITHUB_ENV"
+          echo "TMP=$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Ler os arquivos do Chrome uma vez (disco frio)
+        shell: bash
+        run: |
+          ini=$(date +%s%N)
+          find "/c/Program Files/Google/Chrome/Application" -type f -exec cat {} + > /dev/null
+          echo "leitura dos arquivos do Chrome: $(( ($(date +%s%N) - ini) / 1000000 )) ms, $(du -sm "/c/Program Files/Google/Chrome/Application" | cut -f1) MB"
+      - name: Primeiras aberturas do Chrome (depois da leitura)
+        shell: bash
+        run: node -e "console.log('tmpdir', require('os').tmpdir())" && node .github/diag/aquecer.mjs
       - name: Testes (com amostrador e registro por arquivo)
         shell: bash
         run: |
           node .github/diag/amostra.mjs "$RUNNER_TEMP/amostras.jsonl" "$RUNNER_TEMP/parar" &
+          typeperf "\\PhysicalDisk(*)\\% Idle Time" "\\PhysicalDisk(*)\\Avg. Disk sec/Transfer" "\\PhysicalDisk(*)\\Current Disk Queue Length" "\\Processor(_Total)\\% Processor Time" -si 2 -sc 900 -y -f CSV -o "$RUNNER_TEMP/disco.csv" > /dev/null 2>&1 &
+          perf=$!
           export NODE_OPTIONS="--import=$(node -p "require('url').pathToFileURL(require('path').resolve('.github/diag/tempo.mjs')).href")"
           set +e
           node --test --test-concurrency=${{ matrix.conc }} "kit/testes/*.test.mjs"
           saida=$?
           touch "$RUNNER_TEMP/parar"
+          kill $perf 2>/dev/null
+          taskkill //F //IM typeperf.exe > /dev/null 2>&1
           wait
           exit $saida
         env:
@@ -49,9 +63,9 @@ jobs:
         shell: bash
         run: |
           mkdir -p medidas
-          cp "$RUNNER_TEMP/linha.jsonl" "$RUNNER_TEMP/amostras.jsonl" medidas/ || true
+          cp "$RUNNER_TEMP/linha.jsonl" "$RUNNER_TEMP/amostras.jsonl" "$RUNNER_TEMP/disco.csv" medidas/ || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: medidas-${{ matrix.os }}-c${{ matrix.conc }}-a${{ matrix.aquecer }}-r${{ matrix.rep }}
+          name: medidas-${{ matrix.os }}-c${{ matrix.conc }}-t${{ matrix.temp }}-r${{ matrix.rep }}
           path: medidas/
