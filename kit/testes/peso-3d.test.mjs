@@ -85,6 +85,27 @@ test('conta toda biblioteca que fala com o WebGL, em qualquer pasta, e soma o .g
   assert.ok(red[0].detalhe.includes('modelos/peca.bin') && red[0].detalhe.includes('modelos/tex/cor.png'), red[0].detalhe);
 });
 
+// O teto do painel para o .gltf (view_autonomia, framework/sites/painel/publicacao/pacote.mjs,
+// GLTF_MAX_BYTES). Repetido aqui de propósito: o teste confere o número, não a constante do kit.
+const TETO_DO_GLTF = 16 * 1024 * 1024;
+
+test('.gltf acima do teto do painel (16 MB) não é lido: conta pelo tamanho e reprova como modelo', (t) => {
+  const site = path.join(base, 'gltf-grande');
+  fs.mkdirSync(path.join(site, 'modelos'), { recursive: true });
+  const gltf = path.join(site, 'modelos', 'cena.gltf');
+  fs.writeFileSync(gltf, '');
+  fs.truncateSync(gltf, TETO_DO_GLTF + 1);
+  const lidos = [];
+  const ler = fs.readFileSync;
+  t.mock.method(fs, 'readFileSync', (arquivo, ...resto) => {
+    lidos.push(String(arquivo));
+    return ler(arquivo, ...resto);
+  });
+  const r = conferir3d(site);
+  assert.deepEqual(lidos.filter((a) => a.endsWith('cena.gltf')), [], 'o .gltf acima do teto não é lido');
+  assert.deepEqual(r.acima.map((a) => a.arquivo), ['modelos/cena.gltf']);
+});
+
 test('o checar reprova o site com 3D acima do limite (3d-pesado)', opcoesDoNavegador(200000), () => {
   const env = { ...process.env, ESTUDIO_SITES: path.join(base, 'sites'), ESTUDIO_MARCA: path.join(base, 'sem-marca'), ESTUDIO_NAO_ABRIR: '1' };
   const estudio = (...args) => {
@@ -107,4 +128,14 @@ test('o checar reprova o site com 3D acima do limite (3d-pesado)', opcoesDoNaveg
   assert.equal(tipos().includes('3d-pesado'), false);
   escrever(path.join(base, 'sites', 'pesado', 'site', 'assets', '3d', 'biblioteca.js'), 210 * KB);
   assert.ok(tipos().includes('3d-pesado'));
+});
+
+test('uri do .gltf com "%" solto não derruba a conta: vale o nome como está escrito', () => {
+  const site = path.join(base, 'uri-solta');
+  fs.mkdirSync(path.join(site, 'assets', 'modelos'), { recursive: true });
+  fs.writeFileSync(path.join(site, 'assets', 'modelos', 'peca.gltf'), JSON.stringify({ buffers: [{ uri: 'peca 100%.bin' }] }));
+  escrever(path.join(site, 'assets', 'modelos', 'peca 100%.bin'), 20 * KB);
+  const r = conferir3d(site);
+  assert.deepEqual(r.modelos.map((m) => [m.arquivo, m.junto]), [['assets/modelos/peca.gltf', ['assets/modelos/peca 100%.bin']]]);
+  assert.ok(r.modelos[0].kb >= 20, `${r.modelos[0].kb} KB`);
 });

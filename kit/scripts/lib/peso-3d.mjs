@@ -14,10 +14,15 @@
 // que nenhum .gltf cita conta sozinho. Limite: 1,5 MB por modelo; acima disso, no 4G do
 // celular, a peça demora mais que a página toda.
 // O checar reprova acima do limite (3d-pesado).
+// Um .gltf acima do teto do painel (TETO_DO_GLTF, 16 MB) não é lido: conta só pelo tamanho, que já
+// passa do limite do modelo.
 import fs from 'node:fs';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { listarArquivos } from './caminhos.mjs';
+import { TETO_DO_GLTF } from './regras-do-painel.mjs';
+// a mesma leitura de uri do pacote: "%" solto vale como está escrito, sem derrubar a conta
+import { decodificado } from './pacote.mjs';
 
 export const LIMITE_3D = Object.freeze({ js_kb_comprimido: 200, modelo_kb: 1536 });
 const EXTENSOES_DE_CODIGO = Object.freeze(['.js', '.mjs', '.wasm']);
@@ -36,9 +41,11 @@ function codigoDo3d(pastaSite, rel) {
 
 // Os arquivos que um .gltf cita (buffers e imagens), relativos ao site; endereço data: fica dentro.
 function citadosPeloGltf(pastaSite, rel) {
+  const abs = path.join(pastaSite, ...rel.split('/'));
+  if (fs.statSync(abs).size > TETO_DO_GLTF) return [];
   let dados;
   try {
-    dados = JSON.parse(fs.readFileSync(path.join(pastaSite, ...rel.split('/')), 'utf8'));
+    dados = JSON.parse(fs.readFileSync(abs, 'utf8'));
   } catch {
     return [];
   }
@@ -46,7 +53,7 @@ function citadosPeloGltf(pastaSite, rel) {
   return [...(dados.buffers || []), ...(dados.images || [])]
     .map((b) => (b && typeof b.uri === 'string' ? b.uri : ''))
     .filter((uri) => uri && !uri.startsWith('data:'))
-    .map((uri) => path.posix.normalize(pasta + decodeURIComponent(uri)));
+    .map((uri) => path.posix.normalize(pasta + decodificado(uri)));
 }
 
 export function conferir3d(pastaSite) {

@@ -2,6 +2,7 @@
 // tradução dos códigos de erro do serviço para os códigos do estúdio (kit/mensagens.json).
 // A chave de publicação só viaja no cabeçalho Authorization: nunca entra em erro, log ou "dados".
 import { KitErro } from './saida.mjs';
+import { sanear } from './executar.mjs';
 
 export const SERVICO = 'https://sites.autonomia.site';
 const LOCAL = '127.0.0.1';
@@ -147,7 +148,10 @@ export async function chamar(cfg, metodo, caminho, { chave, json, bytes, cabecal
 }
 
 // Erro do serviço traduzido para o estúdio. A frase do serviço vai em dados.detalhe (passa pelo sanear) e,
-// quando o serviço diz qual arquivo recusou (campo detalhe da resposta), o nome vai em dados.arquivo.
+// quando o serviço diz qual arquivo recusou (campo detalhe da resposta), o nome vai em dados.arquivo,
+// também saneado aqui: é texto que veio da rede. O sanear é aplicado na entrada, e não ao campo
+// "arquivo" de toda saída, porque o nome de arquivo local (caminho da pessoa) fica intacto por contrato
+// (lib/saida.mjs, CAMPOS_LIVRES).
 export function erroDoServico(resposta) {
   const corpo = resposta.corpo || {};
   const codigoServico = typeof corpo.codigo === 'string' ? corpo.codigo : '';
@@ -156,7 +160,7 @@ export function erroDoServico(resposta) {
   if (!codigo && resposta.status === 401) codigo = 'PUBLICAR_CHAVE_RECUSADA';
   if (!codigo && resposta.status === 422 && codigoServico.startsWith('PACOTE_')) codigo = 'PUBLICAR_PACOTE_RECUSADO';
   if (!codigo) codigo = 'PUBLICAR_RECUSADO';
-  const arquivo = typeof corpo.detalhe === 'string' && corpo.detalhe !== '' ? { arquivo: corpo.detalhe.slice(0, 300) } : {};
+  const arquivo = typeof corpo.detalhe === 'string' && corpo.detalhe !== '' ? { arquivo: sanear(corpo.detalhe.slice(0, 300)) } : {};
   return new KitErro(codigo, { status: resposta.status, codigo_do_servico: codigoServico, detalhe: frase.slice(0, 300), ...arquivo });
 }
 

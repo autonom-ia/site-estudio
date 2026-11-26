@@ -12,6 +12,10 @@ import { reprovado } from './saida.mjs';
 export const TETO_MB = 200;
 export const MAX_ARQUIVOS = 10000;
 const MB = 1024 * 1024;
+// Teto do .gltf (modelo 3D em texto): GLTF_MAX_BYTES de framework/sites/painel/publicacao/pacote.mjs.
+// Acima dele o painel recusa com PACOTE_3D_GRANDE. O pacote (lib/pacote.mjs) e a conta do 3D
+// (lib/peso-3d.mjs) conferem pelo tamanho no disco, antes de ler: um .gltf gigante nunca é lido aqui.
+export const TETO_DO_GLTF = 16 * MB;
 const PEDACO_MAX_BYTES = 255;
 const NOME_MAX_BYTES = 1024;
 const PASTA_OCULTA_PERMITIDA = '.well-known';

@@ -140,6 +140,17 @@ test('recusa do pacote pelo serviço diz qual arquivo (dados.arquivo)', async (t
   }
 });
 
+test('nome de arquivo que o serviço devolve passa pelo sanear (sequência longa vira <REDACTED>)', async (t) => {
+  const ctx = await preparar(t);
+  darChave(ctx);
+  const longo = `assets/${'a1B2'.repeat(10)}.bin`;
+  ctx.servico.estado.erroAoAbrir = { status: 422, codigo: 'PACOTE_BIN_SOLTO', detalhe: longo };
+  const r = await ctx.publicar();
+  assert.equal(r.json.codigo, 'PUBLICAR_BIN_SOLTO', r.saida);
+  assert.equal(r.json.dados.arquivo, 'assets/<REDACTED>.bin');
+  assert.ok(!r.saida.includes('a1B2'.repeat(10)), 'a sequência longa não sai em lugar nenhum');
+});
+
 test('site no ar sem cadeado ainda: PUBLICADO_CERTIFICADO_PENDENTE; sem serviço: PUBLICAR_SEM_CONEXAO', async (t) => {
   const ctx = await preparar(t);
   darChave(ctx);
