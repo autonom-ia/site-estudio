@@ -13,7 +13,7 @@
 // 7. depois de o painel aceitar abrir o envio, o pendente fica mesmo com erro; no-ar.json guarda o
 //    nome que a pasta usa, não o que a resposta devolveu (autonom-ia/site-estudio#19).
 //    Queda ao abrir o envio desfaz tudo; --voltar registra o pedido antes de mandar, e a resposta
-//    perdida não faz a próxima publicação pedir --por-cima; recusa do painel desfaz o pedido, e sem
+//    perdida não faz a próxima publicação pedir --por-cima (com registro); recusa do painel desfaz o pedido, e sem
 //    registro da pasta o pedido nem é gravado.
 // Serviço falso só em 127.0.0.1.
 import { test } from 'node:test';
@@ -396,6 +396,45 @@ test('7f. --voltar com a resposta perdida: o painel voltou, e a próxima publica
   assert.deepEqual([r.json.codigo, r.json.dados.versao], ['PUBLICADO', 4], r.saida);
 });
 
+test('7j. pedido de voltar perdido não passa para o envio seguinte, nem quando o envio é recusado', async (t) => {
+  const ctx = await preparar(t);
+  darChave(ctx);
+  const e = ctx.servico.estado;
+  for (const titulo of ['Um', 'Dois', 'Três']) {
+    novoConteudo(ctx, titulo);
+    assert.equal((await ctx.publicar()).json.codigo, 'PUBLICADO');
+  }
+  e.voltarCai = true;
+  assert.equal((await ctx.publicar('--voltar', '2')).json.codigo, 'PUBLICAR_SEM_CONEXAO');
+  assert.ok(registroDaPasta(ctx)[NOME].voltar, 'o pedido ficou registrado');
+  novoConteudo(ctx, 'Quatro');
+  e.erroAoAbrir = { status: 409, codigo: 'LIMITE_DE_SITES' };
+  assert.equal((await ctx.publicar()).json.codigo, 'PUBLICAR_LIMITE_DE_SITES');
+  assert.equal(registroDaPasta(ctx)[NOME].voltar, undefined, 'a recusa do envio não devolve o pedido antigo');
+  // e a volta que valeu continua desta pasta: a próxima publicação segue sem pedir --por-cima
+  e.erroAoAbrir = null;
+  const r = await ctx.publicar();
+  assert.deepEqual([r.json.codigo, r.json.dados.versao], ['PUBLICADO', 4], r.saida);
+});
+
+test('7k. --voltar com publicação incompleta no painel: não é recusa, o pedido fica e a volta que valeu segue desta pasta', async (t) => {
+  const ctx = await preparar(t);
+  darChave(ctx);
+  const e = ctx.servico.estado;
+  for (const titulo of ['Um', 'Dois']) {
+    novoConteudo(ctx, titulo);
+    assert.equal((await ctx.publicar()).json.codigo, 'PUBLICADO');
+  }
+  e.erroAoVoltar = { status: 409, codigo: 'PUBLICACAO_INCOMPLETA' };
+  assert.equal((await ctx.publicar('--voltar', '1')).json.codigo, 'PUBLICAR_NO_AR_AJUSTANDO');
+  assert.ok(registroDaPasta(ctx)[NOME].voltar, 'o pedido ficou: o no ar pode ter mudado');
+  e.erroAoVoltar = null;
+  e.noAr.set(NOME, 1); // o painel terminou a volta
+  novoConteudo(ctx, 'Três');
+  const r = await ctx.publicar();
+  assert.deepEqual([r.json.codigo, r.json.dados.versao], ['PUBLICADO', 3], r.saida);
+});
+
 test('7g. --voltar sem número com a resposta perdida: vale a anterior; outra versão no ar pede --por-cima', async (t) => {
   const ctx = await preparar(t);
   darChave(ctx);
@@ -437,7 +476,7 @@ test('7h. --voltar recusado pelo painel: o registro volta ao que era, e outra vo
   assert.deepEqual([r.json.codigo, r.json.dados.versao_no_ar], ['PUBLICAR_ENDERECO_JA_EM_USO', 1], r.saida);
 });
 
-test('7i. --voltar --por-cima sem registro desta pasta e com a resposta perdida: não deixa registro que bloqueie', async (t) => {
+test('7i. --voltar --por-cima sem registro desta pasta e com a resposta perdida: não deixa registro que bloqueie a migração', async (t) => {
   const ctx = await preparar(t);
   darChave(ctx);
   const e = ctx.servico.estado;
@@ -447,8 +486,22 @@ test('7i. --voltar --por-cima sem registro desta pasta e com a resposta perdida:
   fs.writeFileSync(path.join(pastaDoSite(ctx), 'no-ar.json'), JSON.stringify({ nome: NOME, versao: 2 }));
   e.voltarCai = true;
   assert.equal((await ctx.publicar('--voltar', '1', '--por-cima')).json.codigo, 'PUBLICAR_SEM_CONEXAO');
-  e.noAr.set(NOME, 2); // a volta não chegou a valer
   assert.equal(registroDaPasta(ctx), null, 'nenhum pedido sozinho no registro');
-  const r = await ctx.publicar();
+  // a volta valeu (o painel está na 1) e a resposta se perdeu: sem registro, pede --por-cima uma vez
+  assert.equal(e.noAr.get(NOME), 1);
+  assert.equal((await ctx.publicar()).json.codigo, 'PUBLICAR_ENDERECO_JA_EM_USO');
+  assert.deepEqual((await ctx.publicar('--por-cima')).json.codigo, 'PUBLICADO');
+  // a volta não valeu (o painel continua na 2): a migração pelo no-ar.json segue valendo
+  const ctx2 = await preparar(t);
+  darChave(ctx2);
+  const e2 = ctx2.servico.estado;
+  e2.publicados.push({ slug: NOME, versao: 1, zip: Buffer.from('um') }, { slug: NOME, versao: 2, zip: Buffer.from('dois') });
+  e2.noAr.set(NOME, 2);
+  fs.writeFileSync(path.join(pastaDoSite(ctx2), 'no-ar.json'), JSON.stringify({ nome: NOME, versao: 2 }));
+  e2.voltarCaiSemVoltar = true; // a resposta se perdeu e a volta não aconteceu
+  assert.equal((await ctx2.publicar('--voltar', '1', '--por-cima')).json.codigo, 'PUBLICAR_SEM_CONEXAO');
+  assert.equal(e2.noAr.get(NOME), 2);
+  assert.equal(registroDaPasta(ctx2), null);
+  const r = await ctx2.publicar();
   assert.deepEqual([r.json.codigo, r.json.dados.versao], ['PUBLICADO', 3], 'a migração pelo no-ar.json segue valendo');
 });

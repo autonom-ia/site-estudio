@@ -37,7 +37,7 @@ import { aviso, falha, KitErro } from '../lib/saida.mjs';
 import { configuracao } from '../lib/publicar-servico.mjs';
 import { entrar } from '../lib/publicar-login.mjs';
 import { enviarPacote, voltarVersao, esperarSiteNoAr } from '../lib/publicar-envio.mjs';
-import { conferirDono, lerDono, anotarDono, lerNoAr, anotarNoAr, lembreteAtual } from '../lib/publicar-dono.mjs';
+import { conferirDono, lerDono, registroResolvido, anotarDono, lerNoAr, anotarNoAr, lembreteAtual } from '../lib/publicar-dono.mjs';
 import { apagar, arquivoChave, esquecerTudo, lerChave } from '../lib/publicar-guarda.mjs';
 
 // Nome do endereço: --no-ar, senão o já anotado em no-ar.json, senão o do site.
@@ -85,12 +85,15 @@ async function comAcesso(cfg, fazer) {
 // Erros depois dos quais o site pode já estar no ar: a anotação do endereço fica.
 const TALVEZ_NO_AR = Object.freeze(['PUBLICAR_CONCLUSAO_INCERTA', 'PUBLICAR_NO_AR_AJUSTANDO', 'PUBLICAR_ENVIO_EM_ANDAMENTO']);
 
-// O pedido de voltar ficou sem a resposta do painel: queda de conexão, proxy que respondeu no lugar dele
-// (5xx sem código do painel) ou volta feita com o passo final falho. O painel pode ter voltado.
-const voltaTalvezFeita = (erro) => !(erro instanceof KitErro)
-  || erro.codigo === 'PUBLICAR_SEM_CONEXAO'
-  || TALVEZ_NO_AR.includes(erro.codigo)
-  || (Number.isInteger(erro.dados?.status) && erro.dados.status >= 500 && !erro.dados.codigo_do_servico);
+// O painel respondeu recusando a volta (4xx ou 5xx com o código dele): nada mudou no ar. Todo o resto
+// (queda de conexão, proxy que respondeu no lugar dele, 2xx com resposta estranha) pode ter voltado, e o
+// pedido fica; manter é inofensivo se nada mudou, porque a versão do registro continua valendo.
+// Os códigos de TALVEZ_NO_AR (publicação incompleta, envio em andamento) não são recusa: o no ar pode ter
+// mudado, e o pedido fica.
+const recusaDoPainel = (erro) => erro instanceof KitErro
+  && typeof erro.dados?.codigo_do_servico === 'string' && erro.dados.codigo_do_servico !== ''
+  && Number.isInteger(erro.dados?.status) && erro.dados.status >= 400
+  && !TALVEZ_NO_AR.includes(erro.codigo);
 
 // Envia com o endereço registrado antes ("pendente"); desfaz o registro e o lembrete só se o painel
 // recusou antes de abrir o envio. Depois de aberto, o concluir pode ter publicado mesmo com erro (resposta
@@ -98,9 +101,11 @@ const voltaTalvezFeita = (erro) => !(erro instanceof KitErro)
 // nova, a conferência compara com a versão que a pasta tinha).
 async function enviarRegistrando(cfg, chave, c, noAr, pacote, situacao) {
   const lembrete = lembreteAtual(c);
-  const registro = lerDono(c, noAr);
+  // Um pedido de voltar antigo não passa adiante: a conferência acabou de aceitar o que está no ar, e
+  // o pedido só valia enquanto a resposta dele estava perdida. Sai resolvido: a volta que valeu fica.
+  const anterior = registroResolvido(lerDono(c, noAr), situacao);
   anotarNoAr(c, { ...(lembrete && lembrete.nome === noAr ? lembrete : {}), nome: noAr, em: new Date().toISOString() });
-  anotarDono(c, noAr, { ...(registro || {}), pendente: true, versoes_antes: situacao.versoes, envio_bytes: pacote.zip.length });
+  anotarDono(c, noAr, { ...(anterior || {}), pendente: true, versoes_antes: situacao.versoes, envio_bytes: pacote.zip.length });
   let aberto = false;
   try {
     return await enviarPacote(cfg, chave, noAr, pacote, FERR, { aoAbrir: () => { aberto = true; } });
@@ -108,7 +113,7 @@ async function enviarRegistrando(cfg, chave, c, noAr, pacote, situacao) {
     const talvezNoAr = aberto || (erro instanceof KitErro && TALVEZ_NO_AR.includes(erro.codigo));
     if (!talvezNoAr) {
       anotarNoAr(c, lembrete);
-      anotarDono(c, noAr, registro);
+      anotarDono(c, noAr, anterior);
     }
     throw erro;
   }
@@ -161,9 +166,11 @@ export default async function publicar(args) {
     const situacao = await conferirDono(cfg, chave, c, noAr, porCima);
     // Registrado antes de pedir: se a resposta se perder (o painel pode ter voltado), a próxima
     // conferência aceita a versão pedida (lib/publicar-dono.mjs, voltouParaOPedido). Só quando a pasta
-    // já tem registro: sem ele, um pedido sozinho bloquearia a migração pelo no-ar.json. Se o painel
-    // respondeu recusando, o registro volta ao que era.
-    const registro = lerDono(c, noAr);
+    // já tem registro: sem ele, um pedido sozinho bloquearia a migração pelo no-ar.json (e, se a volta
+    // valeu e a resposta se perdeu, a próxima publicação pede --por-cima uma vez). Se o painel respondeu
+    // recusando, o registro volta ao que era.
+    // Um pedido anterior ainda sem resposta sai resolvido, antes de dar lugar a este.
+    const registro = registroResolvido(lerDono(c, noAr), situacao);
     if (registro) {
       const volta = { de: situacao.versao, para: Number.isInteger(v.versao) ? v.versao : null, versoes: situacao.versoes };
       anotarDono(c, noAr, { ...registro, voltar: volta });
@@ -172,7 +179,7 @@ export default async function publicar(args) {
     try {
       r = await voltarVersao(cfg, chave, noAr, v.versao);
     } catch (erro) {
-      if (registro && !voltaTalvezFeita(erro)) anotarDono(c, noAr, registro);
+      if (registro && recusaDoPainel(erro)) anotarDono(c, noAr, registro);
       throw erro;
     }
     anotarDono(c, noAr, { versao: r.versao });

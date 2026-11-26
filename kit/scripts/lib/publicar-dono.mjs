@@ -22,7 +22,9 @@
 // no-ar.json que bate com a versão no ar vale uma vez e vira registro.
 // --por-cima pula a conferência. Endereço só reservado (nenhuma versão guardada) não conta.
 // --voltar registra o pedido antes de mandar (voltar: { de, para, versoes }), para uma resposta perdida
-// não fazer a próxima publicação pedir --por-cima. Risco aceito: se, enquanto a resposta daqui se
+// não fazer a próxima publicação pedir --por-cima. Só quando a pasta já tem registro: sem ele, a resposta
+// perdida de uma volta que valeu pede --por-cima uma vez. O pedido sai do registro quando uma
+// publicação passa da conferência (registroResolvido). Risco aceito: se, enquanto a resposta daqui se
 // perdeu, outro computador voltar o endereço para a MESMA versão pedida, as duas coisas são
 // indistinguíveis daqui, e a versão vale como desta pasta.
 import fs from 'node:fs';
@@ -98,6 +100,17 @@ function voltouParaOPedido(volta, situacao) {
   if (!Number.isInteger(volta.de)) return false;
   const anteriores = volta.versoes.filter((v) => v < volta.de);
   return anteriores.length > 0 && situacao.versao === Math.max(...anteriores);
+}
+
+// O registro desta pasta sem o pedido de voltar, já resolvido contra o que está no ar: se a volta
+// perdida valeu, a versão dela passa a ser a desta pasta; se não valeu, fica a versão que já estava.
+// Assim o pedido pode sair do registro sem que a pasta perca a volta que fez (sem isso, um envio
+// recusado logo depois deixaria a versão de antes da volta, e a próxima publicação pediria --por-cima).
+export function registroResolvido(registro, situacao) {
+  if (!registro) return null;
+  const { voltar, ...resto } = registro;
+  if (voltar && voltouParaOPedido(voltar, situacao)) return { ...resto, versao: situacao.versao };
+  return Object.keys(resto).length ? resto : null;
 }
 
 // O que está no ar é o que esta pasta pôs? Com envio pendente (o processo pode ter caído no meio),

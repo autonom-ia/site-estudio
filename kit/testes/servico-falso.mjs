@@ -47,6 +47,7 @@ export async function subirServicoFalso({ parteMax = 1000 } = {}) {
     erroAoConcluir: null,
     erroAoVoltar: null,
     voltarCai: false, // volta a versão e derruba a conexão antes de responder
+    voltarCaiSemVoltar: false, // derruba a conexão sem voltar a versão
     abrirCai: false, // derruba a conexão ao abrir o envio, sem abrir
     enderecoDoSite: null,
     slugNaResposta: null, // slug que o concluir devolve, quando difere do enviado
@@ -161,6 +162,10 @@ export async function subirServicoFalso({ parteMax = 1000 } = {}) {
       e.voltas.push(dados);
       if (e.erroAoVoltar) return erro(res, e.erroAoVoltar.status, e.erroAoVoltar.codigo);
       if (dados.versao === 99) return erro(res, 404, 'VERSAO_INEXISTENTE');
+      if (e.voltarCaiSemVoltar) {
+        e.voltarCaiSemVoltar = false;
+        return req.socket.destroy();
+      }
       const versao = dados.versao ?? 1;
       if (e.publicados.some((p) => p.slug === partes[1] && p.versao === versao)) e.noAr.set(partes[1], versao);
       if (e.voltarCai) {
