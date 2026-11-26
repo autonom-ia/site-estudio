@@ -1,0 +1,51 @@
+# Diagnóstico da intermitência no Windows (não vai para a main): mede quem roda junto.
+name: diag-concorrencia
+on:
+  push:
+    branches: ['diag/**']
+jobs:
+  diag:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, conc: 3, rep: 1 }
+          - { os: windows-latest, conc: 3, rep: 2 }
+          - { os: windows-latest, conc: 3, rep: 3 }
+          - { os: windows-latest, conc: 2, rep: 1 }
+          - { os: windows-latest, conc: 2, rep: 2 }
+          - { os: windows-latest, conc: 1, rep: 1 }
+          - { os: ubuntu-latest, conc: 3, rep: 1 }
+    name: diag ${{ matrix.os }} c${{ matrix.conc }} r${{ matrix.rep }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Amostrador de CPU e navegadores
+        shell: bash
+        run: |
+          node -e "console.log('nucleos', require('os').availableParallelism())"
+          nohup node .github/diag/amostra.mjs "$RUNNER_TEMP/amostras.jsonl" "$RUNNER_TEMP/parar" > /dev/null 2>&1 &
+      - name: Testes
+        shell: bash
+        run: node --test --test-concurrency=${{ matrix.conc }} "kit/testes/*.test.mjs"
+        env:
+          ESTUDIO_TESTES_EXIGEM_NAVEGADOR: '1'
+          NODE_OPTIONS: --import=./.github/diag/tempo.mjs
+          DIAG_LINHA: ${{ runner.temp }}/linha.jsonl
+      - name: Guardar medidas
+        if: always()
+        shell: bash
+        run: |
+          touch "$RUNNER_TEMP/parar"
+          sleep 3
+          mkdir -p medidas
+          cp "$RUNNER_TEMP/linha.jsonl" "$RUNNER_TEMP/amostras.jsonl" medidas/ || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: medidas-${{ matrix.os }}-c${{ matrix.conc }}-r${{ matrix.rep }}
+          path: medidas/
