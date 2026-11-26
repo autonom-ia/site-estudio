@@ -10,7 +10,8 @@
   },
   "scripts": {
     "test": "node --test \"kit/testes/*.test.mjs\"",
-    "testar": "node --test \"kit/testes/*.test.mjs\""
+    "testar": "node --test \"kit/testes/*.test.mjs\"",
+    "testar:windows-ci": "node --test --test-concurrency=2 \"kit/testes/*.test.mjs\""
   },
   "devDependencies": {
     "@puppeteer/browsers": "3.2.7"

@@ -111,10 +111,20 @@ test('o checar reprova o site com 3D acima do limite (3d-pesado)', opcoesDoNaveg
   const estudio = (...args) => {
     const r = spawnSync(process.execPath, [DESPACHANTE, ...args], { encoding: 'utf8', env, timeout: 180000 });
     const linhas = (r.stdout || '').trim().split('\n');
-    return { codigo: r.status, json: JSON.parse(linhas[linhas.length - 1]) };
+    try {
+      return { codigo: r.status, json: JSON.parse(linhas[linhas.length - 1]) };
+    } catch {
+      return assert.fail(`${args.join(' ')} saiu sem JSON (código ${r.status}): ${(r.stderr || r.stdout || '').slice(-800)}`);
+    }
   };
   assert.equal(estudio('novo', 'pesado').codigo, 0);
-  const tipos = () => estudio('checar', 'pesado').json.dados.vermelhos.map((v) => v.tipo);
+  // o checar precisa ter conferido de fato: se ele mesmo falhar (navegador que não abriu, página
+  // que não carregou), o motivo aparece aqui, e não um "undefined" sem pista
+  const tipos = () => {
+    const { json } = estudio('checar', 'pesado');
+    assert.ok(Array.isArray(json?.dados?.vermelhos), JSON.stringify(json));
+    return json.dados.vermelhos.map((v) => v.tipo);
+  };
   assert.equal(tipos().includes('3d-pesado'), false);
   escrever(path.join(base, 'sites', 'pesado', 'site', 'assets', '3d', 'biblioteca.js'), 210 * KB);
   assert.ok(tipos().includes('3d-pesado'));
