@@ -181,3 +181,52 @@ test('vendor: o checar exige o que a ordem carrega, nunca o que o pacote chama d
     fs.rmSync(base, { recursive: true, force: true });
   }
 });
+
+// --- 3D: .gltf fundo e .gltf grande (consertos trazidos do View Estúdio) ---
+
+// O teto do painel para o .gltf (view_autonomia, framework/sites/painel/publicacao/pacote.mjs,
+// GLTF_MAX_BYTES). Repetido aqui de propósito: o teste confere o número, não a constante do kit.
+const TETO_DO_GLTF = 16 * 1024 * 1024;
+
+// Um site mínimo com um .gltf em assets/3d, citado pela página.
+function siteCom3d(t) {
+  const site = fs.mkdtempSync(path.join(os.tmpdir(), 'estudio-3d-'));
+  t.after(() => fs.rmSync(site, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(site, 'assets', '3d'), { recursive: true });
+  fs.writeFileSync(path.join(site, 'index.html'), '<title>3D</title><script>carregar("assets/3d/cena.gltf")</script>');
+  return { site, gltf: path.join(site, 'assets', '3d', 'cena.gltf') };
+}
+
+test('montarPacote: .gltf com o JSON aninhado muito fundo não derruba o pacote, e o nome lá no fundo ainda cita o .bin', (t) => {
+  const { site, gltf } = siteCom3d(t);
+  const fundura = 100000;
+  fs.writeFileSync(gltf, `${'['.repeat(fundura)}"peca%20a.bin"${']'.repeat(fundura)}`);
+  fs.writeFileSync(path.join(site, 'assets', '3d', 'peca a.bin'), 'x');
+  let pacote;
+  assert.doesNotThrow(() => {
+    pacote = montarPacote(site);
+  });
+  assert.deepEqual(pacote.naoCitados, [], 'o nome decodificado no fundo do JSON cita o .bin');
+});
+
+test('montarPacote: .gltf acima do teto do painel (16 MB) reprova com PUBLICAR_3D_GRANDE sem ler o arquivo; no teto, passa', (t) => {
+  const { site, gltf } = siteCom3d(t);
+  fs.writeFileSync(gltf, '');
+  fs.truncateSync(gltf, TETO_DO_GLTF + 1);
+  const lidos = [];
+  const ler = fs.readFileSync;
+  t.mock.method(fs, 'readFileSync', (arquivo, ...resto) => {
+    lidos.push(String(arquivo));
+    return ler(arquivo, ...resto);
+  });
+  let erro;
+  try {
+    montarPacote(site);
+  } catch (e) {
+    erro = e;
+  }
+  assert.deepEqual([erro?.codigo, erro?.sair, erro?.dados?.arquivo], ['PUBLICAR_3D_GRANDE', 2, 'site/assets/3d/cena.gltf'], String(erro));
+  assert.deepEqual(lidos.filter((a) => a.endsWith('cena.gltf')), [], 'o .gltf acima do teto não é lido');
+  fs.truncateSync(gltf, TETO_DO_GLTF);
+  assert.doesNotThrow(() => montarPacote(site));
+});
