@@ -21,6 +21,12 @@
 // Migração de quem publicou antes deste registro: sem nenhum registro do endereço neste computador, o
 // no-ar.json que bate com a versão no ar vale uma vez e vira registro.
 // --por-cima pula a conferência. Endereço só reservado (nenhuma versão guardada) não conta.
+// --voltar registra o pedido antes de mandar (voltar: { de, para, versoes }), para uma resposta perdida
+// não fazer a próxima publicação pedir --por-cima. Só quando a pasta já tem registro: sem ele, a resposta
+// perdida de uma volta que valeu pede --por-cima uma vez. O pedido sai do registro quando uma
+// publicação passa da conferência (registroResolvido). Risco aceito: se, enquanto a resposta daqui se
+// perdeu, outro computador voltar o endereço para a MESMA versão pedida, as duas coisas são
+// indistinguíveis daqui, e a versão vale como desta pasta.
 import fs from 'node:fs';
 import path from 'node:path';
 import { FERR, relativoARaiz } from './caminhos.mjs';
@@ -82,6 +88,31 @@ export function anotarDono(c, endereco, registro, ferr = FERR) {
   gravarPrivado(arquivoDonos(ferr), novo);
 }
 
+// Um --voltar registrado antes de pedir ({ de, para, versoes }: a versão no ar, a pedida ou null para
+// "a anterior", e as versões que existiam): se a resposta se perdeu, vale a versão pedida, desde que já
+// existisse (volta não cria versão). "A anterior" é a maior guardada abaixo da que estava no ar, como o
+// painel decide (publicacao/servico.mjs: a seguinte à do ar na lista do disco, da mais nova para a mais
+// velha).
+function voltouParaOPedido(volta, situacao) {
+  if (!volta || typeof volta !== 'object' || !Array.isArray(volta.versoes)) return false;
+  if (!volta.versoes.includes(situacao.versao)) return false;
+  if (Number.isInteger(volta.para)) return situacao.versao === volta.para;
+  if (!Number.isInteger(volta.de)) return false;
+  const anteriores = volta.versoes.filter((v) => v < volta.de);
+  return anteriores.length > 0 && situacao.versao === Math.max(...anteriores);
+}
+
+// O registro desta pasta sem o pedido de voltar, já resolvido contra o que está no ar: se a volta
+// perdida valeu, a versão dela passa a ser a desta pasta; se não valeu, fica a versão que já estava.
+// Assim o pedido pode sair do registro sem que a pasta perca a volta que fez (sem isso, um envio
+// recusado logo depois deixaria a versão de antes da volta, e a próxima publicação pediria --por-cima).
+export function registroResolvido(registro, situacao) {
+  if (!registro) return null;
+  const { voltar, ...resto } = registro;
+  if (voltar && voltouParaOPedido(voltar, situacao)) return { ...resto, versao: situacao.versao };
+  return Object.keys(resto).length ? resto : null;
+}
+
 // O que está no ar é o que esta pasta pôs? Com envio pendente (o processo pode ter caído no meio),
 // vale a versão que ela tinha ou a ÚNICA versão nova desde que o envio começou, se tiver o tamanho do
 // pacote deste envio (envio_bytes): uma versão nova de outro tamanho é de outro lugar, e duas ou mais
@@ -89,6 +120,7 @@ export function anotarDono(c, endereco, registro, ferr = FERR) {
 // que ela tinha.
 function bate(registro, situacao) {
   if (situacao.versao === null) return true;
+  if (voltouParaOPedido(registro.voltar, situacao)) return true;
   const antes = registro.pendente === true && Array.isArray(registro.versoes_antes) ? registro.versoes_antes : null;
   if (!antes) return registro.versao === situacao.versao;
   const novas = situacao.versoes.filter((v) => !antes.includes(v));

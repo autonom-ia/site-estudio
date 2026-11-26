@@ -20,8 +20,9 @@
 // O envio é registrado como "pendente" antes de mandar, com as versões que o endereço já tinha: se o
 // processo cair no meio, a próxima vez sabe que a única versão nova que apareceu ali, com o tamanho
 // do pacote deste envio, é desta pasta (de outro tamanho, ou duas ou mais novas: alguém mais
-// publicou, e a conferência reprova). Recusa do painel antes
-// de publicar desfaz o registro; --voltar registra a versão que ficou no ar.
+// publicou, e a conferência reprova). Recusa do painel antes de abrir o envio desfaz o registro
+// (depois de aberto, o concluir pode ter publicado mesmo com erro, e o pendente fica); --voltar
+// registra a versão que ficou no ar. no-ar.json guarda o nome que esta pasta usa no endereço.
 // Sem chave guardada, começa o login por código (lib/publicar-login.mjs) e devolve
 // PUBLICAR_AGUARDANDO_LOGIN; a próxima chamada continua o mesmo pedido. Se a aprovação chegou durante a
 // espera, devolve PUBLICAR_ACESSO_LIBERADO e publica só na próxima chamada (a espera já gastou o tempo
@@ -29,14 +30,14 @@
 // aparece na saída. --sair só apaga a cópia deste computador: cortar de vez é revogar na página da conta.
 import { nomeDoSite } from '../lib/args.mjs';
 import { abrirSite, abrirPastaDoSite } from '../lib/site.mjs';
-import { nomeValido, sugerirNome } from '../lib/caminhos.mjs';
+import { FERR, nomeValido, sugerirNome } from '../lib/caminhos.mjs';
 import { montarPacote } from '../lib/pacote.mjs';
 import { conferirParaOPainel } from '../lib/regras-do-painel.mjs';
 import { aviso, falha, KitErro } from '../lib/saida.mjs';
 import { configuracao } from '../lib/publicar-servico.mjs';
 import { entrar } from '../lib/publicar-login.mjs';
 import { enviarPacote, voltarVersao, esperarSiteNoAr } from '../lib/publicar-envio.mjs';
-import { conferirDono, lerDono, anotarDono, lerNoAr, anotarNoAr, lembreteAtual } from '../lib/publicar-dono.mjs';
+import { conferirDono, lerDono, registroResolvido, anotarDono, lerNoAr, anotarNoAr, lembreteAtual } from '../lib/publicar-dono.mjs';
 import { apagar, arquivoChave, esquecerTudo, lerChave } from '../lib/publicar-guarda.mjs';
 
 // Nome do endereço: --no-ar, senão o já anotado em no-ar.json, senão o do site.
@@ -84,19 +85,35 @@ async function comAcesso(cfg, fazer) {
 // Erros depois dos quais o site pode já estar no ar: a anotação do endereço fica.
 const TALVEZ_NO_AR = Object.freeze(['PUBLICAR_CONCLUSAO_INCERTA', 'PUBLICAR_NO_AR_AJUSTANDO', 'PUBLICAR_ENVIO_EM_ANDAMENTO']);
 
-// Envia com o endereço registrado antes ("pendente"); desfaz o registro e o lembrete se o painel
-// recusou antes de publicar.
+// O painel respondeu recusando a volta (4xx ou 5xx com o código dele): nada mudou no ar. Todo o resto
+// (queda de conexão, proxy que respondeu no lugar dele, 2xx com resposta estranha) pode ter voltado, e o
+// pedido fica; manter é inofensivo se nada mudou, porque a versão do registro continua valendo.
+// Os códigos de TALVEZ_NO_AR (publicação incompleta, envio em andamento) não são recusa: o no ar pode ter
+// mudado, e o pedido fica.
+const recusaDoPainel = (erro) => erro instanceof KitErro
+  && typeof erro.dados?.codigo_do_servico === 'string' && erro.dados.codigo_do_servico !== ''
+  && Number.isInteger(erro.dados?.status) && erro.dados.status >= 400
+  && !TALVEZ_NO_AR.includes(erro.codigo);
+
+// Envia com o endereço registrado antes ("pendente"); desfaz o registro e o lembrete só se o painel
+// recusou antes de abrir o envio. Depois de aberto, o concluir pode ter publicado mesmo com erro (resposta
+// estranha, código fora da lista): o pendente fica, e é inofensivo se nada entrou no ar (sem versão
+// nova, a conferência compara com a versão que a pasta tinha).
 async function enviarRegistrando(cfg, chave, c, noAr, pacote, situacao) {
   const lembrete = lembreteAtual(c);
-  const registro = lerDono(c, noAr);
+  // Um pedido de voltar antigo não passa adiante: a conferência acabou de aceitar o que está no ar, e
+  // o pedido só valia enquanto a resposta dele estava perdida. Sai resolvido: a volta que valeu fica.
+  const anterior = registroResolvido(lerDono(c, noAr), situacao);
   anotarNoAr(c, { ...(lembrete && lembrete.nome === noAr ? lembrete : {}), nome: noAr, em: new Date().toISOString() });
-  anotarDono(c, noAr, { ...(registro || {}), pendente: true, versoes_antes: situacao.versoes, envio_bytes: pacote.zip.length });
+  anotarDono(c, noAr, { ...(anterior || {}), pendente: true, versoes_antes: situacao.versoes, envio_bytes: pacote.zip.length });
+  let aberto = false;
   try {
-    return await enviarPacote(cfg, chave, noAr, pacote);
+    return await enviarPacote(cfg, chave, noAr, pacote, FERR, { aoAbrir: () => { aberto = true; } });
   } catch (erro) {
-    if (!(erro instanceof KitErro) || !TALVEZ_NO_AR.includes(erro.codigo)) {
+    const talvezNoAr = aberto || (erro instanceof KitErro && TALVEZ_NO_AR.includes(erro.codigo));
+    if (!talvezNoAr) {
       anotarNoAr(c, lembrete);
-      anotarDono(c, noAr, registro);
+      anotarDono(c, noAr, anterior);
     }
     throw erro;
   }
@@ -111,7 +128,8 @@ async function publicarSite(cfg, c, noAr, porCima) {
     const r = await enviarRegistrando(cfg, chave, c, noAr, pacote, situacao);
     // O registro fica pelo nome que esta pasta usa (noAr), o mesmo que a conferência procura.
     anotarDono(c, noAr, { versao: r.versao });
-    anotarNoAr(c, { nome: r.slug, endereco: r.endereco, versao: r.versao, em: new Date().toISOString() });
+    // nome: o que esta pasta usa (noAr), o mesmo do registro; o endereço é o que o painel devolveu
+    anotarNoAr(c, { nome: noAr, endereco: r.endereco, versao: r.versao, em: new Date().toISOString() });
     const noArAgora = await esperarSiteNoAr(cfg, r.endereco);
     return {
       ok: true,
@@ -145,8 +163,25 @@ export default async function publicar(args) {
   const c = abrirPastaDoSite(nome);
   const noAr = nomeNoAr(c, args.opcoes);
   return comAcesso(cfg, async (chave) => {
-    await conferirDono(cfg, chave, c, noAr, porCima);
-    const r = await voltarVersao(cfg, chave, noAr, v.versao);
+    const situacao = await conferirDono(cfg, chave, c, noAr, porCima);
+    // Registrado antes de pedir: se a resposta se perder (o painel pode ter voltado), a próxima
+    // conferência aceita a versão pedida (lib/publicar-dono.mjs, voltouParaOPedido). Só quando a pasta
+    // já tem registro: sem ele, um pedido sozinho bloquearia a migração pelo no-ar.json (e, se a volta
+    // valeu e a resposta se perdeu, a próxima publicação pede --por-cima uma vez). Se o painel respondeu
+    // recusando, o registro volta ao que era.
+    // Um pedido anterior ainda sem resposta sai resolvido, antes de dar lugar a este.
+    const registro = registroResolvido(lerDono(c, noAr), situacao);
+    if (registro) {
+      const volta = { de: situacao.versao, para: Number.isInteger(v.versao) ? v.versao : null, versoes: situacao.versoes };
+      anotarDono(c, noAr, { ...registro, voltar: volta });
+    }
+    let r;
+    try {
+      r = await voltarVersao(cfg, chave, noAr, v.versao);
+    } catch (erro) {
+      if (registro && recusaDoPainel(erro)) anotarDono(c, noAr, registro);
+      throw erro;
+    }
     anotarDono(c, noAr, { versao: r.versao });
     const lembrete = lerNoAr(c);
     anotarNoAr(c, { ...(lembrete.nome === noAr ? lembrete : {}), nome: noAr, versao: r.versao, em: new Date().toISOString() });
