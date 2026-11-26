@@ -3,6 +3,17 @@
 # navegador usam o Chrome que ja vem nas maquinas do GitHub (as tres tem). Aqui eles nunca sao
 # pulados: ESTUDIO_TESTES_EXIGEM_NAVEGADOR=1 faz o teste FALHAR se o navegador nao for achado
 # (kit/testes/fixtures/navegador.mjs). Fora do CI, sem Chrome, eles sao pulados e contados.
+#
+# Windows (Issue #23): a maquina do CI tem pouco folego para a suite, e ela falhava ao acaso sem
+# defeito nenhum no estudio. Tres preparos, cada um medido na Issue:
+# - temp no disco de trabalho (D:): cada sessao cria um perfil novo do Chrome no temp, e no C:, o
+#   disco do sistema, a fila de disco chegava a 42 e as paginas paravam de carregar;
+# - ler o navegador uma vez antes (.github/scripts/ler-navegador.mjs): o C: de maquina nova vem frio
+#   e a 1a abertura do Chrome passava dos 20 s;
+# - no maximo 2 arquivos de teste ao mesmo tempo (o padrao do node --test e CPUs - 1 = 3): 3 arquivos
+#   com navegador juntos deixam as 4 vCPUs em 100%. Com 2, o tempo total nao piora.
+# O limite de 2 mora no package.json (testar:windows-ci), ao lado do "npm test": o --test-concurrency
+# so vale escrito antes da lista de arquivos, e nao entra pelo "npm test --" nem pelo NODE_OPTIONS.
 name: testes
 
 on:
@@ -28,8 +39,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Temp no disco de trabalho (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "TEMP=$RUNNER_TEMP" >> "$GITHUB_ENV"
+          echo "TMP=$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Ler o navegador uma vez (Windows)
+        if: runner.os == 'Windows'
+        run: node .github/scripts/ler-navegador.mjs
       - name: Testes do kit
+        if: runner.os != 'Windows'
         run: npm test
+        env:
+          ESTUDIO_TESTES_EXIGEM_NAVEGADOR: '1'
+      - name: Testes do kit (Windows, 2 arquivos por vez)
+        if: runner.os == 'Windows'
+        run: npm run testar:windows-ci
         env:
           ESTUDIO_TESTES_EXIGEM_NAVEGADOR: '1'
       - name: Instrucoes iguais nas duas copias
