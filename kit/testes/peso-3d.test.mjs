@@ -119,3 +119,13 @@ test('o checar reprova o site com 3D acima do limite (3d-pesado)', opcoesDoNaveg
   escrever(path.join(base, 'sites', 'pesado', 'site', 'assets', '3d', 'biblioteca.js'), 210 * KB);
   assert.ok(tipos().includes('3d-pesado'));
 });
+
+test('uri do .gltf com "%" solto não derruba a conta: vale o nome como está escrito', () => {
+  const site = path.join(base, 'uri-solta');
+  fs.mkdirSync(path.join(site, 'assets', 'modelos'), { recursive: true });
+  fs.writeFileSync(path.join(site, 'assets', 'modelos', 'peca.gltf'), JSON.stringify({ buffers: [{ uri: 'peca 100%.bin' }] }));
+  escrever(path.join(site, 'assets', 'modelos', 'peca 100%.bin'), 20 * KB);
+  const r = conferir3d(site);
+  assert.deepEqual(r.modelos.map((m) => [m.arquivo, m.junto]), [['assets/modelos/peca.gltf', ['assets/modelos/peca 100%.bin']]]);
+  assert.ok(r.modelos[0].kb >= 20, `${r.modelos[0].kb} KB`);
+});

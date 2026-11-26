@@ -92,7 +92,7 @@ export function citaNome(texto, nome) {
 // Cada texto do JSON é decodificado sozinho (buffers, imagens e extensões), para um "%" solto num campo
 // não estragar os outros. O BOM do começo não conta; JSON quebrado tenta o texto inteiro.
 const BOM = '\uFEFF';
-const decodificado = (texto) => {
+export const decodificado = (texto) => {
   try {
     return decodeURIComponent(texto);
   } catch {

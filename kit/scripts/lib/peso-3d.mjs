@@ -21,6 +21,8 @@ import path from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { listarArquivos } from './caminhos.mjs';
 import { TETO_DO_GLTF } from './regras-do-painel.mjs';
+// a mesma leitura de uri do pacote: "%" solto vale como está escrito, sem derrubar a conta
+import { decodificado } from './pacote.mjs';
 
 export const LIMITE_3D = Object.freeze({ js_kb_comprimido: 200, modelo_kb: 1536 });
 const EXTENSOES_DE_CODIGO = Object.freeze(['.js', '.mjs', '.wasm']);
@@ -51,7 +53,7 @@ function citadosPeloGltf(pastaSite, rel) {
   return [...(dados.buffers || []), ...(dados.images || [])]
     .map((b) => (b && typeof b.uri === 'string' ? b.uri : ''))
     .filter((uri) => uri && !uri.startsWith('data:'))
-    .map((uri) => path.posix.normalize(pasta + decodeURIComponent(uri)));
+    .map((uri) => path.posix.normalize(pasta + decodificado(uri)));
 }
 
 export function conferir3d(pastaSite) {
