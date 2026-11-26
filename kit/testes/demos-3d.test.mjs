@@ -323,10 +323,18 @@ test('o configurador funciona só com o teclado, e a escolha é dita e levada ao
 // Conta os quadros da cena WebGL (o molde tem outros laços de quadro, de rolagem e de animação,
 // que não interessam aqui): cada quadro do motor começa limpando a imagem (clear), uma vez só.
 // Com a cena parada, a conta não sobe.
-const CONTAR_QUADROS = "(() => { window.__quadros = 0; window.__primeiro = 0; window.__ultimo = 0; for (const C of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) { if (!C) continue; const o = C.prototype.clear; C.prototype.clear = function (...a) { const t = performance.now(); if (!window.__quadros) window.__primeiro = t; window.__ultimo = t; window.__quadros += 1; return o.apply(this, a); }; } })();";
+// Junto, um laço de quadros da própria página (requestAnimationFrame) conta quantos quadros
+// seguidos passaram sem desenho da cena (__semDesenho). Cena girando pede todo quadro, então a
+// conta fica em 0 ou 1; cena dormindo deixa a conta crescer.
+const CONTAR_QUADROS = "(() => { window.__quadros = 0; window.__primeiro = 0; window.__ultimo = 0; window.__semDesenho = 0; const tique = () => { window.__semDesenho += 1; requestAnimationFrame(tique); }; requestAnimationFrame(tique); for (const C of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) { if (!C) continue; const o = C.prototype.clear; C.prototype.clear = function (...a) { const t = performance.now(); if (!window.__quadros) window.__primeiro = t; window.__ultimo = t; window.__quadros += 1; window.__semDesenho = 0; return o.apply(this, a); }; } })();";
 const quadros = (s) => s.tab.evaluate('window.__quadros');
-// Espera por estado, não por relógio fixo (o CI no Windows desenha devagar, por software):
-// "subir" espera ao menos n desenhos novos; "parar" espera a conta ficar parada por calmoMs.
+// Quadros seguidos da página sem desenho da cena para dizer que ela dormiu (meio segundo a 60 por
+// segundo; com a máquina lenta, os quadros da página também ficam lentos, e a conta acompanha).
+const QUADROS_CALMOS = 30;
+// Espera por estado, não por relógio fixo (o CI no Windows desenha devagar, por software, e roda
+// vários navegadores ao mesmo tempo): "subir" espera ao menos n desenhos novos; "parar" espera
+// QUADROS_CALMOS quadros da página sem desenho da cena. Medir a calma em milissegundos do teste
+// confundia um quadro lento no meio do giro com a cena parada.
 async function quadrosSubirem(s, desde, n = 1, teto = 15000) {
   const fim = Date.now() + teto;
   while (Date.now() < fim) {
@@ -335,19 +343,14 @@ async function quadrosSubirem(s, desde, n = 1, teto = 15000) {
   }
   return false;
 }
-async function quadrosPararem(s, calmoMs = 1500, teto = 30000) {
+async function quadrosPararem(s, calmos = QUADROS_CALMOS, teto = 30000) {
   const fim = Date.now() + teto;
-  let ultimo = await quadros(s);
-  let desde = Date.now();
   while (Date.now() < fim) {
-    await esperar(100);
-    const agora = await quadros(s);
-    if (agora !== ultimo) {
-      ultimo = agora;
-      desde = Date.now();
-    } else if (Date.now() - desde >= calmoMs) return { parou: true, quadros: agora, em: desde };
+    const r = await s.tab.evaluate('({ semDesenho: window.__semDesenho, quadros: window.__quadros })');
+    if (r.semDesenho >= calmos) return { parou: true, quadros: r.quadros };
+    await esperar(50);
   }
-  return { parou: false, quadros: ultimo, em: desde };
+  return { parou: false, quadros: await quadros(s) };
 }
 const semRolarDeLado = (s) => s.tab.evaluate('document.documentElement.scrollWidth <= innerWidth');
 
@@ -387,17 +390,16 @@ test('a caramanhola gira sozinha só nos primeiros segundos; o mouse só pega a 
     await irAoPalco(s);
     assert.ok(await esperarEstado(s, 'pronta'), `ficou em ${await estado(s)}`);
     assert.equal(await s.tab.evaluate(`getComputedStyle(${canvas}).pointerEvents`), 'auto');
-    // girando: logo depois de pronta, a peça segue desenhando (o giro conta do primeiro quadro à
-    // vista, então a máquina lenta não perde o giro); o critério é haver desenhos novos, não quantos
-    const a = await quadros(s);
-    assert.ok(await quadrosSubirem(s, a, 3), 'a peça não está girando logo depois de abrir');
-    // e para sozinha (WCAG 2.2.2: movimento que ninguém pediu acaba em até 5 s)
+    // para sozinha (WCAG 2.2.2: movimento que ninguém pediu acaba em até 5 s)
     const parada = await quadrosPararem(s);
     assert.ok(parada.parou, 'a peça continua girando sozinha');
     // girou por um tempo de verdade (não parou no primeiro quadro), e parou no prazo: o giro é de
-    // 4,5 s contados do primeiro quadro à vista. Medido no relógio da própria página, do primeiro
-    // ao último desenho, para não depender de quando o teste percebe que a cena ficou pronta.
+    // 4,5 s contados do primeiro quadro à vista. Tudo medido no relógio da própria página, do
+    // primeiro ao último desenho: o teste não aposta corrida com o giro. Ler a conta depois de ver
+    // "pronta" e exigir desenhos novos falhava quando o teste chegava atrasado (a máquina
+    // disputada), com o giro já terminado.
     const girou = Math.round(await s.tab.evaluate('window.__ultimo - window.__primeiro'));
+    assert.ok(parada.quadros >= 3, `a peça não girou: ${parada.quadros} desenhos`);
     assert.ok(girou >= 3000, `parou cedo demais: ${girou} ms`);
     assert.ok(girou <= 4500 + 3000, `parou tarde demais: ${girou} ms`);
     const b = parada.quadros;
