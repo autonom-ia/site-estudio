@@ -111,16 +111,20 @@ test('na sessão, recurso de fora é recusado antes de sair e console.error da p
 <body><img src="http://192.0.2.1/foto.png" alt=""><script>console.error('Site Estúdio 3D: o desenho não compilou (teste)');</script></body></html>`);
   const sessao = await abrirSessao(pasta, { tamanho: { largura: 390, altura: 844, movel: true } });
   try {
-    const pedidos = [];
+    const enderecos = new Map();
+    const falhas = [];
     sessao.tab.on((m) => {
-      if (m.method === 'Network.loadingFailed') pedidos.push(m.params.errorText);
+      if (m.method === 'Network.requestWillBeSent') enderecos.set(m.params.requestId, m.params.request.url);
+      if (m.method === 'Network.loadingFailed') falhas.push({ url: enderecos.get(m.params.requestId), erro: m.params.errorText });
     });
-    const inicio = Date.now();
     await sessao.ir(sessao.url('index.html'));
     await esperar(300);
-    // recusado na hora (BLOCKED_BY_CLIENT), sem esperar a rede, e ainda listado como endereço de fora
-    assert.ok(Date.now() - inicio < 8000);
-    assert.ok(pedidos.some((e) => e.includes('BLOCKED_BY_CLIENT')), JSON.stringify(pedidos));
+    // recusado pela própria sessão (BLOCKED_BY_CLIENT): o pedido nem saiu, então não houve espera
+    // pela rede. Quem prova é o motivo da falha, não um prazo de relógio, que reprovava num computador
+    // sem fôlego (o Windows do CI, Issue #23). A falha da imagem chega antes do "load", e o ir() só
+    // volta depois dele, pela mesma conexão.
+    const recusa = falhas.find((f) => f.url === 'http://192.0.2.1/foto.png');
+    assert.ok(recusa && recusa.erro.includes('BLOCKED_BY_CLIENT'), JSON.stringify(falhas));
     assert.deepEqual(sessao.rede().externos, ['http://192.0.2.1/foto.png']);
     assert.deepEqual(sessao.errosJs(), ['console.error: Site Estúdio 3D: o desenho não compilou (teste)']);
   } finally {

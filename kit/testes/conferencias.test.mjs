@@ -187,6 +187,8 @@ test('conferências novas acham o que a revisão achava, sem alarme para leitor 
   assert.equal(estudio('montar', 'conferencias').codigo, 0);
 
   const md = estudio('medir', 'conferencias', '--tamanhos', '390,768');
+  // o medir precisa ter medido: se ele mesmo falhar, o motivo aparece aqui, e não um "not iterable"
+  assert.ok(Array.isArray(md.json?.dados?.vermelhos) && Array.isArray(md.json.dados.amarelos), JSON.stringify(md.json));
   const tudo = [...md.json.dados.vermelhos, ...md.json.dados.amarelos];
   assert.deepEqual(tudo.filter((v) => v.tipo === 'texto-cortado'), [], 'leitor de tela ou faixa decorativa viraram alarme');
   assert.ok(md.json.dados.amarelos.some((v) => v.tipo === 'foto-esticada' && v.detalhe.startsWith('pequena.png tem 40x30 px')), 'foto esticada');
