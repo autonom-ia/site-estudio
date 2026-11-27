@@ -9,40 +9,118 @@
 // Guardar um antes novo apaga o da comparação anterior (o antes, a página do depois e a versão vista):
 // dados.apagados diz o que havia, para o assistente nunca prometer uma versão que já saiu.
 // Nada é apagado antes de o novo estar inteiro: a comparação nova é montada ao lado e entra no lugar
-// da anterior de uma vez (lib/antes-depois.mjs, trocarPasta). A anterior é fechada antes da troca:
-// se a troca falha no meio (no Windows, um arquivo aberto em outro programa), reprova com
-// ANTES_NAO_TROCADO, o site não muda, e o "escolher" nunca volta com o antes de uma e as fontes do
-// gerador da outra. Rodar "antes" de novo termina.
+// da anterior de uma vez (lib/antes-depois.mjs, trocarPasta). São duas trocas (as fontes do gerador
+// em revisao/antes-gerador/ e a comparação), e uma não vale sem a outra: as fontes do gerador da
+// comparação anterior ficam ao lado (.anterior) até a comparação nova entrar, e voltam se ela não
+// entra. A anterior é fechada só durante as trocas (se o programa morrer no meio, o "escolher" nunca
+// volta com o antes de uma e as fontes do gerador da outra). Se uma troca falha (no Windows, um
+// arquivo aberto em outro programa), reprova com ANTES_NAO_TROCADO, o site não muda e a comparação
+// anterior volta a ser como era: se estava em aberto, o "escolher" ainda responde a ela
+// (dados.pergunta_anterior_em_aberto). Rodar "antes" de novo termina.
 import fs from 'node:fs';
 import path from 'node:path';
 import { nomeDoSite } from '../lib/args.mjs';
 import { abrirSite } from '../lib/site.mjs';
 import { copiarPasta, listarArquivos, ehPasta, relativoARaiz } from '../lib/caminhos.mjs';
-import { escreverJson, lerJson } from '../lib/json.mjs';
+import { escreverJson, escreverTexto, lerJson, lerTexto } from '../lib/json.mjs';
 import { aviso, reprovado } from '../lib/saida.mjs';
-import { caminhosDoAntesDepois, trocarPasta } from '../lib/antes-depois.mjs';
+import { caminhosDoAntesDepois, sobrasDaTroca, trocarPasta } from '../lib/antes-depois.mjs';
 
-// Monta em "montando" o que vai para "destino" e troca de uma vez. Sem origem, tira a cópia velha.
-// Devolve a sobra da troca (lib/antes-depois.mjs) ou null.
-function trocarCopia(origem, destino) {
-  if (!ehPasta(origem)) {
-    fs.rmSync(destino, { recursive: true, force: true });
-    return null;
-  }
-  const montando = `${destino}.guardando`;
-  fs.rmSync(montando, { recursive: true, force: true });
-  copiarPasta(origem, montando, { links: 'recriar' });
-  return trocarPasta(montando, destino, fs.renameSync, { mover: true }).sobra;
+// As fontes do gerador em revisao/antes-gerador/, trocadas sem perder as da comparação anterior: elas
+// saem para .anterior e só são apagadas depois que a comparação nova entra (concluir). desfazer
+// devolve as anteriores ao lugar. Sem _gerador/ no site, a cópia velha só sai.
+function trocaDoGerador(c, ad) {
+  const anterior = `${ad.gerador}.anterior`;
+  const montando = `${ad.gerador}.guardando`;
+  let saiu = false;
+  let entrou = false;
+  return {
+    montar() {
+      fs.rmSync(anterior, { recursive: true, force: true });
+      fs.rmSync(montando, { recursive: true, force: true });
+      if (ehPasta(c.gerador)) copiarPasta(c.gerador, montando, { links: 'recriar' });
+    },
+    trocar() {
+      if (fs.existsSync(ad.gerador)) {
+        fs.renameSync(ad.gerador, anterior);
+        saiu = true;
+      }
+      if (ehPasta(montando)) {
+        fs.renameSync(montando, ad.gerador);
+        entrou = true;
+      }
+    },
+    desfazer() {
+      fs.rmSync(montando, { recursive: true, force: true });
+      if (entrou) fs.rmSync(ad.gerador, { recursive: true, force: true });
+      entrou = false;
+      if (saiu) fs.renameSync(anterior, ad.gerador);
+      saiu = false;
+    },
+    // Devolve a cópia velha que não saiu (arquivo aberto no Windows), ou null.
+    concluir() {
+      if (!saiu) return null;
+      try {
+        fs.rmSync(anterior, { recursive: true, force: true });
+        return null;
+      } catch {
+        return anterior;
+      }
+    },
+  };
 }
 
 // A comparação nova (antes/, mudancas.json e estado.json), montada ao lado e trocada inteira.
-function trocarComparacao(c, ad, temGerador) {
-  const montando = `${ad.pasta}.guardando`;
+function montarComparacao(c, ad, montando, temGerador) {
   fs.rmSync(montando, { recursive: true, force: true });
   copiarPasta(c.site, path.join(montando, 'antes'));
   escreverJson(path.join(montando, 'mudancas.json'), { pedido: '', mudancas: [] });
   escreverJson(path.join(montando, 'estado.json'), { aberto: true, gerador: temGerador });
-  return trocarPasta(montando, ad.pasta, fs.renameSync, { mover: true }).sobra;
+}
+
+// Erro do sistema de arquivos (EPERM, EBUSY, EACCES...): vira reprovação. Outro erro é defeito do
+// estúdio e sobe como é.
+const ehErroDeArquivo = (erro) => typeof erro?.code === 'string' && typeof erro.syscall === 'string';
+
+// Tira o que foi montado e não entrou (.guardando, e o .trocando de uma troca que parou na entrada).
+// Uma cópia presa (arquivo aberto no Windows) fica: não muda o que vale, e o próximo "antes" a apaga.
+function tirarMontagens(ad, comparacao) {
+  for (const pasta of [comparacao, sobrasDaTroca(ad.pasta).novo, `${ad.gerador}.guardando`]) {
+    try {
+      fs.rmSync(pasta, { recursive: true, force: true });
+    } catch (erro) {
+      if (!ehErroDeArquivo(erro)) throw erro;
+    }
+  }
+}
+
+// Depois de uma troca que falhou: devolve o gerador anterior e o estado.json como era (mesmo texto,
+// escrita atômica). Se algo aqui também falha, a comparação anterior fica fechada.
+function voltarAComparacaoAnterior(gerador, ad, estadoComoEra) {
+  try {
+    gerador.desfazer();
+    if (estadoComoEra !== null) escreverTexto(ad.estado, estadoComoEra);
+  } catch (erro) {
+    if (!ehErroDeArquivo(erro)) throw erro;
+  }
+}
+
+// O que vale depois de uma falha: a pergunta "Qual fica?" da comparação anterior ainda está em aberto?
+// Lido do estado.json que ficou, não do que se pretendia (uma troca pode ter recuperado uma
+// comparação de uma queda anterior, já fechada).
+function perguntaEmAberto(ad) {
+  try {
+    return ehPasta(ad.antes) && JSON.parse(lerTexto(ad.estado)).aberto === true;
+  } catch {
+    return false;
+  }
+}
+
+function naoTrocado(nome, ad, comparacao, erro) {
+  if (!ehErroDeArquivo(erro)) throw erro;
+  tirarMontagens(ad, comparacao);
+  // Só o código do erro sai (a mensagem traz caminhos da pessoa).
+  reprovado('ANTES_NAO_TROCADO', { nome, erro: erro.code, pergunta_anterior_em_aberto: perguntaEmAberto(ad) });
 }
 
 export default async function antes(args) {
@@ -57,16 +135,26 @@ export default async function antes(args) {
   const apagados = [['antes', ad.antes], ['comparacao', ad.depois], ['tentativa', ad.tentativa]]
     .filter(([, pasta]) => ehPasta(pasta)).map(([nomeDoItem]) => nomeDoItem);
   const temGerador = ehPasta(c.gerador);
-  if (ehPasta(ad.pasta)) escreverJson(ad.estado, { aberto: false, escolha: estado.escolha || '' });
+  const gerador = trocaDoGerador(c, ad);
+  const comparacao = `${ad.pasta}.guardando`;
+  try {
+    gerador.montar();
+    montarComparacao(c, ad, comparacao, temGerador);
+  } catch (erro) {
+    naoTrocado(nome, ad, comparacao, erro);
+  }
+  let estadoComoEra = null;
   let sobras;
   try {
-    sobras = [trocarCopia(c.gerador, ad.gerador), trocarComparacao(c, ad, temGerador)].filter(Boolean);
+    estadoComoEra = fs.existsSync(ad.estado) ? fs.readFileSync(ad.estado, 'utf8') : null;
+    if (estadoComoEra !== null) escreverJson(ad.estado, { aberto: false, escolha: estado.escolha || '' });
+    gerador.trocar();
+    sobras = [trocarPasta(comparacao, ad.pasta, fs.renameSync, { mover: true }).sobra];
   } catch (erro) {
-    // Só erro do sistema de arquivos (EPERM, EBUSY, EACCES...) vira reprovação, e só o código dele sai
-    // (a mensagem traz caminhos da pessoa). Outro erro é defeito do estúdio e sobe como é.
-    if (typeof erro?.code !== 'string' || typeof erro.syscall !== 'string') throw erro;
-    reprovado('ANTES_NAO_TROCADO', { nome, erro: erro.code });
+    if (ehErroDeArquivo(erro)) voltarAComparacaoAnterior(gerador, ad, estadoComoEra);
+    naoTrocado(nome, ad, comparacao, erro);
   }
+  sobras = [...sobras, gerador.concluir()].filter(Boolean);
   return {
     ok: true,
     codigo: 'ANTES_GUARDADO',
