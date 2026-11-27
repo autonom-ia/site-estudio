@@ -333,7 +333,7 @@
   },
   "ANTES_NAO_TROCADO": {
     "texto": "Não consegui guardar a versão de antes agora. O site não mudou.",
-    "acao": "dados.erro diz por quê (no Windows, quase sempre um arquivo da comparação anterior aberto em outro programa, como a página do antes e depois no navegador ou uma foto num editor). A comparação anterior foi fechada e não serve mais para o escolher. Peça para fechar o que estiver usando esses arquivos e rode ./estudio antes <nome> de novo antes de mudar qualquer coisa no site. Não apague nada com final .guardando, .trocando ou .descartando."
+    "acao": "dados.erro diz por quê (no Windows, quase sempre um arquivo da comparação anterior aberto em outro programa, como a página do antes e depois no navegador ou uma foto num editor). Se dados.pergunta_anterior_em_aberto for true, o \"Qual fica?\" da comparação anterior continua em aberto e o ./estudio escolher <nome> ainda vale para ele. Se for false, não há comparação em aberto para o escolher. Peça para fechar o que estiver usando esses arquivos e rode ./estudio antes <nome> de novo antes de mudar qualquer coisa no site. Não apague nada com final .guardando, .trocando, .descartando ou .anterior."
   },
   "ANTES_JA_RESOLVIDO": {
     "texto": "Essa comparação já foi resolvida. Vou guardar o site de agora antes de mudar de novo.",
